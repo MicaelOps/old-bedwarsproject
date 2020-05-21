@@ -1,0 +1,6 @@
+name: bedwars
+main: br.com.logicmc.bedwars.BWMain
+version: 1.0
+author: icarus
+depend:
+  - corezao
