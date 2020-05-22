@@ -77,7 +77,8 @@ public class YamlFile {
 	}
 	public Location getLocation(String path) {
 		if (config !=null) {
-			return new Location(Bukkit.getWorld("world"), config.getDouble(path+".x"),config.getDouble(path+".y"),config.getDouble(path+".z") );
+			if(config.get(path) != null)
+				return new Location(Bukkit.getWorld(path+".world"), config.getDouble(path+".x"),config.getDouble(path+".y"),config.getDouble(path+".z") );
 		}
 		return null;
 	}

@@ -4,3 +4,11 @@ version: 1.0
 author: icarus
 depend:
   - corezao
+commands:
+  setspawn:
+  setarena:
+  ping:
+  gamemode:
+  admin:
+  ping:
+  admin:

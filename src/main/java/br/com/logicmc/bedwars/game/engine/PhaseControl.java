@@ -2,13 +2,13 @@ package br.com.logicmc.bedwars.game.engine;
 
 public interface PhaseControl {
 
-    int onTimerCall(GameEngine engine);
+    int onTimerCall(Arena arena);
 
-    void init(GameEngine engine);
+    void init(Arena arena);
 
-    void stop(GameEngine engine);
+    void stop(Arena arena);
 
-    boolean end(GameEngine engine);
+    boolean end(Arena arena);
 
     PhaseControl next();
 }

@@ -1,7 +1,8 @@
 package br.com.logicmc.bedwars.listeners;
 
+import br.com.logicmc.bedwars.BWMain;
 import br.com.logicmc.bedwars.game.BWManager;
-import br.com.logicmc.bedwars.game.engine.GameEngine;
+import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.core.events.PlayerJoinArenaEvent;
 import org.bukkit.Bukkit;
@@ -23,23 +24,34 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onplayerjoinarena(PlayerJoinArenaEvent event) {
         Player player = event.getPlayer();
+
         String mapname = "doces"; // test purposes
+        BWManager.getInstance().addNewPlayer(new BWPlayer(player.getUniqueId(), "doces")); // for test purposes
+
+        if(event.getArenaname().equalsIgnoreCase("staff")) {
+
+        }
+
         for(Player other : Bukkit.getOnlinePlayers()) {
             if(!mapname.equalsIgnoreCase(BWManager.getInstance().getBWPlayer(other.getUniqueId()).getMapname())) {
                 player.hidePlayer(other);
             }
         }
-        BWManager.getInstance().addNewPlayer(new BWPlayer(player.getUniqueId(), "doces")); // for test purposes
     }
     @EventHandler
     public void onquitplayer(PlayerQuitEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
-        GameEngine gameEngine = BWManager.getInstance().getArenabyUUID(uuid);
+        Arena arena = BWManager.getInstance().getArenabyUUID(uuid);
         event.setQuitMessage(null);
-        if(gameEngine.getGamestate() == GameEngine.INGAME) {
 
+        arena.getPlayers().remove(uuid);
+
+        if(arena.getGamestate() == Arena.WAITING) {
+            arena.decrementAllotedPlayers();
+        } else {
+            arena.
         }
-        BWManager.getInstance().removePlayer(uuid);
+        BWMain.getInstance().updateArena(arena.getName());
     }
 
     public void preparePlayer() {

@@ -1,7 +1,10 @@
 package br.com.logicmc.bedwars.game;
 
-import br.com.logicmc.bedwars.game.engine.GameEngine;
+import br.com.logicmc.bedwars.BWMain;
+import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
+
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -9,29 +12,32 @@ public class BWManager {
 
 
     private static BWManager instance;
-    private final HashMap<String, GameEngine> arenas = new HashMap<>();
-    private final HashMap<UUID, BWPlayer> playermanager = new HashMap<>();
+    private final HashMap<String, Arena> arenas = new HashMap<>();
 
-    public void addGame(String name, GameEngine arena) {
+    public void addGame(String name, Arena arena) {
         arenas.put(name, arena);
     }
 
-    public GameEngine getArena(String name) {
+    public Arena getArena(String name) {
         return arenas.get(name);
     }
 
-    public GameEngine getArenabyUUID(UUID uuid) {
-        return arenas.get(playermanager.get(uuid).getMapname());
+    public Arena getArenabyUUID(UUID uuid) {
+        return arenas.get(BWMain.getInstance().playermanager.getPlayerBase(uuid).getData().getMapname());
     }
+
+    public Collection<Arena> getArenas() {
+        return arenas.values();
+    }
+
     public BWPlayer getBWPlayer(UUID uuid) {
-        return playermanager.get(uuid);
+        return BWMain.getInstance().playermanager.getPlayerBase(uuid).getData();
     }
+
     public void addNewPlayer(BWPlayer player) {
-        playermanager.put(player.getUuid(), player);
+        BWMain.getInstance().playermanager.getPlayerBase(player.getUuid()).setData(player);
     }
-    public void removePlayer(UUID uuid) {
-        playermanager.remove(uuid);
-    }
+
     public static BWManager getInstance() {
 
         if(instance == null)

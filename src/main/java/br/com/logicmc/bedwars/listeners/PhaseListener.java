@@ -1,7 +1,7 @@
 package br.com.logicmc.bedwars.listeners;
 
 import br.com.logicmc.bedwars.game.BWManager;
-import br.com.logicmc.bedwars.game.engine.GameEngine;
+import br.com.logicmc.bedwars.game.engine.Arena;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -65,6 +65,6 @@ public class PhaseListener implements Listener {
         event.setCancelled(event.getSpawnReason() == CreatureSpawnEvent.SpawnReason.CUSTOM);
     }
     private boolean check(Player player) {
-        return BWManager.getInstance().getArenabyUUID(player.getUniqueId()).getGamestate() == GameEngine.WAITING;
+        return BWManager.getInstance().getArenabyUUID(player.getUniqueId()).getGamestate() == Arena.WAITING;
     }
 }

@@ -1,13 +1,12 @@
 package br.com.logicmc.bedwars.game.addons;
 
-import br.com.logicmc.bedwars.game.engine.GameEngine;
-import org.bukkit.Bukkit;
+import br.com.logicmc.bedwars.game.engine.Arena;
 
 public class TimeScheduler implements Runnable{
 
-    private final GameEngine engine;
+    private final Arena engine;
 
-    public TimeScheduler(GameEngine engine) {
+    public TimeScheduler(Arena engine) {
         this.engine = engine;
     }
 
@@ -17,6 +16,6 @@ public class TimeScheduler implements Runnable{
         engine.changeTime();
 
         int time = engine.getTime(), i = time/60;
-        Bukkit.getScoreboardManager().getMainScoreboard().getTeam("time").setSuffix("§a" + (i < 10 ? "0"+i+":" : i+":") + (time%60 < 10 ? "0"+time%60 :time%60));
+        //Bukkit.getScoreboardManager().getMainScoreboard().getTeam("time").setSuffix("§a" + (i < 10 ? "0"+i+":" : i+":") + (time%60 < 10 ? "0"+time%60 :time%60));
     }
 }

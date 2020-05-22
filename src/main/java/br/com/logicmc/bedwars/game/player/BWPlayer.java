@@ -8,19 +8,19 @@ import java.util.UUID;
 public class BWPlayer {
 
     private final UUID uuid;
-    private final String mapname;
+    private final String arena;
 
     private Color teamcolor;
 
     private int kills,beds;
 
-    public BWPlayer(UUID uuid, String mapname) {
+    public BWPlayer(UUID uuid, String arena) {
         this.uuid = uuid;
-        this.mapname = mapname;
+        this.arena = arena;
     }
 
     public String getMapname() {
-        return mapname;
+        return arena;
     }
 
     public Color getTeamcolor() {
