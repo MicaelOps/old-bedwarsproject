@@ -81,6 +81,8 @@ public class Schematic{
         }
         return null;
     }
+
+    @Deprecated
     public void paste(Location location) {
         World world = Bukkit.getWorld("world");
         for(int x = 0; x < width; ++x){

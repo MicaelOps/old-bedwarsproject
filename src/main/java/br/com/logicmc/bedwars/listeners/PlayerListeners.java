@@ -9,6 +9,7 @@ import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.core.events.PlayerJoinArenaEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -35,12 +36,14 @@ public class PlayerListeners implements Listener {
         Player player = event.getPlayer();
 
         String mapname = "doces"; // test purposes
-        BWManager.getInstance().addNewPlayer(new BWPlayer(player.getUniqueId(), "doces")); // for test purposes
 
         plugin.utils.cleanPlayer(player);
         plugin.utils.clearChat(player);
 
         if(event.getArenaname().equalsIgnoreCase("staff")) {
+            player.setGameMode(GameMode.CREATIVE);
+            player.setAllowFlight(true);
+            player.setFlying(true);
             plugin.giveItem(player, 0, FixedItems.STAFF_ARENA_SPECTATE);
         } else {
             for(Player other : Bukkit.getOnlinePlayers()) {

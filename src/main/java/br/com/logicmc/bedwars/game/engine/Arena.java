@@ -1,15 +1,12 @@
 package br.com.logicmc.bedwars.game.engine;
 
 import br.com.logicmc.bedwars.BWMain;
-import br.com.logicmc.bedwars.extra.BWMessages;
-import br.com.logicmc.bedwars.game.BWManager;
+
 import br.com.logicmc.bedwars.game.addons.TimeScheduler;
 import br.com.logicmc.bedwars.game.phase.WaitingPhase;
-import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import br.com.logicmc.core.system.server.ServerState;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;

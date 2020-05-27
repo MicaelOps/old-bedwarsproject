@@ -3,14 +3,14 @@ package br.com.logicmc.bedwars;
 import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.extra.FixedItems;
 import br.com.logicmc.bedwars.extra.Schematic;
+import br.com.logicmc.bedwars.extra.StaffArena;
 import br.com.logicmc.bedwars.extra.YamlFile;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.addons.VoidWorld;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
-import br.com.logicmc.core.account.PlayerBase;
-import br.com.logicmc.core.account.addons.Preferences;
+
 import br.com.logicmc.core.system.command.CommandLoader;
 import br.com.logicmc.core.system.minigame.ArenaInfoPacket;
 import br.com.logicmc.core.system.minigame.MinigamePlugin;
@@ -18,10 +18,9 @@ import br.com.logicmc.core.system.mysql.MySQL;
 import br.com.logicmc.core.system.redis.packet.PacketManager;
 import br.com.logicmc.core.system.server.ServerState;
 import br.com.logicmc.core.system.server.ServerType;
-import com.google.gson.Gson;
+
 import net.minecraft.server.v1_8_R3.PacketPlayOutScoreboardTeam;
 import org.bukkit.*;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_8_R3.scoreboard.CraftScoreboard;
 import org.bukkit.entity.Entity;
@@ -62,6 +61,8 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
         spawnlocation = mainconfig.getLocation("spawn");
         maintenance = mainconfig.getConfig().getBoolean("maintenance");
+
+        BWManager.getInstance().addGame("staff", new StaffArena());
         if(spawnlocation == null)
             System.out.println("[Arena] Lobby location is null");
 
@@ -117,6 +118,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         folder.delete();
     }
 
+    @Deprecated
     @Override
     public List<String> loadArenas() {
         List<String> schematics = mainconfig.getConfig().getStringList("schematics");
@@ -173,7 +175,6 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 prepareWorld(world);
                 schematic.paste(new Location(world, 250, 100, 250));
 
-                FileConfiguration config = mainconfig.getConfig();
                 HashSet<Island> islands =new HashSet<>();
                 HashSet<Location> diamond = new HashSet<>(),emerald =new HashSet<>();
                 AtomicReference<Location> lobbyloc = new AtomicReference<>();
@@ -271,5 +272,10 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
     public boolean isMaintenance() {
         return maintenance;
+    }
+
+    @Override
+    public BWPlayer createDataInstance() {
+        return new BWPlayer();
     }
 }

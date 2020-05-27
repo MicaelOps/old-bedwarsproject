@@ -33,7 +33,7 @@
             <version>4.11</version>
         </dependency>
         <dependency>
-            <groupId>br.com.zeetzmc</groupId>
+            <groupId>br.com.logicmc</groupId>
             <artifactId>spigotzao</artifactId>
             <version>1.0</version>
             <scope>compile</scope>

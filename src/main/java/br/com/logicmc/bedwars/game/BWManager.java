@@ -34,9 +34,6 @@ public class BWManager {
         return BWMain.getInstance().playermanager.getPlayerBase(uuid).getData();
     }
 
-    public void addNewPlayer(BWPlayer player) {
-        BWMain.getInstance().playermanager.getPlayerBase(player.getUuid()).setData(player);
-    }
 
     public static BWManager getInstance() {
 

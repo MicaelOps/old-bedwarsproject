@@ -3,6 +3,7 @@ package br.com.logicmc.bedwars.extra;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashSet;
 
@@ -13,11 +14,16 @@ public class StaffArena extends Arena {
 
     @Override
     public int getGamestate() {
-        return Arena.WAITING;
+        return Arena.INGAME;
     }
 
     @Override
     public int getTime() {
         return -1;
+    }
+
+    @Override
+    public void startTimer(JavaPlugin plugin) {
+
     }
 }
