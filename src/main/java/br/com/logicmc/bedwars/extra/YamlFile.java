@@ -83,6 +83,7 @@ public class YamlFile {
 		return null;
 	}
 	public void setLocation(String path, Location location) {
+		config.set(path+".world",location.getWorld().getName());
 		config.set(path+".x",location.getX());
 		config.set(path+".y",location.getY());
 		config.set(path+".z",location.getZ());

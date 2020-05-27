@@ -10,5 +10,6 @@ public interface PhaseControl {
 
     boolean end(Arena arena);
 
+
     PhaseControl next();
 }

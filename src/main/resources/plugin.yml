@@ -9,6 +9,9 @@ commands:
   setarena:
   ping:
   gamemode:
-  admin:
+  unban:
+  unmute:
+  tempban:
+  ban:
   ping:
   admin:

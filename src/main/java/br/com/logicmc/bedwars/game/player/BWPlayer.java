@@ -1,6 +1,6 @@
 package br.com.logicmc.bedwars.game.player;
 
-import org.bukkit.Color;
+import org.bukkit.ChatColor;
 
 
 import java.util.UUID;
@@ -10,24 +10,25 @@ public class BWPlayer {
     private final UUID uuid;
     private final String arena;
 
-    private Color teamcolor;
+    private ChatColor teamcolor;
 
-    private int kills,beds;
+    private int kills,beds,deaths,wins,defeats;
 
     public BWPlayer(UUID uuid, String arena) {
         this.uuid = uuid;
         this.arena = arena;
+        teamcolor = null;
     }
 
     public String getMapname() {
         return arena;
     }
 
-    public Color getTeamcolor() {
+    public ChatColor getTeamcolor() {
         return teamcolor;
     }
 
-    public void setTeamcolor(Color teamcolor) {
+    public void setTeamcolor(ChatColor teamcolor) {
         this.teamcolor = teamcolor;
     }
 

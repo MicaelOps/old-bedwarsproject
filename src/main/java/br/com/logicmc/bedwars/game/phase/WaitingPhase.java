@@ -1,6 +1,7 @@
 package br.com.logicmc.bedwars.game.phase;
 
-import br.com.logicmc.bedwars.game.engine.GameEngine;
+import br.com.logicmc.bedwars.BWMain;
+import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.PhaseControl;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -8,9 +9,9 @@ import org.bukkit.ChatColor;
 public class WaitingPhase implements PhaseControl {
 
     @Override
-    public int onTimerCall(GameEngine engine) {
+    public int onTimerCall(Arena arena) {
 
-        int time = engine.getTime();
+        int time = arena.getTime();
         time--;
 
         if(time != 0 ) {
@@ -18,22 +19,33 @@ public class WaitingPhase implements PhaseControl {
                 Bukkit.broadcastMessage(ChatColor.YELLOW + "O jogo comeca em "+time/60+" minuto(s)");
             else if(time < 6)
                 Bukkit.broadcastMessage(ChatColor.YELLOW + "O jogo comeca em "+time+" segundo(s)");
+        } else {
+            int size = arena.getPlayers().size();
+            if(size == 0)
+                time = 60;
+
+            if(BWMain.getInstance().isMaintenance() ) {
+                if (size > 0)
+                    arena.changePhase();
+                else
+                    time = 120;
+            } else if(size < 4)
+                time = 60;
+
         }
         return time;
     }
 
     @Override
-    public void init(GameEngine engine) {
+    public void init(Arena arena) { }
+
+    @Override
+    public void stop(Arena arena) {
 
     }
 
     @Override
-    public void stop(GameEngine engine) {
-
-    }
-
-    @Override
-    public boolean end(GameEngine engine) {
+    public boolean end(Arena arena) {
         return false;
     }
 
@@ -41,4 +53,5 @@ public class WaitingPhase implements PhaseControl {
     public PhaseControl next() {
         return new IngamePhase();
     }
+
 }

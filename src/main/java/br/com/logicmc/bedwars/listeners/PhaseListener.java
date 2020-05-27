@@ -2,7 +2,9 @@ package br.com.logicmc.bedwars.listeners;
 
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
+import org.bukkit.Location;
 import org.bukkit.entity.Creature;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -19,52 +21,47 @@ public class PhaseListener implements Listener {
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockdamage(BlockDamageEvent event) {
-        event.setCancelled(check(event.getPlayer()));
+        event.setCancelled(check(event.getPlayer().getLocation()));
     }
     @EventHandler(priority=EventPriority.HIGHEST)
-    public void blockbuild(BlockBreakEvent event) {
-        event.setCancelled(check(event.getPlayer()));
-    }
+    public void blockbuild(BlockBreakEvent event){event.setCancelled(check(event.getPlayer().getLocation())); }
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(BlockPlaceEvent event) {
-        event.setCancelled(check(event.getPlayer()));
+        event.setCancelled(check(event.getPlayer().getLocation()));
     }
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(PlayerPickupItemEvent event) {
-        event.setCancelled(check(event.getPlayer()));
+        event.setCancelled(check(event.getPlayer().getLocation()));
     }
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(PlayerDropItemEvent event) {
-        event.setCancelled(check(event.getPlayer()));
+        event.setCancelled(check(event.getPlayer().getLocation()));
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(EntitySpawnEvent event) {
-        event.setCancelled(event.getEntity() instanceof Creature);
+        event.setCancelled(!(event.getEntity() instanceof Item));
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void foodlevelchange(FoodLevelChangeEvent event) {
-        if(event.getEntity() instanceof  Player)
-            event.setCancelled(check((Player) event.getEntity()));
+        event.setCancelled(check(event.getEntity().getLocation()));
     }
     @EventHandler(priority= EventPriority.HIGHEST)
     public void entitydamage(EntityDamageEvent event) {
-        if(event.getEntity() instanceof  Player)
-            event.setCancelled(check((Player) event.getEntity()));
+        event.setCancelled(check(event.getEntity().getLocation()));
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void entitydamage(EntityDamageByEntityEvent event) {
-        if(event.getEntity() instanceof  Player)
-            event.setCancelled(check((Player) event.getEntity()));
+        event.setCancelled(check(event.getEntity().getLocation()));
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(CreatureSpawnEvent event) {
         event.setCancelled(event.getSpawnReason() == CreatureSpawnEvent.SpawnReason.CUSTOM);
     }
-    private boolean check(Player player) {
-        return BWManager.getInstance().getArenabyUUID(player.getUniqueId()).getGamestate() == Arena.WAITING;
+    private boolean check(Location location) {
+        return BWManager.getInstance().getArena(location.getWorld().getName()).getGamestate() == Arena.WAITING;
     }
 }

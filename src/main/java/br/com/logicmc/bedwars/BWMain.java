@@ -1,11 +1,16 @@
 package br.com.logicmc.bedwars;
 
+import br.com.logicmc.bedwars.extra.BWMessages;
+import br.com.logicmc.bedwars.extra.FixedItems;
 import br.com.logicmc.bedwars.extra.Schematic;
 import br.com.logicmc.bedwars.extra.YamlFile;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.addons.VoidWorld;
 import br.com.logicmc.bedwars.game.engine.Arena;
+import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
+import br.com.logicmc.core.account.PlayerBase;
+import br.com.logicmc.core.account.addons.Preferences;
 import br.com.logicmc.core.system.command.CommandLoader;
 import br.com.logicmc.core.system.minigame.ArenaInfoPacket;
 import br.com.logicmc.core.system.minigame.MinigamePlugin;
@@ -13,8 +18,10 @@ import br.com.logicmc.core.system.mysql.MySQL;
 import br.com.logicmc.core.system.redis.packet.PacketManager;
 import br.com.logicmc.core.system.server.ServerState;
 import br.com.logicmc.core.system.server.ServerType;
+import com.google.gson.Gson;
 import net.minecraft.server.v1_8_R3.PacketPlayOutScoreboardTeam;
 import org.bukkit.*;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_8_R3.scoreboard.CraftScoreboard;
 import org.bukkit.entity.Entity;
@@ -26,41 +33,47 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 public class BWMain extends MinigamePlugin<BWPlayer> {
 
     private static BWMain instance;
     private YamlFile mainconfig;
+    private boolean maintenance;
     private Location spawnlocation;
+
 
     @Override
     public void onEnable() {
-        super.onEnable();
-
         instance = this;
+        
         if(!loadConfig()) {
             System.out.println("Error while loading config.yml");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
+
+
         spawnlocation = mainconfig.getLocation("spawn");
+        maintenance = mainconfig.getConfig().getBoolean("maintenance");
+        if(spawnlocation == null)
+            System.out.println("[Arena] Lobby location is null");
+
 
         for(Arena arena : BWManager.getInstance().getArenas()) {
             arena.startTimer(this);
         }
-        try {
-            CommandLoader.loadPackage(this, "br.com.logicmc.bedwars.commands");
-        } catch (IOException e) {
-            System.out.println("Failed in loading commands");
-            Bukkit.getPluginManager().disablePlugin(this);
-        }
-        //buildScoreboard();
+        
+        super.onEnable();
+
+        messagehandler.loadMessage(BWMessages.PLAYER_LEAVE_INGAME, this);
+        CommandLoader.loadPackage(this, "br.com.logicmc.bedwars.commands");
     }
 
     public static BWMain getInstance() {
@@ -73,12 +86,12 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     }
 
     @Override
-    public boolean isAvailable(String arenaname) {
-        return BWManager.getInstance().getArena(arenaname).getPlayers().si == Arena.WAITING;
+    public boolean isAvailable(String arenaname, int size) {
+        return BWManager.getInstance().getArena(arenaname).hasSpaceforPlayer();
     }
 
     @Override
-    public void allocateSpace(String arenaname) {
+    public void allocateSpace(String arenaname, int size) {
         BWManager.getInstance().getArena(arenaname).incrementAllotedPlayers();
     }
 
@@ -107,6 +120,13 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     @Override
     public List<String> loadArenas() {
         List<String> schematics = mainconfig.getConfig().getStringList("schematics");
+
+        if(schematics == null) 
+            return new ArrayList<>();
+
+        if(schematics.isEmpty()) 
+            return new ArrayList<>();
+
         Schematic lobby = Schematic.read(getResource("LobbyBW.schematic"));
         boolean reload = false;
         // deleting unacessary worlds
@@ -151,9 +171,32 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             else {
                 System.out.println("[Arena] Pasting map for "+arena);
                 prepareWorld(world);
-                schematic.paste(new Location(world, 300, 100, 300));
-                BWManager.getInstance().addGame(arena, new Arena(arena, 12));
-                // load chests etc...
+                schematic.paste(new Location(world, 250, 100, 250));
+
+                FileConfiguration config = mainconfig.getConfig();
+                HashSet<Island> islands =new HashSet<>();
+                HashSet<Location> diamond = new HashSet<>(),emerald =new HashSet<>();
+                AtomicReference<Location> lobbyloc = new AtomicReference<>();
+
+                String finalArena = arena;
+                mainconfig.loopThroughSectionKeys(arena, (visland) -> {
+
+                    if(visland.equalsIgnoreCase("islands"))
+                        mainconfig.loopThroughSectionKeys(finalArena +".islands."+visland, (island)->{
+                            lobbyloc.set(mainconfig.getLocation(finalArena + ".islands." + island + ".lobby"));
+                             islands.add(new Island(island, mainconfig.getLocation(finalArena +".islands."+island+".npc") , mainconfig.getLocation(finalArena +".islands."+island+".bed"), mainconfig.getLocation(finalArena +".islands."+island+".generator")));
+                        });
+                    else if(visland.equalsIgnoreCase("diamond"))
+                        mainconfig.loopThroughSectionKeys(finalArena +".diamond", (string)->diamond.add(mainconfig.getLocation(finalArena +".diamond")));
+                    else if(visland.equalsIgnoreCase("emerald"))
+                        mainconfig.loopThroughSectionKeys(finalArena +".emerald", (string)->emerald.add(mainconfig.getLocation(finalArena +".emerald")));
+
+                });
+                for(Island island : islands) { // debug arenas
+                    island.report(arena);
+                }
+                BWManager.getInstance().addGame(arena, new Arena(arena, 12, Arena.SOLO, lobbyloc.get(), islands, diamond,emerald));
+                
             }
         }
 
@@ -168,7 +211,13 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     @Override
     public void write(MySQL mysql, UUID uuid) { }
 
+
+
     private boolean loadConfig() {
+        
+        if(!getDataFolder().exists())
+            getDataFolder().mkdirs();
+
         mainconfig = new YamlFile("config.yml");
         return mainconfig.loadResource(this);
     }
@@ -214,5 +263,13 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             player.sendMessage("failed to update scoreboard please report this to the administrator.");
         }
+    }
+
+    public void giveItem(Player player, int slot, FixedItems item) {
+        player.getInventory().setItem(slot, item.getBuild(messagehandler, playermanager.getPlayerBase(player).getPreferences().getLang()));
+    }
+
+    public boolean isMaintenance() {
+        return maintenance;
     }
 }

@@ -1,13 +1,18 @@
 package br.com.logicmc.bedwars.game.engine;
 
+import br.com.logicmc.bedwars.BWMain;
+import br.com.logicmc.bedwars.extra.BWMessages;
+import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.addons.TimeScheduler;
 import br.com.logicmc.bedwars.game.phase.WaitingPhase;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import br.com.logicmc.core.system.server.ServerState;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Color;
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
@@ -19,27 +24,71 @@ public class Arena {
 
 
     public static final int WAITING = 0,INGAME=1,END=2;
+    public static final int DUO = 2, SOLO  = 1, QUADRA = 4;
 
     private final String name;
     final int maxplayers;
 
-    private final HashMap<Color, BWTeam> teams = new HashMap<>();
+    private final HashMap<UUID, ChatColor> preteam = new HashMap<>();
 
+    private final int teamcomposition;
     private final HashSet<UUID> players;
+    private final HashSet<Island> islands;
+    private final HashSet<Location> diamond,emerald;
 
+    private Location lobby;
     private BukkitTask task;
     private PhaseControl phaseControl;
     private int gamestate , time,allotedplayers;
 
-    public Arena(String name, int maxplayers) {
+
+
+    public Arena(String name, int maxplayers, int teamcomposition, Location lobby, HashSet<Island> islands, HashSet<Location> diamond, HashSet<Location> emerald) {
         this.name = name;
         this.maxplayers = maxplayers;
+        this.teamcomposition = teamcomposition;
+        this.diamond = diamond;
+        this.emerald = emerald;
+        this.islands = islands;
+        this.lobby = lobby;
 
         players = new HashSet<>();
         time = 0;
         allotedplayers = 0;
         gamestate = WAITING;
         phaseControl = new WaitingPhase();
+    }
+
+    public HashMap<UUID, ChatColor> getPreteam() {
+        return preteam;
+    }
+
+    public HashSet<Island> getIslands() {
+        return islands;
+    }
+
+    public HashSet<Location> getDiamond() {
+        return diamond;
+    }
+
+    public HashSet<Location> getEmerald() {
+        return emerald;
+    }
+
+    public void setTime(int time) {
+        this.time = time;
+    }
+
+    public int getTeamcomposition() {
+        return teamcomposition;
+    }
+
+    public Location getLobby() {
+        return lobby;
+    }
+
+    public void setLobby(Location lobby) {
+        this.lobby = lobby;
     }
 
     public HashSet<UUID> getPlayers() {
@@ -99,5 +148,15 @@ public class Arena {
 
     public String getName() {
         return name;
+    }
+
+    public void updateScoreboardForAll(String team, String suffix) {
+        for(UUID ingameplayers : getPlayers()) {
+            Player ingamePlayer = Bukkit.getPlayer(ingameplayers);
+            updateScoreboardTeam(ingamePlayer, team, suffix);
+        }
+    }
+    public void updateScoreboardTeam(Player player, String team, String suffix) {
+        BWMain.getInstance().updateSuffix(player, team, suffix);
     }
 }
