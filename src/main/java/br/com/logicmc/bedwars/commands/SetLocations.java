@@ -15,16 +15,17 @@ public class SetLocations extends CommandAdapter {
         super(baseplugin);
     }
 
-    @SimpleComamnd(name = "setspawn", permission = Groups.ADMIN)
+    @SimpleComamnd(name = "setlobby", permission = Groups.ADMIN)
     public void setspawn(BWMain plugin, Player player, PlayerBase<?> playerBase, String[] strings){
-        if(strings.length == 0) {
-
-        }
+        plugin.mainconfig.setLocation("spawn", player.getLocation());
+        player.sendMessage("Lobby setado com sucesso");
     }
 
 
     @SimpleComamnd(name = "setarena", permission = Groups.ADMIN)
     public void arenaconfig(BWMain plugin, Player player, PlayerBase<?> playerBase, String[] strings){
-
+        if(strings.length == 0) {
+            
+        }
     }
 }

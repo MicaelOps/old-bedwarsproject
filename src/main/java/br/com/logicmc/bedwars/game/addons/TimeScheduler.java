@@ -15,7 +15,5 @@ public class TimeScheduler implements Runnable{
 
         arena.changeTime();
 
-        int time = arena.getTime(), i = time/60;
-        arena.updateScoreboardForAll("time","§a" + (i < 10 ? "0"+i+":" : i+":") + (time%60 < 10 ? "0"+time%60 :time%60));
     }
 }

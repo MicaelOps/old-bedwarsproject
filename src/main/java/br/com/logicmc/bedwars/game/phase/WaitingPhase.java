@@ -3,8 +3,16 @@ package br.com.logicmc.bedwars.game.phase;
 import br.com.logicmc.bedwars.BWMain;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.PhaseControl;
+
+import java.util.Random;
+import java.util.UUID;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 public class WaitingPhase implements PhaseControl {
 
@@ -16,9 +24,9 @@ public class WaitingPhase implements PhaseControl {
 
         if(time != 0 ) {
             if(time > 59 && time%60 == 0)
-                Bukkit.broadcastMessage(ChatColor.YELLOW + "O jogo comeca em "+time/60+" minuto(s)");
+                arena.broadcastMessage(ChatColor.YELLOW + "O jogo comeca em "+time/60+" minuto(s)");
             else if(time < 6)
-                Bukkit.broadcastMessage(ChatColor.YELLOW + "O jogo comeca em "+time+" segundo(s)");
+                arena.broadcastMessage(ChatColor.YELLOW + "O jogo comeca em "+time+" segundo(s)");
         } else {
             int size = arena.getPlayers().size();
             if(size == 0)
@@ -33,11 +41,17 @@ public class WaitingPhase implements PhaseControl {
                 time = 60;
 
         }
+        
+        int i = time/60;
+        arena.updateScoreboardForAll("time", "§a" + (i < 10 ? "0"+i+":" : i+":") + (time%60 < 10 ? "0"+time%60 :time%60));
+        arena.setTime(time);
         return time;
     }
 
     @Override
-    public void init(Arena arena) { }
+    public void init(Arena arena) {
+        arena.setTime(500);
+     }
 
     @Override
     public void stop(Arena arena) {
@@ -54,4 +68,32 @@ public class WaitingPhase implements PhaseControl {
         return new IngamePhase();
     }
 
+ 
+    private void createTeam(Scoreboard scoreboard, String name, String prefix, String suffix, String entry) {
+        Team team = scoreboard.registerNewTeam(name);
+        team.setPrefix(prefix);
+        team.setSuffix(suffix);
+        team.addEntry(entry);
+    }
+
+    @Override
+    public Scoreboard buildScoreboard() {
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+        Objective objective = scoreboard.registerNewObjective("waiting"+new Random().nextInt(10000),"dummy");
+
+        objective.setDisplayName("§b§lBEDWARS");
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+
+        objective.getScore("§5").setScore(5);
+		objective.getScore("§4").setScore(4);
+		objective.getScore("§3").setScore(3);
+		objective.getScore("§2").setScore(2);
+		objective.getScore("§1").setScore(1);
+		objective.getScore("§0").setScore(0);
+
+		createTeam(scoreboard, "time", "§fTempo: ","§a00:00","§4");
+		createTeam(scoreboard, "players", "§fOnline: ","§a-1","§2");
+		createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");
+         return scoreboard;
+    }
 }

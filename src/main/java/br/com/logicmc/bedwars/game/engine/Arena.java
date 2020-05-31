@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ public class Arena {
     private BukkitTask task;
     private PhaseControl phaseControl;
     private int gamestate , time,allotedplayers;
+    private Scoreboard scoreboard;
 
 
 
@@ -50,10 +52,11 @@ public class Arena {
         this.lobby = lobby;
 
         players = new HashSet<>();
-        time = 0;
+        time = 500;
         allotedplayers = 0;
         gamestate = WAITING;
         phaseControl = new WaitingPhase();
+        scoreboard = phaseControl.buildScoreboard();
     }
 
     public HashMap<UUID, ChatColor> getPreteam() {
@@ -91,6 +94,9 @@ public class Arena {
     public HashSet<UUID> getPlayers() {
         return players;
     }
+    public Scoreboard getScoreboard() {
+        return scoreboard;
+    }
 
     public int getGamestate() {
         return gamestate;
@@ -103,11 +109,19 @@ public class Arena {
     public boolean endOfPhase(){
         return phaseControl.end(this);
     }
+    public BukkitTask getTask() {
+        return task;
+    }
 
     public void changePhase() {
         phaseControl.stop(this);
         phaseControl = phaseControl.next();
         phaseControl.init(this);
+        scoreboard = phaseControl.buildScoreboard();
+        for(UUID ingameplayers : getPlayers()) {
+            Player ingamePlayer = Bukkit.getPlayer(ingameplayers);
+            ingamePlayer.setScoreboard(scoreboard);
+        }
     }
     public void changeTime() {
         time = phaseControl.onTimerCall(this);
@@ -118,7 +132,7 @@ public class Arena {
     }
 
     public boolean hasSpaceforPlayer() {
-        return getPlayers().size() == allotedplayers;
+        return allotedplayers < maxplayers;
     }
     /***
      * Checks if arena state and returns it according to the ServerState class
@@ -147,6 +161,11 @@ public class Arena {
         return name;
     }
 
+    public void broadcastMessage(String text) {
+        for(UUID ingameplayers : getPlayers()) {
+            Bukkit.getPlayer(ingameplayers).sendMessage(text);
+        }
+    }
     public void updateScoreboardForAll(String team, String suffix) {
         for(UUID ingameplayers : getPlayers()) {
             Player ingamePlayer = Bukkit.getPlayer(ingameplayers);
@@ -154,6 +173,6 @@ public class Arena {
         }
     }
     public void updateScoreboardTeam(Player player, String team, String suffix) {
-        BWMain.getInstance().updateSuffix(player, team, suffix);
+        BWMain.getInstance().updateSuffix(player, scoreboard, team, suffix);
     }
 }

@@ -1,5 +1,6 @@
 package br.com.logicmc.bedwars.game.engine;
 
+
 public interface PhaseControl {
 
     int onTimerCall(Arena arena);
@@ -9,6 +10,8 @@ public interface PhaseControl {
     void stop(Arena arena);
 
     boolean end(Arena arena);
+
+    org.bukkit.scoreboard.Scoreboard buildScoreboard();
 
 
     PhaseControl next();

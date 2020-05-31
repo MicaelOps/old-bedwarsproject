@@ -1,25 +1,24 @@
 package br.com.logicmc.bedwars.game.phase;
 
-import br.com.logicmc.bedwars.BWMain;
+import java.util.HashSet;
+import java.util.Random;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
+
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.engine.PhaseControl;
-import br.com.logicmc.bedwars.game.engine.generator.IGenerator;
 import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
-import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.core.addons.hologram.Hologram;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-
-import java.util.HashSet;
-import java.util.UUID;
 
 public class IngamePhase implements PhaseControl {
-
 
     private final HashSet<NormalGenerator> generators;
     private int islandgenerators;
@@ -32,24 +31,25 @@ public class IngamePhase implements PhaseControl {
     @Override
     public int onTimerCall(Arena arena) {
 
-        arena.setTime(arena.getTime()+1);
+        arena.setTime(arena.getTime() + 1);
         int time = arena.getTime();
 
-        if(islandgenerators == time) {
-            for(Island island : arena.getIslands()){
+        if (islandgenerators == time) {
+            for (Island island : arena.getIslands()) {
                 island.getGenerator().getWorld().dropItem(island.getGenerator(), new ItemStack(Material.IRON_INGOT));
             }
-            islandgenerators = arena.getTime()+5;
+            islandgenerators = arena.getTime() + 5;
         }
 
-        int i = time/60;
-        for(NormalGenerator generator : generators) {
-            if(generator.reset(time)){
+        int i = time / 60;
+        for (NormalGenerator generator : generators) {
+            if (generator.reset(time)) {
                 generator.spawn();
                 generator.setNewReset();
                 Hologram hologram = generator.getHologram();
-                if(hologram != null)
-                    hologram.editText("§c" + (i < 10 ? "0"+i+":" : i+":") + (time%60 < 10 ? "0"+time%60 :time%60));
+                if (hologram != null)
+                    hologram.editText(
+                            "§c" + (i < 10 ? "0" + i + ":" : i + ":") + (time % 60 < 10 ? "0" + time % 60 : time % 60));
             }
         }
         return time;
@@ -57,18 +57,17 @@ public class IngamePhase implements PhaseControl {
 
     @Override
     public void init(Arena arena) {
-        islandgenerators = arena.getTime()+5;
+        arena.setTime(1);
+        islandgenerators = arena.getTime() + 5;
 
-
-        for(Location diamond : arena.getDiamond()){
-            generators.add(new NormalGenerator(diamond, Material.DIAMOND, new Hologram(diamond.add(0.0D, 1.6D,0.0D), "10:00"), 80));
+        for (Location diamond : arena.getDiamond()) {
+            generators.add(new NormalGenerator(diamond, Material.DIAMOND,
+                    new Hologram(diamond.add(0.0D, 1.6D, 0.0D), "10:00"), 80));
         }
-        for(Location emerald : arena.getEmerald()){
-            generators.add(new NormalGenerator(emerald, Material.EMERALD, new Hologram(emerald.add(0.0D, 1.6D,0.0D), "10:00"), 90));
+        for (Location emerald : arena.getEmerald()) {
+            generators.add(new NormalGenerator(emerald, Material.EMERALD,
+                    new Hologram(emerald.add(0.0D, 1.6D, 0.0D), "10:00"), 90));
         }
-
-        int comp = arena.getTeamcomposition();
-        ChatColor[] teams  = {ChatColor.RED,ChatColor.BLUE, ChatColor.GREEN, ChatColor.BLACK, ChatColor.GRAY, ChatColor.WHITE};
 
 
     }
@@ -88,6 +87,35 @@ public class IngamePhase implements PhaseControl {
         return new EndPhase();
     }
 
+    @Override
+    public Scoreboard buildScoreboard() {
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+        Objective objective = scoreboard.registerNewObjective("ingame"+new Random().nextInt(10000),"dummy");
 
+        objective.setDisplayName("§b§lBEDWARS");
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
+        objective.getScore("§8").setScore(8);
+        objective.getScore("§7").setScore(7);
+		objective.getScore("§6").setScore(6);
+        objective.getScore("§5").setScore(5);
+		objective.getScore("§4").setScore(4);
+		objective.getScore("§3").setScore(3);
+		objective.getScore("§2").setScore(2);
+		objective.getScore("§1").setScore(1);
+		objective.getScore("§0").setScore(0);
+
+        createTeam(scoreboard, "time", "§fMelhoria: ","§a00:00","§7");
+        createTeam(scoreboard, "kills", "§fMatou: ","§a3","§5");
+        createTeam(scoreboard, "beds", "§fMorreu: ","§a3","§4");
+		createTeam(scoreboard, "teams", "§fEquipas: ","§a3","§2");
+		createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");
+        return scoreboard;
+    }
+    private void createTeam(Scoreboard scoreboard, String name, String prefix, String suffix, String entry) {
+        Team team = scoreboard.registerNewTeam(name);
+        team.setPrefix(prefix);
+        team.setSuffix(suffix);
+        team.addEntry(entry);
+    }
 }

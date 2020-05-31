@@ -6,11 +6,11 @@ import br.com.logicmc.bedwars.extra.Schematic;
 import br.com.logicmc.bedwars.extra.StaffArena;
 import br.com.logicmc.bedwars.extra.YamlFile;
 import br.com.logicmc.bedwars.game.BWManager;
-import br.com.logicmc.bedwars.game.addons.VoidWorld;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
-
+import br.com.logicmc.bedwars.listeners.PhaseListener;
+import br.com.logicmc.bedwars.listeners.PlayerListeners;
 import br.com.logicmc.core.system.command.CommandLoader;
 import br.com.logicmc.core.system.minigame.ArenaInfoPacket;
 import br.com.logicmc.core.system.minigame.MinigamePlugin;
@@ -43,7 +43,7 @@ import java.util.function.Consumer;
 public class BWMain extends MinigamePlugin<BWPlayer> {
 
     private static BWMain instance;
-    private YamlFile mainconfig;
+    public YamlFile mainconfig;
     private boolean maintenance;
     private Location spawnlocation;
 
@@ -57,15 +57,11 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
-
-
         spawnlocation = mainconfig.getLocation("spawn");
         maintenance = mainconfig.getConfig().getBoolean("maintenance");
 
-        BWManager.getInstance().addGame("staff", new StaffArena());
         if(spawnlocation == null)
             System.out.println("[Arena] Lobby location is null");
-
 
         for(Arena arena : BWManager.getInstance().getArenas()) {
             arena.startTimer(this);
@@ -73,8 +69,13 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         
         super.onEnable();
 
+
+        Bukkit.getPluginManager().registerEvents(new PlayerListeners(), this);
+        Bukkit.getPluginManager().registerEvents(new PhaseListener(), this);
+
         messagehandler.loadMessage(BWMessages.PLAYER_LEAVE_INGAME, this);
-        CommandLoader.loadPackage(this, "br.com.logicmc.bedwars.commands");
+        CommandLoader.loadPackage(this, BWMain.class, "br.com.logicmc.bedwars.commands");
+        BWManager.getInstance().addGame("staff", new StaffArena());
     }
 
     public static BWMain getInstance() {
@@ -134,6 +135,8 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         // deleting unacessary worlds
         for(World world : Bukkit.getWorlds()) {
             boolean exist  = false;
+            if(world.getName().equalsIgnoreCase("world"))
+                continue;
             for(String arena : schematics) {
                 if(world.getName().equalsIgnoreCase(arena.replace(".schematic",""))) {
                     exist = true;
@@ -160,7 +163,11 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             World world = Bukkit.getWorld(arena);
 
             if(world == null) {
-                world = Bukkit.createWorld(new VoidWorld(arena));
+                WorldCreator wc = new WorldCreator(arena);
+                wc.type(WorldType.FLAT);
+                wc.generatorSettings("2;0;1;"); 
+                wc.createWorld();
+                world = Bukkit.createWorld(wc);
                 System.out.println("[Arena] Pasting lobby for "+arena);
                 lobby.paste(new Location(world, 0, 100, 0));
             }
@@ -178,13 +185,13 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 HashSet<Island> islands =new HashSet<>();
                 HashSet<Location> diamond = new HashSet<>(),emerald =new HashSet<>();
                 AtomicReference<Location> lobbyloc = new AtomicReference<>();
-
+                spawnlocation.setWorld(world);
+                lobbyloc.set(spawnlocation);
                 String finalArena = arena;
                 mainconfig.loopThroughSectionKeys(arena, (visland) -> {
 
                     if(visland.equalsIgnoreCase("islands"))
-                        mainconfig.loopThroughSectionKeys(finalArena +".islands."+visland, (island)->{
-                            lobbyloc.set(mainconfig.getLocation(finalArena + ".islands." + island + ".lobby"));
+                        mainconfig.loopThroughSectionKeys(finalArena +".islands."+visland, (island)->{       
                              islands.add(new Island(island, mainconfig.getLocation(finalArena +".islands."+island+".npc") , mainconfig.getLocation(finalArena +".islands."+island+".bed"), mainconfig.getLocation(finalArena +".islands."+island+".generator")));
                         });
                     else if(visland.equalsIgnoreCase("diamond"))
@@ -197,6 +204,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                     island.report(arena);
                 }
                 BWManager.getInstance().addGame(arena, new Arena(arena, 12, Arena.SOLO, lobbyloc.get(), islands, diamond,emerald));
+                BWManager.getInstance().getArena(arena).startTimer(this);
                 
             }
         }
@@ -236,25 +244,8 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         world.setGameRuleValue("doDaylightCycle", "false");
     }
 
-    private void buildScoreboard() {
-        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
-        scoreboard.getObjectives().forEach(Objective::unregister);
-        scoreboard.getTeams().forEach(Team::unregister);
-        Objective objective = scoreboard.registerNewObjective("skywars","dummy");
-
-        objective.setDisplayName("§b§lBEDWARS");
-        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-
-        // to be made
-    }
-    private void createTeam(Scoreboard scoreboard, String name, String prefix, String suffix, String entry) {
-        Team team = scoreboard.registerNewTeam(name);
-        team.setPrefix(prefix);
-        team.setSuffix(suffix);
-        team.addEntry(entry);
-    }
-    public void updateSuffix(Player player, String team, String suffix) {
-        net.minecraft.server.v1_8_R3.Scoreboard scoreboard = ((CraftScoreboard)Bukkit.getScoreboardManager().getMainScoreboard()).getHandle();
+    public void updateSuffix(Player player, Scoreboard sc, String team, String suffix) {
+        net.minecraft.server.v1_8_R3.Scoreboard scoreboard = ((CraftScoreboard)sc).getHandle();
         PacketPlayOutScoreboardTeam updatepacket = new PacketPlayOutScoreboardTeam(scoreboard.getTeam(team), 2);
         try {
             Field field = updatepacket.getClass().getDeclaredField("d");

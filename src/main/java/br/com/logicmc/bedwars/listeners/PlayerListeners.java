@@ -35,11 +35,14 @@ public class PlayerListeners implements Listener {
     public void onplayerjoinarena(PlayerJoinArenaEvent event) {
         Player player = event.getPlayer();
 
-        String mapname = "doces"; // test purposes
 
         plugin.utils.cleanPlayer(player);
         plugin.utils.clearChat(player);
 
+        Arena arena = BWManager.getInstance().getArena(event.getArenaname());
+        arena.getPlayers().add(player.getUniqueId());
+        
+        player.setScoreboard(arena.getScoreboard());
         if(event.getArenaname().equalsIgnoreCase("staff")) {
             player.setGameMode(GameMode.CREATIVE);
             player.setAllowFlight(true);
@@ -47,26 +50,25 @@ public class PlayerListeners implements Listener {
             plugin.giveItem(player, 0, FixedItems.STAFF_ARENA_SPECTATE);
         } else {
             for(Player other : Bukkit.getOnlinePlayers()) {
-                if(!mapname.equalsIgnoreCase(BWManager.getInstance().getBWPlayer(other.getUniqueId()).getMapname())) {
+                if(!event.getArenaname().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(other.getUniqueId()).getMapname())) {
                     player.hidePlayer(other);
                 }
             }
-            Arena arena = BWManager.getInstance().getArena(mapname);
             arena.getPlayers().forEach((inuuid) ->plugin.messagehandler.sendMessage(Bukkit.getPlayer(inuuid), BWMessages.NEWPLAYER));
-            BWManager.getInstance().getArena(mapname).updateScoreboardForAll("players" , ChatColor.GRAY+""+arena.getPlayers().size());
+            BWManager.getInstance().getArena(event.getArenaname()).updateScoreboardForAll("players" , ChatColor.GRAY+""+arena.getPlayers().size());
 
             player.teleport(arena.getLobby());
             plugin.giveItem(player, 0, FixedItems.ONLY_VIP_CHOOSETEAM);
         }
-
+        
+        
     }
     @EventHandler
     public void onquitplayer(PlayerQuitEvent event) {
-        UUID uuid = event.getPlayer().getUniqueId();
-        Arena arena = BWManager.getInstance().getArenabyUUID(uuid);
+        Arena arena = BWManager.getInstance().getArena(event.getPlayer().getWorld().getName());
         event.setQuitMessage(null);
 
-        arena.getPlayers().remove(uuid);
+        arena.getPlayers().remove(event.getPlayer().getUniqueId());
 
         if(arena.getName().equalsIgnoreCase("staff"))
             return;

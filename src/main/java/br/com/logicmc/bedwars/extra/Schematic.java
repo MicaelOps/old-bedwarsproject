@@ -84,15 +84,14 @@ public class Schematic{
 
     @Deprecated
     public void paste(Location location) {
-        World world = Bukkit.getWorld("world");
         for(int x = 0; x < width; ++x){
             for(int y = 0; y < height; ++y){
                 for(int z = 0; z < length; ++z){
                     int index = y * width * length + z * width + x;
                     Material material = Material.getMaterial(blocks[index]);
-                    Location pastelocation = new Location(world, x,y,z).add(location);
-                    Block block = world.getBlockAt(pastelocation);
-                    if(block.getType() != material && block.getData() != data[index]) {
+                    Location pastelocation = new Location(location.getWorld(), x,y,z).add(location);
+                    Block block = location.getWorld().getBlockAt(pastelocation);
+                    if(block.getType() != material) {
                         block.setType(material);
                         block.setData(data[index]);
                     }
