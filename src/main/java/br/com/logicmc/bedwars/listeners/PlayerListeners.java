@@ -34,7 +34,7 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onplayerjoinarena(PlayerJoinArenaEvent event) {
         Player player = event.getPlayer();
-
+        plugin.playermanager.getPlayerBase(player).getData().setMap(event.getArenaname());
 
         plugin.utils.cleanPlayer(player);
         plugin.utils.clearChat(player);
@@ -43,6 +43,7 @@ public class PlayerListeners implements Listener {
         arena.getPlayers().add(player.getUniqueId());
         
         player.setScoreboard(arena.getScoreboard());
+
         if(event.getArenaname().equalsIgnoreCase("staff")) {
             player.setGameMode(GameMode.CREATIVE);
             player.setAllowFlight(true);
@@ -68,14 +69,14 @@ public class PlayerListeners implements Listener {
         Arena arena = BWManager.getInstance().getArena(event.getPlayer().getWorld().getName());
         event.setQuitMessage(null);
 
-        arena.getPlayers().remove(event.getPlayer().getUniqueId());
+
 
         if(arena.getName().equalsIgnoreCase("staff"))
             return;
 
         if(arena.getGamestate() == Arena.WAITING) {
+            arena.getPlayers().remove(event.getPlayer().getUniqueId());
             arena.decrementAllotedPlayers();
-        } else {
             for(UUID ingameplayers : arena.getPlayers()) {
 
                 Player ingamePlayer = Bukkit.getPlayer(ingameplayers);

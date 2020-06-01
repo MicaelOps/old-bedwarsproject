@@ -27,6 +27,9 @@ public class BWPlayer extends Parceable<BWPlayer> {
         return arena;
     }
 
+    public void setMap(String arena) {
+        this.arena = arena;
+    }
     public ChatColor getTeamcolor() {
         return teamcolor;
     }
