@@ -14,13 +14,18 @@ public class Island {
     private Location npc,bed,generator;
 
 
-    public Island(String name, Location npc, Location bed, Location generator) {
+    public Island(String name, String color ,Location npc, Location bed, Location generator) {
         this.name = name;
         this.npc = npc;
         this.bed = bed;
         this.generator = generator;
+        this.teamid = Color.GREEN;
 
         generatorlevel = 1;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Color getTeamid() {

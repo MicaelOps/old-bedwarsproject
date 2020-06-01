@@ -5,6 +5,7 @@ author: icarus
 depend:
   - corezao
 commands:
+  setisland:
   setlobby:
   setarena:
   ping:

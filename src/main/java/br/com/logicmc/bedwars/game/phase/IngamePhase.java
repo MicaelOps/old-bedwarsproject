@@ -6,6 +6,8 @@ import java.util.Random;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -41,16 +43,18 @@ public class IngamePhase implements PhaseControl {
             islandgenerators = arena.getTime() + 5;
         }
 
-        int i = time / 60;
         for (NormalGenerator generator : generators) {
             if (generator.reset(time)) {
                 generator.spawn();
                 generator.setNewReset();
-                Hologram hologram = generator.getHologram();
-                if (hologram != null)
-                    hologram.editText(
-                            "§c" + (i < 10 ? "0" + i + ":" : i + ":") + (time % 60 < 10 ? "0" + time % 60 : time % 60));
             }
+            Hologram hologram = generator.getHologram();
+
+            int remainingtime = generator.getTime() - time;
+            int i = remainingtime / 60;
+            if (hologram != null)
+                hologram.editText(
+                        "§c" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
         }
         return time;
     }
@@ -61,10 +65,12 @@ public class IngamePhase implements PhaseControl {
         islandgenerators = arena.getTime() + 5;
 
         for (Location diamond : arena.getDiamond()) {
+            createArmostand(diamond.add(0.0D, 2.0D, 0.0D), Material.DIAMOND_BLOCK);
             generators.add(new NormalGenerator(diamond, Material.DIAMOND,
                     new Hologram(diamond.add(0.0D, 1.6D, 0.0D), "10:00"), 80));
         }
         for (Location emerald : arena.getEmerald()) {
+            createArmostand(emerald.add(0.0D, 2.0D, 0.0D), Material.EMERALD_BLOCK);
             generators.add(new NormalGenerator(emerald, Material.EMERALD,
                     new Hologram(emerald.add(0.0D, 1.6D, 0.0D), "10:00"), 90));
         }
@@ -117,5 +123,15 @@ public class IngamePhase implements PhaseControl {
         team.setPrefix(prefix);
         team.setSuffix(suffix);
         team.addEntry(entry);
+    }
+
+    private void createArmostand(Location location, Material material){
+        ArmorStand armorStand = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
+        armorStand.setHelmet(new ItemStack(material));
+        armorStand.setVisible(false);
+        armorStand.setGravity(false);
+        armorStand.setMarker(true);
+        armorStand.setSmall(false);
+        armorStand.setCustomNameVisible(false);
     }
 }

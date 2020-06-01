@@ -19,6 +19,7 @@ public class NormalGenerator implements IGenerator{
         this.location =location;
 
         time = reset;
+        holograms.create();
     }
 
     @Override
@@ -29,6 +30,10 @@ public class NormalGenerator implements IGenerator{
     @Override
     public boolean reset(int time) {
         return this.time==time;
+    }
+
+    public int getTime() {
+        return time;
     }
 
     @Override

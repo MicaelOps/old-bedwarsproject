@@ -192,12 +192,12 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
                     if(visland.equalsIgnoreCase("islands"))
                         mainconfig.loopThroughSectionKeys(finalArena +".islands."+visland, (island)->{       
-                             islands.add(new Island(island, mainconfig.getLocation(finalArena +".islands."+island+".npc") , mainconfig.getLocation(finalArena +".islands."+island+".bed"), mainconfig.getLocation(finalArena +".islands."+island+".generator")));
+                             islands.add(new Island(island, mainconfig.getConfig().getString(finalArena+".islands."+island+".color"),mainconfig.getLocation(finalArena +".islands."+island+".npc") , mainconfig.getLocation(finalArena +".islands."+island+".bed"), mainconfig.getLocation(finalArena +".islands."+island+".generator")));
                         });
                     else if(visland.equalsIgnoreCase("diamond"))
-                        mainconfig.loopThroughSectionKeys(finalArena +".diamond", (string)->diamond.add(mainconfig.getLocation(finalArena +".diamond")));
+                        mainconfig.loopThroughSectionKeys(finalArena +".diamond", (string)->diamond.add(mainconfig.getLocation(finalArena +".diamond."+string)));
                     else if(visland.equalsIgnoreCase("emerald"))
-                        mainconfig.loopThroughSectionKeys(finalArena +".emerald", (string)->emerald.add(mainconfig.getLocation(finalArena +".emerald")));
+                        mainconfig.loopThroughSectionKeys(finalArena +".emerald", (string)->emerald.add(mainconfig.getLocation(finalArena +".emerald."+string)));
 
                 });
                 for(Island island : islands) { // debug arenas

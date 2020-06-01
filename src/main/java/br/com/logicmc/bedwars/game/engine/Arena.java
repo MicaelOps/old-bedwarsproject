@@ -2,12 +2,15 @@ package br.com.logicmc.bedwars.game.engine;
 
 import br.com.logicmc.bedwars.BWMain;
 
+import br.com.logicmc.bedwars.extra.YamlFile;
 import br.com.logicmc.bedwars.game.addons.TimeScheduler;
 import br.com.logicmc.bedwars.game.phase.WaitingPhase;
 import br.com.logicmc.core.system.server.ServerState;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -15,6 +18,7 @@ import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.UUID;
 
 
@@ -149,6 +153,9 @@ public class Arena {
         allotedplayers++;
     }
 
+    /***
+     * Decrease space for another player
+     */
     public void decrementAllotedPlayers(){ allotedplayers--; }
     /***
      * Starts arena timer
@@ -174,5 +181,27 @@ public class Arena {
     }
     public void updateScoreboardTeam(Player player, String team, String suffix) {
         BWMain.getInstance().updateSuffix(player, scoreboard, team, suffix);
+    }
+
+    /***
+     * Saving arena to config
+     */
+    public void save() {
+        YamlFile file = BWMain.getInstance().mainconfig;
+        cleanSection(file, getName()+".diamond");
+        cleanSection(file, getName()+".emerald");
+        diamond.forEach(diamondd -> {
+            file.setLocation(getName()+".diamond.d"+new Random().nextInt(10000), diamondd);
+        });
+        emerald.forEach(emeraldd -> {
+            file.setLocation(getName()+".emerald.e"+new Random().nextInt(10000), emeraldd);
+        });
+        islands.forEach(island -> island.save(getName(), file));
+    }
+    private void cleanSection(YamlFile config, String path) {
+        ConfigurationSection section = config.getConfig().getConfigurationSection(path);
+        if(section != null) {
+            section.getKeys(false).forEach((string)->config.getConfig().set(path,null)); // deleting old
+        }
     }
 }

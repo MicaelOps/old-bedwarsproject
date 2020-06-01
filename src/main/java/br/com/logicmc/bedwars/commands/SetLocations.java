@@ -2,6 +2,9 @@ package br.com.logicmc.bedwars.commands;
 
 
 import br.com.logicmc.bedwars.BWMain;
+import br.com.logicmc.bedwars.game.BWManager;
+import br.com.logicmc.bedwars.game.engine.Arena;
+import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.core.account.PlayerBase;
 import br.com.logicmc.core.account.addons.Groups;
 import br.com.logicmc.core.system.command.CommandAdapter;
@@ -24,8 +27,86 @@ public class SetLocations extends CommandAdapter {
 
     @SimpleComamnd(name = "setarena", permission = Groups.ADMIN)
     public void arenaconfig(BWMain plugin, Player player, PlayerBase<?> playerBase, String[] strings){
+        if(strings.length == 0)
+            player.sendMessage("use /setarena <diamond/emerald>");
+        else {
+            Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+
+            if( arena == null) {
+                player.sendMessage("Por favor entre no mundo de uma arena para usar este comando.");
+                return;
+            }
+
+            if(strings[0].toLowerCase().equalsIgnoreCase("diamond")) {
+                arena.getDiamond().add(player.getLocation());
+                arena.save();
+                player.sendMessage("Generator diamond adicionado com sucesso");
+            } else if(strings[0].toLowerCase().equalsIgnoreCase("emerald")) {
+                arena.getEmerald().add(player.getLocation());
+                arena.save();
+                player.sendMessage("Generator emerald adicionado com sucesso");
+            }
+        }
+    }
+    @SimpleComamnd(name = "setisland", permission = Groups.ADMIN)
+    public void islandset(BWMain plugin, Player player, PlayerBase<?> playerBase, String[] strings){
         if(strings.length == 0) {
-            
+            player.sendMessage("use /setisland list");
+            player.sendMessage("use /setisland create <name> <color>  (na localizacao da cama)");
+            player.sendMessage("use /setisland <name> <npc/generator/bed>");
+        } else {
+            Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+
+            if( arena == null) {
+                player.sendMessage("Por favor entre no mundo de uma arena para usar este comando.");
+                return;
+            }
+
+            if(strings[0].toLowerCase().equalsIgnoreCase("list")) {
+                for(Island island : arena.getIslands()) {
+                    player.sendMessage(island.getName() + " X:"+island.getBed().getBlockX()+" Y:"+island.getBed().getBlockY()+" z:"+island.getBed().getBlockZ());
+                }
+            } else if(strings.length >= 2){
+                if(strings[1].toLowerCase().equalsIgnoreCase("npc")) {
+                    for(Island island : arena.getIslands()) {
+                        if(island.getName().equalsIgnoreCase(strings[0].toLowerCase())){
+                            island.setNpc(player.getLocation());
+                            island.save(arena.getName(), BWMain.getInstance().mainconfig);
+                            player.sendMessage("Ilha salva com sucesso;");
+                        }
+                    }
+                } else if(strings[1].toLowerCase().equalsIgnoreCase("generator")) {
+                    for(Island island : arena.getIslands()) {
+                        if(island.getName().equalsIgnoreCase(strings[0].toLowerCase())){
+                            island.setGenerator(player.getLocation());
+                            island.save(arena.getName(), BWMain.getInstance().mainconfig);
+                            player.sendMessage("Ilha salva com sucesso;");
+                        }
+                    }
+                } else if(strings[1].toLowerCase().equalsIgnoreCase("bed")) {
+                    for(Island island : arena.getIslands()) {
+                        if(island.getName().equalsIgnoreCase(strings[0].toLowerCase())){
+                            island.setBed(player.getLocation());
+                            island.save(arena.getName(), BWMain.getInstance().mainconfig);
+                            player.sendMessage("Ilha salva com sucesso;");
+                        }
+                    }
+                } else if(strings[0].toLowerCase().equalsIgnoreCase("create")) {
+                    boolean exist = false;
+                    for(Island island : arena.getIslands()) {
+                        if(island.getName().equalsIgnoreCase(strings[1].toLowerCase())){
+                            player.sendMessage("Ilha ja e existente;");
+                            exist = true;
+                        }
+                    }
+                    if(!exist){
+                        Island island = new Island(strings[1].toLowerCase(), strings[2].toLowerCase(), null, player.getLocation(), null);
+                        island.save(arena.getName(), BWMain.getInstance().mainconfig);
+                        arena.getIslands().add(island);
+                        player.sendMessage("Ilha criada com sucesso");
+                    }
+                }
+            }
         }
     }
 }
