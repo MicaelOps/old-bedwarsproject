@@ -5,6 +5,7 @@ author: icarus
 depend:
   - corezao
 commands:
+  tempo:
   setisland:
   setlobby:
   setarena:

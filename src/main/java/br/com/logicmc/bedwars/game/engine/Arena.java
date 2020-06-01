@@ -4,6 +4,8 @@ import br.com.logicmc.bedwars.BWMain;
 
 import br.com.logicmc.bedwars.extra.YamlFile;
 import br.com.logicmc.bedwars.game.addons.TimeScheduler;
+import br.com.logicmc.bedwars.game.phase.EndPhase;
+import br.com.logicmc.bedwars.game.phase.IngamePhase;
 import br.com.logicmc.bedwars.game.phase.WaitingPhase;
 import br.com.logicmc.core.system.server.ServerState;
 import org.bukkit.Bukkit;
@@ -42,7 +44,7 @@ public class Arena {
     private BukkitTask task;
     private PhaseControl phaseControl;
     private int gamestate , time,allotedplayers;
-    private Scoreboard scoreboard;
+    private Scoreboard scoreboard,ingame,end;
 
 
 
@@ -60,7 +62,10 @@ public class Arena {
         allotedplayers = 0;
         gamestate = WAITING;
         phaseControl = new WaitingPhase();
+
         scoreboard = phaseControl.buildScoreboard();
+        ingame = new IngamePhase().buildScoreboard();
+        end = new EndPhase().buildScoreboard();
     }
 
     public HashMap<UUID, ChatColor> getPreteam() {
@@ -121,7 +126,10 @@ public class Arena {
         phaseControl.stop(this);
         phaseControl = phaseControl.next();
         phaseControl.init(this);
-        scoreboard = phaseControl.buildScoreboard();
+        if(gamestate == INGAME)
+            scoreboard = ingame;
+        else
+            scoreboard = end;
         for(UUID ingameplayers : getPlayers()) {
             Player ingamePlayer = Bukkit.getPlayer(ingameplayers);
             ingamePlayer.setScoreboard(scoreboard);

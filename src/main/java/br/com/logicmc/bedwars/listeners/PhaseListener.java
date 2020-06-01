@@ -4,6 +4,7 @@ import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import org.bukkit.Location;
 import org.bukkit.entity.Creature;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -40,7 +41,7 @@ public class PhaseListener implements Listener {
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(EntitySpawnEvent event) {
-        event.setCancelled(!(event.getEntity() instanceof Item));
+        event.setCancelled(check(event.getLocation()) || !(event.getEntityType()== EntityType.DROPPED_ITEM || event.getEntityType() == EntityType.ARMOR_STAND));
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
@@ -59,7 +60,7 @@ public class PhaseListener implements Listener {
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(CreatureSpawnEvent event) {
-        event.setCancelled(event.getSpawnReason() == CreatureSpawnEvent.SpawnReason.CUSTOM);
+        event.setCancelled(check(event.getLocation()) || !(event.getEntityType()== EntityType.DROPPED_ITEM || event.getEntityType() == EntityType.ARMOR_STAND));
     }
     private boolean check(Location location) {
         return BWManager.getInstance().getArena(location.getWorld().getName()).getGamestate() == Arena.WAITING;

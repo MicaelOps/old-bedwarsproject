@@ -18,6 +18,40 @@ public class SetLocations extends CommandAdapter {
         super(baseplugin);
     }
 
+    
+    @SimpleComamnd(name = "tempo", permission = Groups.YOUTUBERPLUS)
+    public void settempo(BWMain plugin, Player player, PlayerBase<?> playerBase, String[] strings){
+
+        if(strings.length == 0) {
+            player.sendMessage("Use /tempo <tempo");
+        } else {
+            Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+
+            if( arena == null) {
+                player.sendMessage("Por favor entre no mundo de uma arena para usar este comando.");
+                return;
+            }
+            if(arena.getGamestate() == Arena.WAITING) {
+                try{
+                    int i = Integer.parseInt(strings[0]);
+                    if(i == 0)
+                        i = 3;
+                    else if( i > 800)
+                        i = 500;
+                    
+                    arena.setTime(i);
+                    player.sendMessage("tempo setado com sucesso");
+                } catch (Exception e) {
+                    player.sendMessage("Erro ao carregar comando");
+                }
+                
+            }
+        }
+
+    }
+
+
+
     @SimpleComamnd(name = "setlobby", permission = Groups.ADMIN)
     public void setspawn(BWMain plugin, Player player, PlayerBase<?> playerBase, String[] strings){
         plugin.mainconfig.setLocation("spawn", player.getLocation());

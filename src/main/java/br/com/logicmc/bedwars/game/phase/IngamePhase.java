@@ -6,6 +6,7 @@ import java.util.Random;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
@@ -62,14 +63,19 @@ public class IngamePhase implements PhaseControl {
     @Override
     public void init(Arena arena) {
         arena.setTime(1);
+        arena.setGamestate(Arena.INGAME);
         islandgenerators = arena.getTime() + 5;
+        World world = Bukkit.getWorld(arena.getName());
 
         for (Location diamond : arena.getDiamond()) {
+
+            diamond.setWorld(world);
             createArmostand(diamond.add(0.0D, 2.0D, 0.0D), Material.DIAMOND_BLOCK);
             generators.add(new NormalGenerator(diamond, Material.DIAMOND,
                     new Hologram(diamond.add(0.0D, 1.6D, 0.0D), "10:00"), 80));
         }
         for (Location emerald : arena.getEmerald()) {
+            emerald.setWorld(world);
             createArmostand(emerald.add(0.0D, 2.0D, 0.0D), Material.EMERALD_BLOCK);
             generators.add(new NormalGenerator(emerald, Material.EMERALD,
                     new Hologram(emerald.add(0.0D, 1.6D, 0.0D), "10:00"), 90));
@@ -112,8 +118,8 @@ public class IngamePhase implements PhaseControl {
 		objective.getScore("§0").setScore(0);
 
         createTeam(scoreboard, "time", "§fMelhoria: ","§a00:00","§7");
-        createTeam(scoreboard, "kills", "§fMatou: ","§a3","§5");
-        createTeam(scoreboard, "beds", "§fMorreu: ","§a3","§4");
+        createTeam(scoreboard, "kills", "§fMatou: ","§a0","§5");
+        createTeam(scoreboard, "beds", "§fMorreu: ","§a0","§4");
 		createTeam(scoreboard, "teams", "§fEquipas: ","§a3","§2");
 		createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");
         return scoreboard;
