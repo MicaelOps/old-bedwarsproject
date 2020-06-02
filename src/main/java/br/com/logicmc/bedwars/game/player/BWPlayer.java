@@ -12,7 +12,7 @@ public class BWPlayer extends Parceable<BWPlayer> {
   
     private String arena;
 
-    private ChatColor teamcolor;
+    private String teamcolor;
 
     private int kills, beds, deaths, wins, defeats;
 
@@ -21,6 +21,7 @@ public class BWPlayer extends Parceable<BWPlayer> {
         beds=0;
         wins=0;
         defeats=0;
+        teamcolor=null;
     }
 
     public String getMapname() {
@@ -30,11 +31,11 @@ public class BWPlayer extends Parceable<BWPlayer> {
     public void setMap(String arena) {
         this.arena = arena;
     }
-    public ChatColor getTeamcolor() {
+    public String getTeamcolor() {
         return teamcolor;
     }
 
-    public void setTeamcolor(ChatColor teamcolor) {
+    public void setTeamcolor(String teamcolor) {
         this.teamcolor = teamcolor;
     }
 

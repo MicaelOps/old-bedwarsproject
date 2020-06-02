@@ -19,7 +19,6 @@ public class NormalGenerator implements IGenerator{
         this.location =location;
 
         time = reset;
-        holograms.create();
     }
 
     @Override

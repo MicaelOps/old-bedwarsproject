@@ -1,5 +1,6 @@
 package br.com.logicmc.bedwars.listeners;
 
+import br.com.logicmc.bedwars.BWMain;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import org.bukkit.Location;
@@ -55,7 +56,13 @@ public class PhaseListener implements Listener {
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void entitydamage(EntityDamageByEntityEvent event) {
-        event.setCancelled(check(event.getEntity().getLocation()));
+        boolean damage = check(event.getEntity().getLocation());
+        if(!damage) {
+            if(event.getEntity() instanceof Player && event.getDamager() instanceof Player){
+                damage = BWMain.getInstance().playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(BWMain.getInstance().playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
+            }
+        }
+        event.setCancelled(damage);
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)

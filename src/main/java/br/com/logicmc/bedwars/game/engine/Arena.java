@@ -33,18 +33,18 @@ public class Arena {
     private final String name;
     final int maxplayers;
 
-    private final HashMap<UUID, ChatColor> preteam = new HashMap<>();
+    private final HashMap<UUID, String> preteam = new HashMap<>();
 
     private final int teamcomposition;
     private final HashSet<UUID> players;
     private final HashSet<Island> islands;
     private final HashSet<Location> diamond,emerald;
+    private final PhaseControl[] controls = {new WaitingPhase(), new IngamePhase(), new EndPhase()};
 
     private Location lobby;
     private BukkitTask task;
-    private PhaseControl phaseControl;
+    private int phaseControl;
     private int gamestate , time,allotedplayers;
-    private Scoreboard scoreboard,ingame,end;
 
 
 
@@ -61,14 +61,15 @@ public class Arena {
         time = 500;
         allotedplayers = 0;
         gamestate = WAITING;
-        phaseControl = new WaitingPhase();
+        phaseControl = 0;
 
-        scoreboard = phaseControl.buildScoreboard();
-        ingame = new IngamePhase().buildScoreboard();
-        end = new EndPhase().buildScoreboard();
+        for(PhaseControl control : controls) {
+            control.preinit(this);
+        }
+
     }
 
-    public HashMap<UUID, ChatColor> getPreteam() {
+    public HashMap<UUID, String> getPreteam() {
         return preteam;
     }
 
@@ -104,7 +105,7 @@ public class Arena {
         return players;
     }
     public Scoreboard getScoreboard() {
-        return scoreboard;
+        return controls[phaseControl].getScoreboard();
     }
 
     public int getGamestate() {
@@ -115,28 +116,24 @@ public class Arena {
         this.gamestate = gamestate;
     }
 
-    public boolean endOfPhase(){
-        return phaseControl.end(this);
-    }
+
     public BukkitTask getTask() {
         return task;
     }
 
     public void changePhase() {
-        phaseControl.stop(this);
-        phaseControl = phaseControl.next();
-        phaseControl.init(this);
-        if(gamestate == INGAME)
-            scoreboard = ingame;
-        else
-            scoreboard = end;
+        controls[phaseControl].stop(this);
+        phaseControl+=1;
+        controls[phaseControl].next();
+
         for(UUID ingameplayers : getPlayers()) {
             Player ingamePlayer = Bukkit.getPlayer(ingameplayers);
-            ingamePlayer.setScoreboard(scoreboard);
+            ingamePlayer.setScoreboard(controls[phaseControl].getScoreboard());
         }
+        controls[phaseControl].init(this);
     }
     public void changeTime() {
-        time = phaseControl.onTimerCall(this);
+        time = controls[phaseControl].onTimerCall(this);
     }
 
     public int getTime() {
@@ -169,7 +166,7 @@ public class Arena {
      * Starts arena timer
      */
     public void startTimer(JavaPlugin plugin) {
-        task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, new TimeScheduler(this), 0L, 20L);
+        task = Bukkit.getScheduler().runTaskTimer(plugin, new TimeScheduler(this), 0L, 20L);
     }
 
     public String getName() {
@@ -188,7 +185,7 @@ public class Arena {
         }
     }
     public void updateScoreboardTeam(Player player, String team, String suffix) {
-        BWMain.getInstance().updateSuffix(player, scoreboard, team, suffix);
+        BWMain.getInstance().updateSuffix(player, player.getScoreboard(), team, suffix);
     }
 
     /***

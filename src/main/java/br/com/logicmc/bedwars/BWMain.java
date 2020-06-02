@@ -101,6 +101,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     public Consumer<String> getUpdateArenaMethod() {
         return (arena) -> {
             Arena gameEngine = BWManager.getInstance().getArena(arena);
+            System.out.println("arena update " +arena);
             PacketManager.getInstance().sendChannelPacket(this, "lobby", new ArenaInfoPacket(Bukkit.getServerName(), arena, true, gameEngine.getPlayers().size(), gameEngine.getServerState()));
         };
     }
@@ -203,7 +204,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 for(Island island : islands) { // debug arenas
                     island.report(arena);
                 }
-                BWManager.getInstance().addGame(arena, new Arena(arena, 12, Arena.SOLO, lobbyloc.get(), islands, diamond,emerald));
+                BWManager.getInstance().addGame(arena, new Arena(arena, 8, Arena.SOLO, lobbyloc.get(), islands, diamond,emerald));
                 BWManager.getInstance().getArena(arena).startTimer(this);
                 
             }

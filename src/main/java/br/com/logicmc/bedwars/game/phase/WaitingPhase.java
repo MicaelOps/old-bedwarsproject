@@ -5,7 +5,6 @@ import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.PhaseControl;
 
 import java.util.Random;
-import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -15,6 +14,8 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 public class WaitingPhase implements PhaseControl {
+
+    private Scoreboard scoreboard;
 
     @Override
     public int onTimerCall(Arena arena) {
@@ -33,9 +34,10 @@ public class WaitingPhase implements PhaseControl {
                 time = 60;
 
             if(BWMain.getInstance().isMaintenance() ) {
-                if (size > 0)
+                if (size > 0) {
                     arena.changePhase();
-                else
+                    return 0;
+                } else
                     time = 120;
             } else if(size < 4)
                 time = 60;
@@ -69,16 +71,9 @@ public class WaitingPhase implements PhaseControl {
     }
 
  
-    private void createTeam(Scoreboard scoreboard, String name, String prefix, String suffix, String entry) {
-        Team team = scoreboard.registerNewTeam(name);
-        team.setPrefix(prefix);
-        team.setSuffix(suffix);
-        team.addEntry(entry);
-    }
-
     @Override
-    public Scoreboard buildScoreboard() {
-        Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+    public void preinit(Arena arena) {
+        scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         Objective objective = scoreboard.registerNewObjective("waiting"+new Random().nextInt(10000),"dummy");
 
         objective.setDisplayName("§b§lBEDWARS");
@@ -94,6 +89,17 @@ public class WaitingPhase implements PhaseControl {
 		createTeam(scoreboard, "time", "§fTempo: ","§a00:00","§4");
 		createTeam(scoreboard, "players", "§fOnline: ","§a-1","§2");
 		createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");
+    }
+    private void createTeam(Scoreboard scoreboard, String name, String prefix, String suffix, String entry) {
+        Team team = scoreboard.registerNewTeam(name);
+        team.setPrefix(prefix);
+        team.setSuffix(suffix);
+        team.addEntry(entry);
+    }
+
+
+    @Override
+    public Scoreboard getScoreboard() {
          return scoreboard;
     }
 }

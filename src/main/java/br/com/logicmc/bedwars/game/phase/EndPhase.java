@@ -12,6 +12,9 @@ import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.PhaseControl;
 
 public class EndPhase implements PhaseControl {
+
+    private Scoreboard scoreboard;
+    
     @Override
     public int onTimerCall(Arena arena) {
         return 0;
@@ -38,8 +41,19 @@ public class EndPhase implements PhaseControl {
     }
 
     @Override
-    public Scoreboard buildScoreboard() {
-        Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+    public Scoreboard getScoreboard() {
+        return scoreboard;
+    }
+    private void createTeam(Scoreboard scoreboard, String name, String prefix, String suffix, String entry) {
+        Team team = scoreboard.registerNewTeam(name);
+        team.setPrefix(prefix);
+        team.setSuffix(suffix);
+        team.addEntry(entry);
+    }
+
+    @Override
+    public void preinit(Arena arena) {
+        scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         Objective objective = scoreboard.registerNewObjective("end"+new Random().nextInt(10000),"dummy");
 
         objective.setDisplayName("§b§lBEDWARS");
@@ -55,12 +69,5 @@ public class EndPhase implements PhaseControl {
 		createTeam(scoreboard, "time", "§fTempo: ","§a00:00","§4");
 		createTeam(scoreboard, "players", "§fOnline: ","§a-1","§2");
 		createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");
-        return scoreboard;
-    }
-    private void createTeam(Scoreboard scoreboard, String name, String prefix, String suffix, String entry) {
-        Team team = scoreboard.registerNewTeam(name);
-        team.setPrefix(prefix);
-        team.setSuffix(suffix);
-        team.addEntry(entry);
     }
 }
