@@ -169,6 +169,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             World world = Bukkit.getWorld(arena);
 
             if(world == null) {
+                
                 WorldCreator wc = new WorldCreator(arena);
                 wc.type(WorldType.FLAT);
                 wc.generatorSettings("2;0;1;"); 
@@ -194,24 +195,37 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 spawnlocation.setWorld(world);
                 lobbyloc.set(spawnlocation);
                 String finalArena = arena;
+                
                 mainconfig.loopThroughSectionKeys(arena, (visland) -> {
 
                     if(visland.equalsIgnoreCase("islands"))
-                        mainconfig.loopThroughSectionKeys(finalArena +".islands."+visland, (island)->{       
+                        mainconfig.loopThroughSectionKeys(finalArena +".islands", (island)->{       
                              islands.add(new Island(island, BWTeam.valueOf(mainconfig.getConfig().getString(finalArena+".islands."+island+".color")),mainconfig.getLocation(finalArena +".islands."+island+".spawn"),mainconfig.getLocation(finalArena +".islands."+island+".npc") , mainconfig.getLocation(finalArena +".islands."+island+".bed"), mainconfig.getLocation(finalArena +".islands."+island+".generator")));
                         });
                     else if(visland.equalsIgnoreCase("diamond"))
                         mainconfig.loopThroughSectionKeys(finalArena +".diamond", (string)->diamond.add(new NormalGenerator(mainconfig.getLocation(finalArena +".diamond."+string), Material.DIAMOND,
-                                new Hologram(mainconfig.getLocation(finalArena +".diamond."+string).subtract(0.0D, 0.6D, 0.0D), "10:00"), 80)));
+                                null, 80)));
                     else if(visland.equalsIgnoreCase("emerald"))
                         mainconfig.loopThroughSectionKeys(finalArena +".emerald", (string)->emerald.add(new NormalGenerator(mainconfig.getLocation(finalArena +".emerald."+string), Material.EMERALD,
-                                new Hologram(mainconfig.getLocation(finalArena +".emerald."+string).subtract(0.0D, 0.6D, 0.0D), "10:00"), 90)));
+                                null, 90)));
 
                 });
                 for(Island island : islands) { // debug arenas
                     island.report(arena);
+                    island.getGenerator().getLocation().setWorld(world);
+                    island.getNpc().setWorld(world);
+                    island.getSpawn().setWorld(world);
+                    
                 }
-                BWManager.getInstance().addGame(arena, new Arena(arena, 8, Arena.SOLO, lobbyloc.get(), islands, diamond,emerald));
+                for(NormalGenerator generator : diamond) { 
+                    generator.getLocation().setWorld(world);
+                    generator.setHologram(new Hologram(generator.getLocation().subtract(0.0D, 0.6D, 0.0D), "10:00"));
+                }
+                for(NormalGenerator generator : emerald) { 
+                    generator.getLocation().setWorld(world);
+                    generator.setHologram(new Hologram(generator.getLocation().subtract(0.0D, 0.6D, 0.0D), "10:00"));
+                }
+                BWManager.getInstance().addGame(arena, new Arena(arena, 8, Arena.DUO, lobbyloc.get(), islands, diamond,emerald));
                 BWManager.getInstance().getArena(arena).startTimer(this);
                 
             }

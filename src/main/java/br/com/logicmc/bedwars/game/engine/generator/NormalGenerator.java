@@ -8,10 +8,10 @@ import org.bukkit.Material;
 public class NormalGenerator implements IGenerator{
 
     private final Material material;
-    private final Hologram holograms;
     private final Location location;
     private final int reset;
 
+    private Hologram holograms;
     private int time;
 
     public NormalGenerator(Location location, Material material, Hologram holograms, int reset) {
@@ -52,4 +52,8 @@ public class NormalGenerator implements IGenerator{
     public Hologram getHologram() {
         return holograms;
     }
+
+	public void setHologram(Hologram hologram) {
+        this.holograms=hologram;
+	}
 }

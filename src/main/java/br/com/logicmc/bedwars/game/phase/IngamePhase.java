@@ -51,11 +51,9 @@ public class IngamePhase implements PhaseControl {
         if (islandgenerators == time ) {
             for (Island island : arena.getIslands()) {
                 NormalGenerator generator = island.getGenerator();
-                if (generator.reset(time)) {
-                    generator.spawn();
-                    generator.setNewReset();
-                    islandgenerators+=generator.getReset();
-                }
+                generator.spawn();
+                generator.setNewReset();
+                islandgenerators+=generator.getReset();
             }
         }
         if(diamondgenerators == time) {
@@ -170,9 +168,10 @@ public class IngamePhase implements PhaseControl {
 
             //prepare player
             Player player = Bukkit.getPlayer(uuid);
-            arena.updateScoreboardTeam(player, bwPlayer.getTeamcolor(), "§aV  §7(You)");
-            player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor())).findFirst().get().getSpawn());
+            arena.updateScoreboardTeam(player, bwPlayer.getTeamcolor(), "§a V §7(You)");
+            player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor().toUpperCase())).findFirst().get().getSpawn());
             player.setGameMode(GameMode.SURVIVAL);
+            player.getInventory().clear();
         }
         
 
@@ -234,10 +233,10 @@ public class IngamePhase implements PhaseControl {
         createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§a");
         
 
-        islandgenerators = 5;
+        islandgenerators = 3;
         int index = 0;
         for(BWTeam team : BWTeam.values()){
-            createTeam(scoreboard, team.name(),"§"+WordUtils.capitalize(team.name().toLowerCase()) ,"", "");
+            createTeam(scoreboard, team.name(),team.getChatColor()+WordUtils.capitalize(team.name().toLowerCase()) ,"", "");
             for(int i = 0; i < arena.getTeamcomposition(); i++) {
                 available.add(index, team.name());
                 index++;

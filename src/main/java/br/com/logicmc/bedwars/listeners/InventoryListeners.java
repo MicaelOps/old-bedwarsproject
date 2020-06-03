@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 public class InventoryListeners implements Listener {
 
@@ -29,6 +30,12 @@ public class InventoryListeners implements Listener {
             BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId()).getData().setTeamcolor(bwTeam.name());
             player.sendMessage(bwTeam.getChatColor()+bwTeam.name()+" selected");
             BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getPreteam().put(player.getUniqueId(), bwTeam.name());
+
+            ItemStack vv = new ItemStack(Material.WOOL, 1 , bwTeam.getData());
+            ItemMeta meta = stack.getItemMeta();
+            meta.setDisplayName(bwTeam.getChatColor()+bwTeam.name());
+            vv.setItemMeta(meta);
+            player.getInventory().addItem(vv);
             event.setCancelled(true);
         }
     }

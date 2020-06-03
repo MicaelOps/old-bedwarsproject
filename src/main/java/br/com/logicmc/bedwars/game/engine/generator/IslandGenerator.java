@@ -8,17 +8,12 @@ public class IslandGenerator extends NormalGenerator{
     private int generatorLevel = 1;
 
     public IslandGenerator(Location location) {
-        super(location, Material.IRON_INGOT, null, 5);
-        System.out.println(location.getWorld().getName());
+        super(location, Material.IRON_INGOT, null, 3);
     }
 
     public void setGeneratorLevel(int generatorLevel) {
         this.generatorLevel = generatorLevel;
     }
 
-    @Override
-    public void spawn() {
-
-
-    }
+  
 }

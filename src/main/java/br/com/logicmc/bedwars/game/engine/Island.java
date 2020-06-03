@@ -72,10 +72,14 @@ public class Island {
     }
     public void save(String arenaname, YamlFile file) {
         file.getConfig().set(arenaname+".islands."+name+".color" , team.name());
-        file.setLocation(arenaname+".islands."+name+".npc" , npc);
-        file.setLocation(arenaname+".islands."+name+".spawn" , spawn);
-        file.setLocation(arenaname+".islands."+name+".bed" , bed);
-        file.setLocation(arenaname+".islands."+name+".generator" , generator.getLocation());
+        if(npc != null)
+            file.setLocation(arenaname+".islands."+name+".npc" , npc);
+        if(spawn!=null)
+            file.setLocation(arenaname+".islands."+name+".spawn" , spawn);
+        if(bed!=null)
+            file.setLocation(arenaname+".islands."+name+".bed" , bed);
+        if(generator.getLocation() !=null)
+            file.setLocation(arenaname+".islands."+name+".generator" , generator.getLocation());
     }
 
     public void setGenerator(IslandGenerator islandGenerator) {

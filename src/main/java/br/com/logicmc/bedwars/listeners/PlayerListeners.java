@@ -104,7 +104,7 @@ public class PlayerListeners implements Listener {
 
         if(item.getType() == Material.WOOL && event.getPlayer().getGameMode() == GameMode.ADVENTURE){
             PlayerBase<BWPlayer> base = BWMain.getInstance().playermanager.getPlayerBase(event.getPlayer().getUniqueId());
-            if(base.isVip()){
+            if(base.isVip() || base.isStaff()){
                 Inventory inventory = Bukkit.createInventory(null, 9, "Teams");
                 for(BWTeam team : BWTeam.values()){
                     ItemStack stack = new ItemStack(Material.WOOL, 1 , team.getData());
@@ -113,6 +113,7 @@ public class PlayerListeners implements Listener {
                     stack.setItemMeta(meta);
                     inventory.addItem(stack);
                 }
+                event.getPlayer().openInventory(inventory);
             } else
                 event.getPlayer().sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.ERROR_ONLY_VIP, base.getPreferences().getLang()));
         }

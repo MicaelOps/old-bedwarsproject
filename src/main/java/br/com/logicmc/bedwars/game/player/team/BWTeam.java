@@ -5,9 +5,14 @@ import org.bukkit.Color;
 
 public enum BWTeam {
 
-    GRAY(ChatColor.GRAY, Color.GRAY, (short)1),
-    RED(ChatColor.RED, Color.RED, (short)4),
-    WHITE(ChatColor.WHITE, Color.WHITE, (short)1),
+    NAVY(ChatColor.BLUE, Color.NAVY, (short)3),
+    PINK(ChatColor.LIGHT_PURPLE, Color.FUCHSIA, (short)6),
+    GREEN(ChatColor.GREEN, Color.GREEN, (short)5),
+    PURPLE(ChatColor.DARK_PURPLE, Color.PURPLE,(short)10),
+    YELLOW(ChatColor.YELLOW, Color.YELLOW, (short)4),
+    GRAY(ChatColor.GRAY, Color.GRAY, (short)7),
+    RED(ChatColor.RED, Color.RED, (short)14),
+    WHITE(ChatColor.WHITE, Color.WHITE, (short)0),
     AQUA(ChatColor.AQUA, Color.AQUA, (short)3);
 
     private final ChatColor chatColor;
@@ -18,7 +23,7 @@ public enum BWTeam {
         this.chatColor=chatcolor;
         this.color = color;
         this.data = data;
-
+        
     }
 
     public Color getColor() {

@@ -46,12 +46,16 @@ public class PartyCommand extends CommandAdapter {
                 }
             } else {
                 if(strings[0].toLowerCase().equalsIgnoreCase("add")) {
+                    
                     if (isOwner(playerBase.getPartyid(), player)) {
                         Player target = Bukkit.getPlayer(strings[1]);
                         if(target == null){
                             player.sendMessage("jogador offline");
                             return;
                         }
+                        if(target.getUniqueId() == player.getUniqueId())
+                            return;
+
                         PlayerBase<BWPlayer> targetplayer = BWMain.getInstance().playermanager.getPlayerBase(target.getUniqueId());
                         targetplayer.setPartyid(playerBase.getPartyid());
                         target.sendMessage("voce foi adicionado na party do "+player.getName());
@@ -66,6 +70,8 @@ public class PartyCommand extends CommandAdapter {
                             player.sendMessage("jogador offline");
                             return;
                         }
+                        if(target.getUniqueId() == player.getUniqueId())
+                            return;
                         PlayerBase<BWPlayer> targetplayer = BWMain.getInstance().playermanager.getPlayerBase(target.getUniqueId());
                         targetplayer.setPartyid(-1);
                         target.sendMessage("voce foi removido na party do "+player.getName());
