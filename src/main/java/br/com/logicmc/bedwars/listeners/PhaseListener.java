@@ -17,6 +17,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 public class PhaseListener implements Listener {
 
@@ -65,6 +66,11 @@ public class PhaseListener implements Listener {
         event.setCancelled(damage);
     }
 
+    @EventHandler
+    public void respawn(PlayerRespawnEvent event) {
+        Arena arena = BWManager.getInstance().getArena(event.getPlayer().getWorld().getName());
+        event.setRespawnLocation(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(event.getPlayer().getUniqueId()).getTeamcolor())).findFirst().get().getSpawn());
+    }
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(CreatureSpawnEvent event) {
         event.setCancelled(check(event.getLocation()) || !(event.getEntityType()== EntityType.DROPPED_ITEM || event.getEntityType() == EntityType.ARMOR_STAND));

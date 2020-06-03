@@ -1,41 +1,36 @@
 package br.com.logicmc.bedwars.game.player.team;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Color;
-import org.bukkit.Location;
 
-import java.util.HashSet;
-import java.util.UUID;
+public enum BWTeam {
 
-public class BWTeam {
+    GRAY(ChatColor.GRAY, Color.GRAY, (short)1),
+    RED(ChatColor.RED, Color.RED, (short)4),
+    WHITE(ChatColor.WHITE, Color.WHITE, (short)1),
+    AQUA(ChatColor.AQUA, Color.AQUA, (short)3);
 
+    private final ChatColor chatColor;
     private final Color color;
-    private final Location spawnlocation,bedlocation;
-    private final HashSet<UUID> players;
+    private final short data;
 
-    public BWTeam(Color color, Location spawnlocation, Location bedlocation) {
+    BWTeam(ChatColor chatcolor, Color color, short data) {
+        this.chatColor=chatcolor;
         this.color = color;
-        this.spawnlocation = spawnlocation;
-        this.bedlocation = bedlocation;
-        players = new HashSet<>();
-    }
+        this.data = data;
 
-    public void addPlayer(UUID uuid) {
-        players.add(uuid);
-    }
-
-    public HashSet<UUID> getPlayers() {
-        return players;
     }
 
     public Color getColor() {
         return color;
     }
 
-    public Location getSpawnlocation() {
-        return spawnlocation;
+    public ChatColor getChatColor() {
+        return chatColor;
     }
 
-    public Location getBedlocation() {
-        return bedlocation;
+    public short getData() {
+        return data;
     }
+
 }

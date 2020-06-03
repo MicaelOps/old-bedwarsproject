@@ -8,9 +8,13 @@ import br.com.logicmc.bedwars.extra.YamlFile;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.Island;
+import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
+import br.com.logicmc.bedwars.game.player.team.BWTeam;
+import br.com.logicmc.bedwars.listeners.InventoryListeners;
 import br.com.logicmc.bedwars.listeners.PhaseListener;
 import br.com.logicmc.bedwars.listeners.PlayerListeners;
+import br.com.logicmc.core.addons.hologram.Hologram;
 import br.com.logicmc.core.system.command.CommandLoader;
 import br.com.logicmc.core.system.minigame.ArenaInfoPacket;
 import br.com.logicmc.core.system.minigame.MinigamePlugin;
@@ -70,6 +74,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         super.onEnable();
 
 
+        Bukkit.getPluginManager().registerEvents(new InventoryListeners(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListeners(), this);
         Bukkit.getPluginManager().registerEvents(new PhaseListener(), this);
 
@@ -184,7 +189,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 schematic.paste(new Location(world, 250, 100, 250));
 
                 HashSet<Island> islands =new HashSet<>();
-                HashSet<Location> diamond = new HashSet<>(),emerald =new HashSet<>();
+                HashSet<NormalGenerator> diamond = new HashSet<>(),emerald =new HashSet<>();
                 AtomicReference<Location> lobbyloc = new AtomicReference<>();
                 spawnlocation.setWorld(world);
                 lobbyloc.set(spawnlocation);
@@ -193,12 +198,14 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
                     if(visland.equalsIgnoreCase("islands"))
                         mainconfig.loopThroughSectionKeys(finalArena +".islands."+visland, (island)->{       
-                             islands.add(new Island(island, mainconfig.getConfig().getString(finalArena+".islands."+island+".color"),mainconfig.getLocation(finalArena +".islands."+island+".npc") , mainconfig.getLocation(finalArena +".islands."+island+".bed"), mainconfig.getLocation(finalArena +".islands."+island+".generator")));
+                             islands.add(new Island(island, BWTeam.valueOf(mainconfig.getConfig().getString(finalArena+".islands."+island+".color")),mainconfig.getLocation(finalArena +".islands."+island+".spawn"),mainconfig.getLocation(finalArena +".islands."+island+".npc") , mainconfig.getLocation(finalArena +".islands."+island+".bed"), mainconfig.getLocation(finalArena +".islands."+island+".generator")));
                         });
                     else if(visland.equalsIgnoreCase("diamond"))
-                        mainconfig.loopThroughSectionKeys(finalArena +".diamond", (string)->diamond.add(mainconfig.getLocation(finalArena +".diamond."+string)));
+                        mainconfig.loopThroughSectionKeys(finalArena +".diamond", (string)->diamond.add(new NormalGenerator(mainconfig.getLocation(finalArena +".diamond."+string), Material.DIAMOND,
+                                new Hologram(mainconfig.getLocation(finalArena +".diamond."+string).subtract(0.0D, 0.6D, 0.0D), "10:00"), 80)));
                     else if(visland.equalsIgnoreCase("emerald"))
-                        mainconfig.loopThroughSectionKeys(finalArena +".emerald", (string)->emerald.add(mainconfig.getLocation(finalArena +".emerald."+string)));
+                        mainconfig.loopThroughSectionKeys(finalArena +".emerald", (string)->emerald.add(new NormalGenerator(mainconfig.getLocation(finalArena +".emerald."+string), Material.EMERALD,
+                                new Hologram(mainconfig.getLocation(finalArena +".emerald."+string).subtract(0.0D, 0.6D, 0.0D), "10:00"), 90)));
 
                 });
                 for(Island island : islands) { // debug arenas

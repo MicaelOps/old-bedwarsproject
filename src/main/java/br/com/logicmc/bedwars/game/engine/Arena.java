@@ -4,6 +4,7 @@ import br.com.logicmc.bedwars.BWMain;
 
 import br.com.logicmc.bedwars.extra.YamlFile;
 import br.com.logicmc.bedwars.game.addons.TimeScheduler;
+import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
 import br.com.logicmc.bedwars.game.phase.EndPhase;
 import br.com.logicmc.bedwars.game.phase.IngamePhase;
 import br.com.logicmc.bedwars.game.phase.WaitingPhase;
@@ -38,7 +39,7 @@ public class Arena {
     private final int teamcomposition;
     private final HashSet<UUID> players;
     private final HashSet<Island> islands;
-    private final HashSet<Location> diamond,emerald;
+    private final HashSet<NormalGenerator> diamond,emerald;
     private final PhaseControl[] controls = {new WaitingPhase(), new IngamePhase(), new EndPhase()};
 
     private Location lobby;
@@ -48,7 +49,7 @@ public class Arena {
 
 
 
-    public Arena(String name, int maxplayers, int teamcomposition, Location lobby, HashSet<Island> islands, HashSet<Location> diamond, HashSet<Location> emerald) {
+    public Arena(String name, int maxplayers, int teamcomposition, Location lobby, HashSet<Island> islands, HashSet<NormalGenerator> diamond, HashSet<NormalGenerator> emerald) {
         this.name = name;
         this.maxplayers = maxplayers;
         this.teamcomposition = teamcomposition;
@@ -77,11 +78,11 @@ public class Arena {
         return islands;
     }
 
-    public HashSet<Location> getDiamond() {
+    public HashSet<NormalGenerator> getDiamond() {
         return diamond;
     }
 
-    public HashSet<Location> getEmerald() {
+    public HashSet<NormalGenerator> getEmerald() {
         return emerald;
     }
 
@@ -196,10 +197,10 @@ public class Arena {
         cleanSection(file, getName()+".diamond");
         cleanSection(file, getName()+".emerald");
         diamond.forEach(diamondd -> {
-            file.setLocation(getName()+".diamond.d"+new Random().nextInt(10000), diamondd);
+            file.setLocation(getName()+".diamond.d"+new Random().nextInt(10000), diamondd.getLocation());
         });
         emerald.forEach(emeraldd -> {
-            file.setLocation(getName()+".emerald.e"+new Random().nextInt(10000), emeraldd);
+            file.setLocation(getName()+".emerald.e"+new Random().nextInt(10000), emeraldd.getLocation());
         });
         islands.forEach(island -> island.save(getName(), file));
     }

@@ -10,6 +10,7 @@ public class NormalGenerator implements IGenerator{
     private final Material material;
     private final Hologram holograms;
     private final Location location;
+    private final int reset;
 
     private int time;
 
@@ -17,8 +18,10 @@ public class NormalGenerator implements IGenerator{
         this.material = material;
         this.holograms = holograms;
         this.location =location;
+        this.reset = reset;
 
         time = reset;
+
     }
 
     @Override
@@ -27,17 +30,18 @@ public class NormalGenerator implements IGenerator{
     }
 
     @Override
-    public boolean reset(int time) {
-        return this.time==time;
-    }
-
     public int getTime() {
         return time;
     }
 
     @Override
+    public int getReset() {
+        return reset;
+    }
+
+    @Override
     public void setNewReset() {
-        time+= time;
+        time+= reset;
     }
 
     @Override

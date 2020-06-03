@@ -7,13 +7,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import org.apache.commons.lang.WordUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Color;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -36,17 +32,13 @@ import br.com.logicmc.core.system.party.PartyManager;
 
 public class IngamePhase implements PhaseControl {
 
-    private final HashSet<NormalGenerator> generators;
     private final List<String> available;
-    private final String[] teams;
-    
+
     private Scoreboard scoreboard;
-    private int islandgenerators;
+    private int islandgenerators,diamondgenerators,emeraldgenerators;
 
     public IngamePhase() {
-        generators = new HashSet<>();
         available = new ArrayList<>();
-        teams = new String[] {"AQUA", "BLACK", "GREEN", "RED", "BLUE", "GRAY", "WHITE", "YELLOW"};
         islandgenerators = -1;
     }
 
@@ -56,29 +48,44 @@ public class IngamePhase implements PhaseControl {
         arena.setTime(arena.getTime() + 1);
         int time = arena.getTime();
 
-        if (islandgenerators == time) {
+        if (islandgenerators == time ) {
             for (Island island : arena.getIslands()) {
-                island.getGenerator().getWorld().dropItem(island.getGenerator(), new ItemStack(Material.IRON_INGOT));
+                NormalGenerator generator = island.getGenerator();
+                if (generator.reset(time)) {
+                    generator.spawn();
+                    generator.setNewReset();
+                    islandgenerators+=generator.getReset();
+                }
             }
-            islandgenerators = arena.getTime() + 5;
         }
-
-        for (NormalGenerator generator : generators) {
-            if (generator.reset(time)) {
-                generator.spawn();
-                generator.setNewReset();
+        if(diamondgenerators == time) {
+            for (NormalGenerator generator : arena.getDiamond()) {
+                resetGenerator(generator, time);
+                diamondgenerators+=generator.getReset();
             }
-            Hologram hologram = generator.getHologram();
-
-            int remainingtime = generator.getTime() - time;
-            int i = remainingtime / 60;
-            if (hologram != null)
-                hologram.editText(
-                        "§c" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
+        }
+        if(emeraldgenerators == time) {
+            for (NormalGenerator generator : arena.getDiamond()) {
+                resetGenerator(generator, time);
+                emeraldgenerators+=generator.getReset();
+            }
         }
         return time;
     }
 
+    private void resetGenerator(NormalGenerator generator, int time) {
+        if (generator.reset(time)) {
+            generator.spawn();
+            generator.setNewReset();
+        }
+        Hologram hologram = generator.getHologram();
+
+        if (hologram != null) {
+            int remainingtime = generator.getTime() - time;
+            int i = remainingtime / 60;
+            hologram.editText("§c" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
+        }
+    }
     @Override
     public void init(Arena arena) {
         arena.setTime(1);
@@ -135,8 +142,6 @@ public class IngamePhase implements PhaseControl {
                             }
                         }
                     }
-                    
-
                     // if the members yet dont have teams we have to add uuid to a team and also the members
                     if(bwPlayer.getTeamcolor() == null || bwPlayer.getTeamcolor().isEmpty()) {
 
@@ -165,12 +170,11 @@ public class IngamePhase implements PhaseControl {
 
             //prepare player
             Player player = Bukkit.getPlayer(uuid);
-            player.sendMessage(bwPlayer.getTeamcolor());
-            arena.updateScoreboardTeam(player, bwPlayer.getTeamcolor(), " §7(You)");
-
+            arena.updateScoreboardTeam(player, bwPlayer.getTeamcolor(), "§aV  §7(You)");
+            player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor())).findFirst().get().getSpawn());
+            player.setGameMode(GameMode.SURVIVAL);
         }
-
-  
+        
 
         scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§l").setScore((index+5+1));
         scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§k").setScore((index+5+2));
@@ -178,9 +182,7 @@ public class IngamePhase implements PhaseControl {
         scoreboard.getTeam("upgrade").addEntry("§k");
 
         arena.getPreteam().clear();
-    
-        
- 
+
         available.clear();
     }
 
@@ -212,16 +214,6 @@ public class IngamePhase implements PhaseControl {
             team.addEntry(entry);
     }
 
-    private void createArmostand(Location location, Material material){
-        ArmorStand armorStand = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
-        armorStand.setHelmet(new ItemStack(material));
-        armorStand.setVisible(false);
-        armorStand.setGravity(false);
-        armorStand.setMarker(true);
-        armorStand.setSmall(false);
-        armorStand.setCustomNameVisible(false);
-    }
-
     @Override
     public void preinit(Arena arena) {
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
@@ -241,27 +233,13 @@ public class IngamePhase implements PhaseControl {
         createTeam(scoreboard, "beds", "§fCapturas: ","§a0","§c");
         createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§a");
         
-        World world = Bukkit.getWorld(arena.getName());
 
-        for (Location diamond : arena.getDiamond()) {
-
-            diamond.setWorld(world);
-        
-            createArmostand(diamond, Material.DIAMOND_BLOCK);
-            generators.add(new NormalGenerator(diamond, Material.DIAMOND,
-                    new Hologram(diamond.subtract(0.0D, 0.6D, 0.0D), "10:00"), 80));
-        }
-        for (Location emerald : arena.getEmerald()) {
-            emerald.setWorld(world);
-            createArmostand(emerald, Material.EMERALD_BLOCK);
-            generators.add(new NormalGenerator(emerald, Material.EMERALD,
-                    new Hologram(emerald.subtract(0.0D, 0.6D, 0.0D), "10:00"), 90));
-        }
+        islandgenerators = 5;
         int index = 0;
-        for(String team : teams){
-            createTeam(scoreboard, team,"§aV §f"+WordUtils.capitalize(team.toLowerCase()) ,"", "");
+        for(BWTeam team : BWTeam.values()){
+            createTeam(scoreboard, team.name(),"§"+WordUtils.capitalize(team.name().toLowerCase()) ,"", "");
             for(int i = 0; i < arena.getTeamcomposition(); i++) {
-                available.add(index, team);
+                available.add(index, team.name());
                 index++;
             }
         }

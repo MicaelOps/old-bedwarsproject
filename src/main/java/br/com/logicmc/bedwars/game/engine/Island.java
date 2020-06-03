@@ -1,25 +1,28 @@
 package br.com.logicmc.bedwars.game.engine;
 
 import br.com.logicmc.bedwars.extra.YamlFile;
+import br.com.logicmc.bedwars.game.engine.generator.IslandGenerator;
+import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import org.bukkit.Color;
 import org.bukkit.Location;
 
 public class Island {
 
     private final String name;
+    private final BWTeam team;
 
     private int generatorlevel;
+    private Location npc,bed,spawn;
+    private IslandGenerator generator;
 
-    private Color teamid;
-    private Location npc,bed,generator;
 
-
-    public Island(String name, String color ,Location npc, Location bed, Location generator) {
+    public Island(String name, BWTeam color , Location spawn, Location npc, Location bed, Location generator) {
         this.name = name;
         this.npc = npc;
         this.bed = bed;
-        this.generator = generator;
-        this.teamid = Color.GREEN;
+        this.generator = new IslandGenerator(generator);
+        this.spawn = spawn;
+        this.team = color;
 
         generatorlevel = 1;
     }
@@ -28,20 +31,12 @@ public class Island {
         return name;
     }
 
-    public Color getTeamid() {
-        return teamid;
+    public Location getSpawn() {
+        return spawn;
     }
 
-    public void setTeamid(Color teamid) {
-        this.teamid = teamid;
-    }
-
-    public int getGeneratorlevel() {
-        return generatorlevel;
-    }
-
-    public void setGeneratorlevel(int generatorlevel) {
-        this.generatorlevel = generatorlevel;
+    public BWTeam getTeam() {
+        return team;
     }
 
     public Location getNpc() {
@@ -60,13 +55,10 @@ public class Island {
         this.bed = bed;
     }
 
-    public Location getGenerator() {
+    public IslandGenerator getGenerator() {
         return generator;
     }
 
-    public void setGenerator(Location generator) {
-        this.generator = generator;
-    }
 
     public void report(String arenaname) {
         if(npc == null)
@@ -75,10 +67,18 @@ public class Island {
             System.out.println("[Arena] Bed location of "+name+" from arena "+arenaname+" is null");
         if(generator == null)
             System.out.println("[Arena] Generator location of "+name+" from arena "+arenaname+" is null");
+        if(spawn == null)
+            System.out.println("[Arena] Spawn location of "+name+" from arena "+arenaname+" is null");
     }
     public void save(String arenaname, YamlFile file) {
+        file.getConfig().set(arenaname+".islands."+name+".color" , team.name());
         file.setLocation(arenaname+".islands."+name+".npc" , npc);
+        file.setLocation(arenaname+".islands."+name+".spawn" , spawn);
         file.setLocation(arenaname+".islands."+name+".bed" , bed);
-        file.setLocation(arenaname+".islands."+name+".generator" , generator);
+        file.setLocation(arenaname+".islands."+name+".generator" , generator.getLocation());
+    }
+
+    public void setGenerator(IslandGenerator islandGenerator) {
+        this.generator= islandGenerator;
     }
 }

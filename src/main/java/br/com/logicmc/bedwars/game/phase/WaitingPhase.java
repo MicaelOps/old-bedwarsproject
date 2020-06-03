@@ -6,8 +6,15 @@ import br.com.logicmc.bedwars.game.engine.PhaseControl;
 
 import java.util.Random;
 
+import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
+import net.minecraft.server.v1_8_R3.Packet;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -89,7 +96,24 @@ public class WaitingPhase implements PhaseControl {
 		createTeam(scoreboard, "time", "§fTempo: ","§a00:00","§4");
 		createTeam(scoreboard, "players", "§fOnline: ","§a-1","§2");
 		createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");
+
+		for(NormalGenerator normalGenerator : arena.getDiamond()) {
+		    createArmostand(normalGenerator.getLocation().add(0.0D, 0.6D, 0.0D), Material.DIAMOND_BLOCK);
+        }
+        for(NormalGenerator normalGenerator : arena.getEmerald()) {
+            createArmostand(normalGenerator.getLocation().add(0.0D, 0.6D, 0.0D), Material.EMERALD_BLOCK);
+        }
     }
+    private void createArmostand(Location location, Material material){
+        ArmorStand armorStand = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
+        armorStand.setHelmet(new ItemStack(material));
+        armorStand.setVisible(false);
+        armorStand.setGravity(false);
+        armorStand.setMarker(true);
+        armorStand.setSmall(false);
+        armorStand.setCustomNameVisible(false);
+    }
+
     private void createTeam(Scoreboard scoreboard, String name, String prefix, String suffix, String entry) {
         Team team = scoreboard.registerNewTeam(name);
         team.setPrefix(prefix);

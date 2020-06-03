@@ -8,11 +8,15 @@ public interface IGenerator {
 
     Material getMaterial();
 
-    boolean reset(int time);
+    int getReset();
+
+    int getTime();
 
     void setNewReset();
 
     Location getLocation();
+
+    default boolean reset(int time) { return getTime() == time;}
 
     default void spawn() {
         getLocation().getWorld().dropItem(getLocation(), new ItemStack(getMaterial()));

@@ -6,15 +6,22 @@ import br.com.logicmc.bedwars.extra.FixedItems;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
+import br.com.logicmc.bedwars.game.player.team.BWTeam;
+import br.com.logicmc.core.account.PlayerBase;
 import br.com.logicmc.core.events.PlayerJoinArenaEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.UUID;
 
@@ -86,6 +93,28 @@ public class PlayerListeners implements Listener {
 
                 arena.updateScoreboardTeam(ingamePlayer, "players" , ChatColor.GRAY+""+arena.getPlayers().size());
             }
+        }
+    }
+
+    @EventHandler
+    public void interactpl(PlayerInteractEvent event) {
+        ItemStack item = event.getItem();
+        if (item == null || item.getType().equals(Material.AIR) || !item.hasItemMeta() || !event.getAction().name().contains("RIGHT"))
+            return;
+
+        if(item.getType() == Material.WOOL && event.getPlayer().getGameMode() == GameMode.ADVENTURE){
+            PlayerBase<BWPlayer> base = BWMain.getInstance().playermanager.getPlayerBase(event.getPlayer().getUniqueId());
+            if(base.isVip()){
+                Inventory inventory = Bukkit.createInventory(null, 9, "Teams");
+                for(BWTeam team : BWTeam.values()){
+                    ItemStack stack = new ItemStack(Material.WOOL, 1 , team.getData());
+                    ItemMeta meta = stack.getItemMeta();
+                    meta.setDisplayName(team.getChatColor()+team.name());
+                    stack.setItemMeta(meta);
+                    inventory.addItem(stack);
+                }
+            } else
+                event.getPlayer().sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.ERROR_ONLY_VIP, base.getPreferences().getLang()));
         }
     }
 }

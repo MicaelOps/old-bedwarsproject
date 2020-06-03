@@ -5,10 +5,14 @@ import br.com.logicmc.bedwars.BWMain;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.Island;
+import br.com.logicmc.bedwars.game.engine.generator.IslandGenerator;
+import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
+import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import br.com.logicmc.core.account.PlayerBase;
 import br.com.logicmc.core.account.addons.Groups;
 import br.com.logicmc.core.system.command.CommandAdapter;
 import br.com.logicmc.core.system.command.SimpleComamnd;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 public class SetLocations extends CommandAdapter {
@@ -72,11 +76,11 @@ public class SetLocations extends CommandAdapter {
             }
 
             if(strings[0].toLowerCase().equalsIgnoreCase("diamond")) {
-                arena.getDiamond().add(player.getLocation());
+                arena.getDiamond().add(new NormalGenerator(player.getLocation(), Material.AIR, null, 222));
                 arena.save();
                 player.sendMessage("Generator diamond adicionado com sucesso");
             } else if(strings[0].toLowerCase().equalsIgnoreCase("emerald")) {
-                arena.getEmerald().add(player.getLocation());
+                arena.getEmerald().add(new NormalGenerator(player.getLocation(), Material.AIR, null, 222));
                 arena.save();
                 player.sendMessage("Generator emerald adicionado com sucesso");
             }
@@ -86,7 +90,7 @@ public class SetLocations extends CommandAdapter {
     public void islandset(BWMain plugin, Player player, PlayerBase<?> playerBase, String[] strings){
         if(strings.length == 0) {
             player.sendMessage("use /setisland list");
-            player.sendMessage("use /setisland create <name> <color>  (na localizacao da cama)");
+            player.sendMessage("use /setisland create <name> <color>  (na localizacao do spawn)");
             player.sendMessage("use /setisland <name> <npc/generator/bed>");
         } else {
             Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
@@ -112,7 +116,7 @@ public class SetLocations extends CommandAdapter {
                 } else if(strings[1].toLowerCase().equalsIgnoreCase("generator")) {
                     for(Island island : arena.getIslands()) {
                         if(island.getName().equalsIgnoreCase(strings[0].toLowerCase())){
-                            island.setGenerator(player.getLocation());
+                            island.setGenerator(new IslandGenerator(player.getLocation()));
                             island.save(arena.getName(), BWMain.getInstance().mainconfig);
                             player.sendMessage("Ilha salva com sucesso;");
                         }
@@ -134,7 +138,7 @@ public class SetLocations extends CommandAdapter {
                         }
                     }
                     if(!exist){
-                        Island island = new Island(strings[1].toLowerCase(), strings[2].toLowerCase(), null, player.getLocation(), null);
+                        Island island = new Island(strings[1].toLowerCase(), BWTeam.valueOf(strings[2].toUpperCase()), player.getLocation(), null, null, null);
                         island.save(arena.getName(), BWMain.getInstance().mainconfig);
                         arena.getIslands().add(island);
                         player.sendMessage("Ilha criada com sucesso");
