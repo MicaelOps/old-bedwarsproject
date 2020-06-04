@@ -52,7 +52,7 @@ public class PlayerListeners implements Listener {
         
         player.setScoreboard(arena.getScoreboard());
 
-        if(event.getArenaname().equalsIgnoreCase("staff")) {
+        if(event.getArenaname().equalsIgnoreCase("staff") || arena.getGamestate() == Arena.INGAME) {
             player.setGameMode(GameMode.CREATIVE);
             player.setAllowFlight(true);
             player.setFlying(true);

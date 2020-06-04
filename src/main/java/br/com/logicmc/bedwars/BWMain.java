@@ -186,7 +186,6 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 schematics.remove(arena+".schematic");
             else {
                 System.out.println("[Arena] Pasting map for "+arena);
-                prepareWorld(world);
                 schematic.paste(new Location(world, 250, 100, 250));
 
                 HashSet<Island> islands =new HashSet<>();
@@ -194,6 +193,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 AtomicReference<Location> lobbyloc = new AtomicReference<>();
                 spawnlocation.setWorld(world);
                 lobbyloc.set(spawnlocation);
+                prepareWorld(world);
                 String finalArena = arena;
                 
                 mainconfig.loopThroughSectionKeys(arena, (visland) -> {
