@@ -41,6 +41,9 @@ public class IngamePhase implements PhaseControl {
         available = new ArrayList<>();
         islandgenerators = -1;
     }
+    /**
+     * islandgenerators is not used as a cooldown but as a minimum cooldown to verify if the generators are in cooldown;
+     */
 
     @Override
     public int onTimerCall(Arena arena) {
@@ -53,20 +56,16 @@ public class IngamePhase implements PhaseControl {
                 NormalGenerator generator = island.getGenerator();
                 generator.spawn();
                 generator.setNewReset();
-                islandgenerators+=generator.getReset();
+                
             }
+            islandgenerators+=3;
         }
-        if(diamondgenerators == time) {
-            for (NormalGenerator generator : arena.getDiamond()) {
-                resetGenerator(generator, time);
-                diamondgenerators+=generator.getReset();
-            }
+        for (NormalGenerator generator : arena.getDiamond()) {
+            resetGenerator(generator, time);
         }
-        if(emeraldgenerators == time) {
-            for (NormalGenerator generator : arena.getDiamond()) {
-                resetGenerator(generator, time);
-                emeraldgenerators+=generator.getReset();
-            }
+
+        for (NormalGenerator generator : arena.getEmerald()) {
+            resetGenerator(generator, time);
         }
         return time;
     }
@@ -81,7 +80,7 @@ public class IngamePhase implements PhaseControl {
         if (hologram != null) {
             int remainingtime = generator.getTime() - time;
             int i = remainingtime / 60;
-            hologram.editText("§c" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
+            hologram.editText("§e" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
         }
     }
     @Override

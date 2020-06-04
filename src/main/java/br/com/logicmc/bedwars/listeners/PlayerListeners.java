@@ -16,6 +16,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -117,5 +118,10 @@ public class PlayerListeners implements Listener {
             } else
                 event.getPlayer().sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.ERROR_ONLY_VIP, base.getPreferences().getLang()));
         }
+    }
+
+    @EventHandler
+    public void breakbed(BlockBreakEvent event) {
+        
     }
 }
