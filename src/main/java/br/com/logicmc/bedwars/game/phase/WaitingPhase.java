@@ -2,18 +2,15 @@ package br.com.logicmc.bedwars.game.phase;
 
 import br.com.logicmc.bedwars.BWMain;
 import br.com.logicmc.bedwars.game.engine.Arena;
+import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.engine.PhaseControl;
 
 import java.util.Random;
 
 import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
 import net.minecraft.server.v1_8_R3.Packet;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EntityType;
+import org.bukkit.*;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -59,6 +56,7 @@ public class WaitingPhase implements PhaseControl {
 
     @Override
     public void init(Arena arena) {
+
         arena.setTime(500);
      }
 
@@ -97,13 +95,31 @@ public class WaitingPhase implements PhaseControl {
 		createTeam(scoreboard, "players", "§fOnline: ","§a-1","§2");
 		createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");
 
+		World world = Bukkit.getWorld(arena.getName());
+        world.setStorm(false);
+        world.setAutoSave(false);
+        world.setThundering(false);
+        world.setThunderDuration(0);
+        world.setWeatherDuration(0);
+        world.setDifficulty(Difficulty.PEACEFUL);
+        world.getEntities().forEach(Entity::remove);
+        world.getLivingEntities().forEach(LivingEntity::remove);
+        world.setGameRuleValue("doDaylightCycle", "false");
+
 		for(NormalGenerator normalGenerator : arena.getDiamond()) {
-		    createArmostand(normalGenerator.getLocation().add(0.0D, 0.6D, 0.0D), Material.DIAMOND_BLOCK);
+		    createArmostand(normalGenerator.getLocation().add(0.0D, 1.0D, 0.0D), Material.DIAMOND_BLOCK);
         }
         for(NormalGenerator normalGenerator : arena.getEmerald()) {
-            createArmostand(normalGenerator.getLocation().add(0.0D, 0.6D, 0.0D), Material.EMERALD_BLOCK);
+            createArmostand(normalGenerator.getLocation().add(0.0D, 1.0D, 0.0D), Material.EMERALD_BLOCK);
         }
+        for(Island island : arena.getIslands()){
+            Villager villager = (Villager) island.getNpc().getWorld().spawnEntity(island.getNpc(), EntityType.ARMOR_STAND);
+            villager.setCustomName("vc e ruim no pvp");
+            villager.setCustomNameVisible(true);
+        }
+
     }
+
     private void createArmostand(Location location, Material material){
         ArmorStand armorStand = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
         armorStand.setHelmet(new ItemStack(material));

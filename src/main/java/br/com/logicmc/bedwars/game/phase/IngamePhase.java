@@ -171,8 +171,13 @@ public class IngamePhase implements PhaseControl {
             player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor().toUpperCase())).findFirst().get().getSpawn());
             player.setGameMode(GameMode.SURVIVAL);
             player.getInventory().clear();
+            player.getInventory().setItem(0,new ItemStack(Material.WOOD_SWORD));
+            player.getInventory().setItem(1,new ItemStack(Material.COMPASS));
+            player.setDisplayName(BWTeam.valueOf(bwPlayer.getTeamcolor()).getChatColor()+player.getName());
         }
         
+
+        arena.getIslands().removeIf(island -> BWMain.getInstance().playermanager.getPlayers().stream().noneMatch(bwPlayerPlayerBase -> bwPlayerPlayerBase.getData().getTeamcolor().equalsIgnoreCase(island.getTeam().name())));
 
         scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§l").setScore((index+5+1));
         scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§k").setScore((index+5+2));

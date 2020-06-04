@@ -13,13 +13,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -53,10 +53,11 @@ public class PlayerListeners implements Listener {
         player.setScoreboard(arena.getScoreboard());
 
         if(event.getArenaname().equalsIgnoreCase("staff") || arena.getGamestate() == Arena.INGAME) {
-            player.setGameMode(GameMode.CREATIVE);
+            player.setGameMode(GameMode.SPECTATOR);
             player.setAllowFlight(true);
             player.setFlying(true);
             plugin.giveItem(player, 0, FixedItems.STAFF_ARENA_SPECTATE);
+            plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
         } else {
             for(Player other : Bukkit.getOnlinePlayers()) {
                 if(!event.getArenaname().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(other.getUniqueId()).getMapname())) {
@@ -96,6 +97,11 @@ public class PlayerListeners implements Listener {
             }
         }
     }
+    @EventHandler
+    public void chat(AsyncPlayerChatEvent event){
+        event.setCancelled(true);
+        Bukkit.broadcastMessage(event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+    }
 
     @EventHandler
     public void interactpl(PlayerInteractEvent event) {
@@ -121,7 +127,13 @@ public class PlayerListeners implements Listener {
     }
 
     @EventHandler
-    public void breakbed(BlockBreakEvent event) {
-        
+    public void interactnpc(PlayerInteractEntityEvent event){
+
+        Player player =event.getPlayer();
+        Entity entity = event.getRightClicked();
+        if(entity.getType() == EntityType.VILLAGER){
+            Inventory inventory = Bukkit.createInventory(null, 27, "Categorias");
+            player.openInventory(inventory);
+        }
     }
 }

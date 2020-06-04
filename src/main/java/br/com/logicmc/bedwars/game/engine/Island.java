@@ -11,7 +11,8 @@ public class Island {
     private final String name;
     private final BWTeam team;
 
-    private int generatorlevel;
+    private boolean bedbroken;
+    private int generatorlevel,sharpness;
     private Location npc,bed,spawn;
     private IslandGenerator generator;
 
@@ -24,7 +25,17 @@ public class Island {
         this.spawn = spawn;
         this.team = color;
 
+        bedbroken = false;
         generatorlevel = 1;
+        sharpness = 0;
+    }
+
+    public void setBedbroken(boolean bedbroken) {
+        this.bedbroken = bedbroken;
+    }
+
+    public boolean isBedbroken() {
+        return bedbroken;
     }
 
     public String getName() {

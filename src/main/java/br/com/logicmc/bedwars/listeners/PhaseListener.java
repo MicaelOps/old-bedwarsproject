@@ -1,13 +1,16 @@
 package br.com.logicmc.bedwars.listeners;
 
 import br.com.logicmc.bedwars.BWMain;
+import br.com.logicmc.bedwars.extra.BWMessages;
+import br.com.logicmc.bedwars.extra.FixedItems;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
-import org.bukkit.Location;
-import org.bukkit.entity.Creature;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
+import br.com.logicmc.bedwars.game.engine.Island;
+import br.com.logicmc.bedwars.game.player.BWPlayer;
+import br.com.logicmc.bedwars.game.player.team.BWTeam;
+import br.com.logicmc.core.account.PlayerBase;
+import org.bukkit.*;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -18,32 +21,66 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.UUID;
 
 public class PhaseListener implements Listener {
 
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockdamage(BlockDamageEvent event) {
-        event.setCancelled(check(event.getPlayer().getLocation()));
+        event.setCancelled(check(event.getPlayer().getLocation(), event.getPlayer()));
     }
+
     @EventHandler(priority=EventPriority.HIGHEST)
-    public void blockbuild(BlockBreakEvent event){event.setCancelled(check(event.getPlayer().getLocation())); }
+    public void blockbuild(BlockBreakEvent event){
+        boolean cancelled = check(event.getPlayer().getLocation(), event.getPlayer());
+        if(!cancelled){
+            if(event.getBlock().getType() == Material.BED_BLOCK) {
+                Player player = event.getPlayer();
+                Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+                for(Island island : arena.getIslands()){
+                    if(!island.isBedbroken() &&island.getBed().distance(event.getBlock().getLocation()) < 5.0D){
+                        PlayerBase<BWPlayer> bwPlayer = BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId());
+                        if(bwPlayer.getData().getTeamcolor().equalsIgnoreCase(island.getTeam().name()))
+                            cancelled = true;
+                        else {
+                            BWTeam bwTeam = island.getTeam();
+                            island.setBedbroken(true);
+                            for(UUID uuid : arena.getPlayers()){
+                                Player everyone = Bukkit.getPlayer(uuid);
+                                String string = BWMain.getInstance().messagehandler.getMessage(BWMessages.BED_DESTROYED, BWMain.getInstance().playermanager.getPlayerBase(uuid).getPreferences().getLang());
+                                everyone.sendTitle(""+ChatColor.BOLD+bwTeam.getChatColor()+bwTeam.name(),  string);
+                                if(everyone.getDisplayName().contains(bwTeam.getChatColor()+""))
+                                    arena.updateScoreboardTeam(everyone, bwTeam.name(), ChatColor.RED+" X (You)");
+                                else
+                                    arena.updateScoreboardTeam(everyone, bwTeam.name(), ChatColor.RED+" X");
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        event.setCancelled(cancelled);
+    }
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(BlockPlaceEvent event) {
         event.setCancelled(check(event.getPlayer().getLocation()));
     }
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(PlayerPickupItemEvent event) {
-        event.setCancelled(check(event.getPlayer().getLocation()));
+        event.setCancelled(check(event.getPlayer().getLocation(), event.getPlayer()));
     }
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(PlayerDropItemEvent event) {
-        event.setCancelled(check(event.getPlayer().getLocation()));
+        event.setCancelled(check(event.getPlayer().getLocation(), event.getPlayer()));
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(EntitySpawnEvent event) {
-        event.setCancelled(check(event.getLocation()) || !(event.getEntityType()== EntityType.DROPPED_ITEM || event.getEntityType() == EntityType.ARMOR_STAND));
+        event.setCancelled(event.getEntityType()== EntityType.DROPPED_ITEM || event.getEntityType() == EntityType.ARMOR_STAND|| event.getEntityType() == EntityType.VILLAGER);
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
@@ -52,30 +89,77 @@ public class PhaseListener implements Listener {
     }
     @EventHandler(priority= EventPriority.HIGHEST)
     public void entitydamage(EntityDamageEvent event) {
-        event.setCancelled(check(event.getEntity().getLocation()));
+        event.setCancelled(event.getEntityType()==EntityType.VILLAGER || check(event.getEntity().getLocation(), event.getEntity()));
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void entitydamage(EntityDamageByEntityEvent event) {
-        boolean damage = check(event.getEntity().getLocation());
-        if(!damage) {
-            if(event.getEntity() instanceof Player && event.getDamager() instanceof Player){
-                damage = BWMain.getInstance().playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(BWMain.getInstance().playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
+        boolean damage = false;
+        if(event.getEntity() instanceof Player){
+            damage = check(event.getEntity().getLocation());
+            if(!damage) {
+                if(event.getEntity() instanceof Player && event.getDamager() instanceof Player){
+                    damage = BWMain.getInstance().playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(BWMain.getInstance().playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
+
+                    if(!damage) {
+                        if(event.getDamage() >= ((Player) event.getEntity()).getHealth()) {
+                            damage = true;
+                            Player player = (Player) event.getEntity();
+                            Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+                            PlayerBase<BWPlayer> bwPlayer = BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId());
+                            BWPlayer bedwars = bwPlayer.getData();
+                            for (Island island : arena.getIslands()) {
+                                if (island.getTeam().name().equalsIgnoreCase(bedwars.getTeamcolor())) {
+
+                                    player.setGameMode(GameMode.SPECTATOR);
+                                    player.setAllowFlight(true);
+                                    player.setFlying(true);
+                                    player.getInventory().setArmorContents(null);
+
+                                    if (island.isBedbroken()) {
+                                        player.sendTitle(new Title(ChatColor.BOLD + "" + ChatColor.RED + BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang())));
+                                        arena.getPlayers().remove(player.getUniqueId());
+                                        for (UUID uuid : arena.getPlayers()) {
+                                            Bukkit.getPlayer(uuid).hidePlayer(player);
+                                        }
+                                        player.getInventory().clear();
+                                        BWMain.getInstance().giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
+                                        BWMain.getInstance().giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
+                                        BWMain.getInstance().giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
+                                    } else {
+                                        player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + BWMain.getInstance().messagehandler.getMessage(BWMessages.DEAD, bwPlayer.getPreferences().getLang()), BWMain.getInstance().messagehandler.getMessage(BWMessages.RESPAWN_MESSAGE, bwPlayer.getPreferences().getLang()));
+                                        new BukkitRunnable() {
+                                            @Override
+                                            public void run() {
+                                                Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+                                                player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor())).findFirst().get().getSpawn());
+                                                player.setGameMode(GameMode.SURVIVAL);
+                                            }
+                                        }.runTaskLater(BWMain.getInstance(), 60L);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
             }
-        }
+        } else if(event.getEntityType()==EntityType.VILLAGER)
+            damage = true;
         event.setCancelled(damage);
     }
 
-    @EventHandler
-    public void respawn(PlayerRespawnEvent event) {
-        Arena arena = BWManager.getInstance().getArena(event.getPlayer().getWorld().getName());
-        event.setRespawnLocation(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(event.getPlayer().getUniqueId()).getTeamcolor())).findFirst().get().getSpawn());
-    }
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(CreatureSpawnEvent event) {
-        event.setCancelled(check(event.getLocation()) || !(event.getEntityType()== EntityType.DROPPED_ITEM || event.getEntityType() == EntityType.ARMOR_STAND));
+        event.setCancelled(event.getEntityType()== EntityType.DROPPED_ITEM || event.getEntityType() == EntityType.ARMOR_STAND|| event.getEntityType() == EntityType.VILLAGER);
     }
     private boolean check(Location location) {
         return BWManager.getInstance().getArena(location.getWorld().getName()).getGamestate() == Arena.WAITING;
+    }
+    private boolean check(Location location, Entity player) {
+        if(player instanceof Player)
+            return BWManager.getInstance().getArena(location.getWorld().getName()).getGamestate() == Arena.WAITING || ((Player)player).getGameMode() == GameMode.SPECTATOR;
+        else
+            return check(location);
     }
 }

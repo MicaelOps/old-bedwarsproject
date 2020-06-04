@@ -193,7 +193,6 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 AtomicReference<Location> lobbyloc = new AtomicReference<>();
                 spawnlocation.setWorld(world);
                 lobbyloc.set(spawnlocation);
-                prepareWorld(world);
                 String finalArena = arena;
                 
                 mainconfig.loopThroughSectionKeys(arena, (visland) -> {
@@ -219,11 +218,11 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 }
                 for(NormalGenerator generator : diamond) { 
                     generator.getLocation().setWorld(world);
-                    generator.setHologram(new Hologram(generator.getLocation().subtract(0.0D, 0.6D, 0.0D), "10:00"));
+                    generator.setHologram(new Hologram(generator.getLocation().add(0.0D, 0.9D, 0.0D), "10:00"));
                 }
                 for(NormalGenerator generator : emerald) { 
                     generator.getLocation().setWorld(world);
-                    generator.setHologram(new Hologram(generator.getLocation().subtract(0.0D, 0.6D, 0.0D), "10:00"));
+                    generator.setHologram(new Hologram(generator.getLocation().add(0.0D, 0.9D, 0.0D), "10:00"));
                 }
                 BWManager.getInstance().addGame(arena, new Arena(arena, 8, Arena.DUO, lobbyloc.get(), islands, diamond,emerald));
                 BWManager.getInstance().getArena(arena).startTimer(this);
@@ -254,17 +253,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     }
 
 
-    private void prepareWorld(World world) {
-        world.setStorm(false);
-        world.setAutoSave(false);
-        world.setThundering(false);
-        world.setThunderDuration(0);
-        world.setWeatherDuration(0);
-        world.setDifficulty(Difficulty.PEACEFUL);
-        world.getEntities().forEach(Entity::remove);
-        world.getLivingEntities().forEach(LivingEntity::remove);
-        world.setGameRuleValue("doDaylightCycle", "false");
-    }
+
 
     public void updateSuffix(Player player, Scoreboard sc, String team, String suffix) {
         net.minecraft.server.v1_8_R3.Scoreboard scoreboard = ((CraftScoreboard)sc).getHandle();
