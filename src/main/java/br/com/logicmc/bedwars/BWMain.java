@@ -30,6 +30,7 @@ import org.bukkit.craftbukkit.v1_8_R3.scoreboard.CraftScoreboard;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -209,11 +210,23 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                                 null, 90)));
 
                 });
+
+                world.setStorm(false);
+                world.setAutoSave(false);
+                world.setThundering(false);
+                world.setThunderDuration(0);
+                world.setWeatherDuration(0);
+                world.setDifficulty(Difficulty.PEACEFUL);
+                world.getEntities().forEach(Entity::remove);
+                world.getLivingEntities().forEach(LivingEntity::remove);
+                world.setGameRuleValue("doDaylightCycle", "false");
+        
                 for(Island island : islands) { // debug arenas
                     island.report(arena);
                     island.getGenerator().getLocation().setWorld(world);
                     island.getNpc().setWorld(world);
                     island.getSpawn().setWorld(world);
+                    island.getBed().setWorld(world);
                     
                 }
                 for(NormalGenerator generator : diamond) { 
@@ -225,11 +238,10 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                     generator.setHologram(new Hologram(generator.getLocation().add(0.0D, 0.9D, 0.0D), "10:00"));
                 }
                 BWManager.getInstance().addGame(arena, new Arena(arena, 8, Arena.DUO, lobbyloc.get(), islands, diamond,emerald));
-                BWManager.getInstance().getArena(arena).startTimer(this);
+                BWManager.getInstance().getArena(arena).startTimer(BWMain.getInstance());
                 
             }
         }
-
         return schematics;
     }
 

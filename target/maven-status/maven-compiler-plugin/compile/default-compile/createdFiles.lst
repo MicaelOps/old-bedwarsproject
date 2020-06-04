@@ -1,3 +1,4 @@
+br\com\logicmc\bedwars\listeners\PhaseListener$1.class
 br\com\logicmc\bedwars\listeners\PlayerListeners.class
 br\com\logicmc\bedwars\game\player\BWPlayer.class
 br\com\logicmc\bedwars\extra\YamlFile.class
@@ -20,5 +21,6 @@ br\com\logicmc\bedwars\game\player\team\BWTeam.class
 br\com\logicmc\bedwars\extra\BWMessages.class
 br\com\logicmc\bedwars\game\phase\WaitingPhase.class
 br\com\logicmc\bedwars\listeners\InventoryListeners.class
+br\com\logicmc\bedwars\listeners\PhaseListener$2.class
 br\com\logicmc\bedwars\commands\PartyCommand.class
 br\com\logicmc\bedwars\extra\FixedItems.class

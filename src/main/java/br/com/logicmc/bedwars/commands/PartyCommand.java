@@ -11,6 +11,7 @@ import br.com.logicmc.core.system.party.PartyManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.Random;
 import java.util.UUID;
 
 /***
@@ -43,6 +44,13 @@ public class PartyCommand extends CommandAdapter {
                         PartyManager.getInstance().removeParty(party.getId());
                         player.sendMessage("Party deletada com sucesso");
                     }
+                }else if(strings[0].toLowerCase().equalsIgnoreCase("create")) {
+                    if(party ==null){
+                        party =new Party(new Random().nextInt(1000), player.getUniqueId());
+                        PartyManager.getInstance().unifyParty(party);
+                        player.sendMessage("partycriada");
+                        playerBase.setPartyid(party.getId());
+                    }
                 }
             } else {
                 if(strings[0].toLowerCase().equalsIgnoreCase("add")) {
@@ -62,8 +70,7 @@ public class PartyCommand extends CommandAdapter {
                         player.sendMessage("jogador adicionado com sucesso");
                         party.getMembers().add(target.getUniqueId());
                     }
-                }
-                if(strings[0].toLowerCase().equalsIgnoreCase("remove")) {
+                } else if(strings[0].toLowerCase().equalsIgnoreCase("remove")) {
                     if (isOwner(playerBase.getPartyid(), player)) {
                         Player target = Bukkit.getPlayer(strings[1]);
                         if(target == null){

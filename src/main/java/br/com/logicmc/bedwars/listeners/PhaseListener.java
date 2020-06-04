@@ -22,6 +22,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.github.paperspigot.Title;
 
 import java.util.UUID;
 
@@ -89,7 +90,49 @@ public class PhaseListener implements Listener {
     }
     @EventHandler(priority= EventPriority.HIGHEST)
     public void entitydamage(EntityDamageEvent event) {
-        event.setCancelled(event.getEntityType()==EntityType.VILLAGER || check(event.getEntity().getLocation(), event.getEntity()));
+        boolean damage = event.getEntityType()==EntityType.VILLAGER || check(event.getEntity().getLocation(), event.getEntity());
+        if(!damage) {
+            if(event.getDamage() >= ((Player) event.getEntity()).getHealth()) {
+                damage = true;
+                Player player = (Player) event.getEntity();
+                Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+                PlayerBase<BWPlayer> bwPlayer = BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId());
+                BWPlayer bedwars = bwPlayer.getData();
+                for (Island island : arena.getIslands()) {
+                    if (island.getTeam().name().equalsIgnoreCase(bedwars.getTeamcolor())) {
+
+                        player.setGameMode(GameMode.SPECTATOR);
+                        player.setAllowFlight(true);
+                        player.setFlying(true);
+                        player.getInventory().setArmorContents(null);
+
+                        if (island.isBedbroken()) {
+                            player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
+                            arena.getPlayers().remove(player.getUniqueId());
+                            for (UUID uuid : arena.getPlayers()) {
+                                Bukkit.getPlayer(uuid).hidePlayer(player);
+                            }
+                            player.getInventory().clear();
+                            BWMain.getInstance().giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
+                            BWMain.getInstance().giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
+                            BWMain.getInstance().giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
+                        } else {
+                            player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + BWMain.getInstance().messagehandler.getMessage(BWMessages.DEAD, bwPlayer.getPreferences().getLang()), BWMain.getInstance().messagehandler.getMessage(BWMessages.RESPAWN_MESSAGE, bwPlayer.getPreferences().getLang()));
+                            new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+                                    player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor())).findFirst().get().getSpawn());
+                                    player.setGameMode(GameMode.SURVIVAL);
+                                }
+                            }.runTaskLater(BWMain.getInstance(), 60L);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        event.setCancelled(damage);
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
@@ -100,7 +143,7 @@ public class PhaseListener implements Listener {
             if(!damage) {
                 if(event.getEntity() instanceof Player && event.getDamager() instanceof Player){
                     damage = BWMain.getInstance().playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(BWMain.getInstance().playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
-
+                    System.out.println(damage);
                     if(!damage) {
                         if(event.getDamage() >= ((Player) event.getEntity()).getHealth()) {
                             damage = true;
@@ -117,7 +160,7 @@ public class PhaseListener implements Listener {
                                     player.getInventory().setArmorContents(null);
 
                                     if (island.isBedbroken()) {
-                                        player.sendTitle(new Title(ChatColor.BOLD + "" + ChatColor.RED + BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang())));
+                                        player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
                                         arena.getPlayers().remove(player.getUniqueId());
                                         for (UUID uuid : arena.getPlayers()) {
                                             Bukkit.getPlayer(uuid).hidePlayer(player);

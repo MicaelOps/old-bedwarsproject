@@ -60,7 +60,7 @@ public class PlayerListeners implements Listener {
             plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
         } else {
             for(Player other : Bukkit.getOnlinePlayers()) {
-                if(!event.getArenaname().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(other.getUniqueId()).getMapname())) {
+                if(!event.getArenaname().toLowerCase().equalsIgnoreCase(other.getLocation().getWorld().getName())) {
                     player.hidePlayer(other);
                 }
             }

@@ -240,7 +240,7 @@ public class IngamePhase implements PhaseControl {
         islandgenerators = 3;
         int index = 0;
         for(BWTeam team : BWTeam.values()){
-            createTeam(scoreboard, team.name(),team.getChatColor()+WordUtils.capitalize(team.name().toLowerCase()) ,"", "");
+            createTeam(scoreboard, team.name(),team.getChatColor()+WordUtils.capitalize(team.name().toLowerCase()) ,ChatColor.GREEN+" V", "");
             for(int i = 0; i < arena.getTeamcomposition(); i++) {
                 available.add(index, team.name());
                 index++;
