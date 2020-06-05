@@ -29,11 +29,14 @@ import net.minecraft.server.v1_8_R3.PacketPlayOutScoreboardTeam;
 import org.bukkit.*;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_8_R3.scoreboard.CraftScoreboard;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Scoreboard;
 import java.io.File;
 import java.lang.reflect.Field;
@@ -84,6 +87,8 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         messagehandler.loadMessage(BWMessages.PLAYER_LEAVE_INGAME, this);
         CommandLoader.loadPackage(this, BWMain.class, "br.com.logicmc.bedwars.commands");
         BWManager.getInstance().addGame("staff", new StaffArena());
+
+        loadItens();
     }
 
     public static BWMain getInstance() {
@@ -303,17 +308,10 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             player.sendMessage("failed to update scoreboard please report this to the administrator.");
         }
     }
-    public void updateEntry(Player player, Scoreboard sc, String team, String newentry) {
+    public void updateEntry(Player player, Scoreboard sc, String team, List<String> entries) {
         net.minecraft.server.v1_8_R3.Scoreboard scoreboard = ((CraftScoreboard)sc).getHandle();
-        PacketPlayOutScoreboardTeam updatepacket = new PacketPlayOutScoreboardTeam(scoreboard.getTeam(team), 0);
-        try {
-            Field field = updatepacket.getClass().getDeclaredField("g");
-            field.setAccessible(true);
-            field.set(updatepacket, new ArrayList<String>());
-            ((CraftPlayer)player).getHandle().playerConnection.sendPacket(updatepacket);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            player.sendMessage("failed to update scoreboard please report this to the administrator.");
-        }
+        PacketPlayOutScoreboardTeam updatepacket = new PacketPlayOutScoreboardTeam(scoreboard.getTeam(team), entries, 3);
+        ((CraftPlayer)player).getHandle().playerConnection.sendPacket(updatepacket);
     }
     public void giveItem(Player player, int slot, FixedItems item) {
         player.getInventory().setItem(slot, item.getBuild(messagehandler, playermanager.getPlayerBase(player).getPreferences().getLang()));
@@ -326,5 +324,64 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     @Override
     public BWPlayer createDataInstance() {
         return new BWPlayer();
+    }
+
+    private void loadItens(){
+        
+        blocks.getListitems().add(new ShopItem(new ItemStack(Material.WOOL, 16), new ItemStack(Material.IRON_INGOT, 4)));
+        blocks.getListitems().add(new ShopItem(new ItemStack(Material.HARD_CLAY, 16), new ItemStack(Material.IRON_INGOT, 12)));
+        blocks.getListitems().add(new ShopItem(new ItemStack(Material.WOOD, 16), new ItemStack(Material.GOLD_INGOT, 4)));
+        blocks.getListitems().add(new ShopItem(new ItemStack(Material.GLASS, 4), new ItemStack(Material.IRON_INGOT, 12)));
+        blocks.getListitems().add(new ShopItem(new ItemStack(Material.ENDER_STONE, 12), new ItemStack(Material.IRON_INGOT, 24)));
+        blocks.getListitems().add(new ShopItem(new ItemStack(Material.LADDER, 16), new ItemStack(Material.IRON_INGOT, 4)));
+        blocks.getListitems().add(new ShopItem(new ItemStack(Material.OBSIDIAN, 4), new ItemStack(Material.EMERALD, 4)));
+
+        fight.getListitems().add(new ShopItem(new ItemStack(Material.STONE_SWORD, 1), new ItemStack(Material.IRON_INGOT, 10)));
+        fight.getListitems().add(new ShopItem(new ItemStack(Material.IRON_SWORD, 1), new ItemStack(Material.GOLD_INGOT, 7)));
+        fight.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_SWORD, 1), new ItemStack(Material.EMERALD, 4)));
+        fight.getListitems().add(new ShopItem(addEnchantment(Material.STICK, Enchantment.KNOCKBACK, 1), new ItemStack(Material.EMERALD, 4)));
+
+        fight.getListitems().add(new ShopItem(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1), new ItemStack(Material.IRON_INGOT, 40)));
+        fight.getListitems().add(new ShopItem(new ItemStack(Material.IRON_CHESTPLATE, 1), new ItemStack(Material.GOLD_INGOT, 12)));
+        fight.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_CHESTPLATE, 1), new ItemStack(Material.EMERALD, 7)));
+        fight.getListitems().add(new ShopItem(new ItemStack(Material.SHEARS, 1), new ItemStack(Material.IRON_INGOT, 20)));
+
+          
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.WOOD_AXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.STONE_AXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.IRON_AXE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_AXE, 1), new ItemStack(Material.GOLD_INGOT, 6)));
+
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.WOOD_PICKAXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.IRON_PICKAXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.GOLD_PICKAXE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_PICKAXE, 1), new ItemStack(Material.GOLD_INGOT, 6)));
+
+
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.BOW, 1), new ItemStack(Material.GOLD_INGOT, 12)));
+        utilities.getListitems().add(new ShopItem(addEnchantment(Material.BOW, Enchantment.ARROW_DAMAGE, 1), new ItemStack(Material.GOLD_INGOT, 24)));
+        utilities.getListitems().add(new ShopItem(addEnchantment(Material.BOW, Enchantment.ARROW_DAMAGE, 2), new ItemStack(Material.EMERALD, 6)));
+        utilities.getListitems().add(new ShopItem(addPotion(PotionEffectType.SPEED, 45, 2), new ItemStack(Material.EMERALD, 1)));
+        utilities.getListitems().add(new ShopItem(addPotion(PotionEffectType.JUMP, 45, 5), new ItemStack(Material.EMERALD, 1)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.GOLDEN_APPLE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.SNOW_BALL, 1), new ItemStack(Material.IRON_INGOT, 40)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.FIREBALL, 1), new ItemStack(Material.IRON_INGOT, 40)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.TNT, 1), new ItemStack(Material.GOLD_INGOT, 4)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.ENDER_PEARL, 1), new ItemStack(Material.EMERALD, 4)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.WATER_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 3)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.MILK_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 4)));
+    }
+    private ItemStack addPotion(PotionEffectType type , int duration, int power){
+        ItemStack itemStack = new ItemStack(Material.POTION, 1);
+        PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
+        potionMeta.addCustomEffect(new PotionEffect(type, duration, power), true);
+        itemStack.setItemMeta(potionMeta);
+        return itemStack;
+    }
+
+    private ItemStack addEnchantment(Material material, Enchantment enchantment, int level){
+        ItemStack itemStack = new ItemStack(material);
+        itemStack.addUnsafeEnchantment(enchantment,level);
+        return itemStack;
     }
 }

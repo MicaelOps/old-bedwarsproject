@@ -118,7 +118,7 @@ public class PhaseListener implements Listener {
                 for (Island island : arena.getIslands()) {
                     if (island.getTeam().name().equalsIgnoreCase(bedwars.getTeamcolor())) {
 
-                        player.setGameMode(GameMode.SURVIVAL);
+                        player.setGameMode(GameMode.SPECTATOR);
                         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999 ,5));
                         player.setAllowFlight(true);
                         player.setFlying(true);
@@ -143,12 +143,18 @@ public class PhaseListener implements Listener {
                                     Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
                                     player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor())).findFirst().get().getSpawn());
                                     player.setGameMode(GameMode.SURVIVAL);
-                                    String name = bedwars.getArmor().name().replace("_CHESTPLATE","");
+                                    player.setAllowFlight(false);
+                                    player.setFlying(false);
+                                    player.getActivePotionEffects().forEach(potion->player.removePotionEffect(potion.getType()));
+                                    if(bedwars.getArmor() != Material.AIR){
+                                        String name = bedwars.getArmor().name().replace("_CHESTPLATE","");
 
-                                    player.getInventory().setHelmet(addEnchantment(Material.valueOf(name+"_HELMET"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                    player.getInventory().setChestplate(addEnchantment(Material.valueOf(name+"_CHESTPLATE"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                    player.getInventory().setLeggings(addEnchantment(Material.valueOf(name+"_LEGGINGS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                    player.getInventory().setBoots(addEnchantment(Material.valueOf(name+"_BOOTS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
+                                        player.getInventory().setHelmet(addEnchantment(Material.valueOf(name+"_HELMET"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
+                                        player.getInventory().setChestplate(addEnchantment(Material.valueOf(name+"_CHESTPLATE"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
+                                        player.getInventory().setLeggings(addEnchantment(Material.valueOf(name+"_LEGGINGS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
+                                        player.getInventory().setBoots(addEnchantment(Material.valueOf(name+"_BOOTS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
+                                    }
+        
                                 }
                             }.runTaskLater(BWMain.getInstance(), 60L);
                         }
@@ -184,7 +190,7 @@ public class PhaseListener implements Listener {
                         for (Island island : arena.getIslands()) {
                             if (island.getTeam().name().equalsIgnoreCase(bedwars.getTeamcolor())) {
 
-                                player.setGameMode(GameMode.SURVIVAL);
+                                player.setGameMode(GameMode.SPECTATOR);
                                 player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999 ,5));
                                 player.setAllowFlight(true);
                                 player.setFlying(true);
@@ -210,12 +216,17 @@ public class PhaseListener implements Listener {
                                             Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
                                             player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor())).findFirst().get().getSpawn());
                                             player.setGameMode(GameMode.SURVIVAL);
-                                            String name = bedwars.getArmor().name().replace("_CHESTPLATE","");
-
-                                            player.getInventory().setHelmet(addEnchantment(Material.valueOf(name+"_HELMET"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                            player.getInventory().setChestplate(addEnchantment(Material.valueOf(name+"_CHESTPLATE"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                            player.getInventory().setLeggings(addEnchantment(Material.valueOf(name+"_LEGGINGS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                            player.getInventory().setBoots(addEnchantment(Material.valueOf(name+"_BOOTS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
+                                            player.setAllowFlight(false);
+                                            player.setFlying(false);
+                                            player.getActivePotionEffects().forEach(potion->player.removePotionEffect(potion.getType()));
+                                            if(bedwars.getArmor() != Material.AIR){
+                                                String name = bedwars.getArmor().name().replace("_CHESTPLATE","");
+        
+                                                player.getInventory().setHelmet(addEnchantment(Material.valueOf(name+"_HELMET"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
+                                                player.getInventory().setChestplate(addEnchantment(Material.valueOf(name+"_CHESTPLATE"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
+                                                player.getInventory().setLeggings(addEnchantment(Material.valueOf(name+"_LEGGINGS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
+                                                player.getInventory().setBoots(addEnchantment(Material.valueOf(name+"_BOOTS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
+                                            }
                                         }
                                     }.runTaskLater(BWMain.getInstance(), 60L);
                                 }

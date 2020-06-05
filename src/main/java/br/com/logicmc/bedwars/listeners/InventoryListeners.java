@@ -51,10 +51,11 @@ public class InventoryListeners implements Listener {
             event.setCancelled(true);
         } else if (event.getInventory().getName().equalsIgnoreCase("Categories")) {
             event.setCancelled(true);
-            Inventory inventory = Bukkit.createInventory(null, 27, "Shop");
+            Inventory inventory = null;
             int i = 10;
 
             if (stack.getType() == Material.DIAMOND_SWORD) {
+                inventory = Bukkit.createInventory(null, 27, "Shop");
                 for (ShopItem shopItem : BWMain.getInstance().getFight().getListitems()) {
                     if (i == 18)
                         i = 19;
@@ -62,13 +63,17 @@ public class InventoryListeners implements Listener {
                     i++;
                 }
             } else if (stack.getType() == Material.GOLDEN_APPLE) {
+                inventory = Bukkit.createInventory(null, 36, "Shop");
                 for (ShopItem shopItem : BWMain.getInstance().getUtilities().getListitems()) {
                     if (i == 18)
                         i = 19;
+                    else if(i== 27)
+                        i = 28;
                     inventory.setItem(i, shopItem.getMenu());
                     i++;
                 }
             } else if (stack.getType() == Material.STONE) {
+                inventory = Bukkit.createInventory(null, 27, "Shop");
                 for (ShopItem shopItem : BWMain.getInstance().getBlocks().getListitems()) {
                     if (i == 18)
                         i = 19;
@@ -82,14 +87,17 @@ public class InventoryListeners implements Listener {
             event.setCancelled(true);
             stack = stack.clone();
             Player player = (Player) event.getWhoClicked();
-            if(player.getInventory().firstEmpty() == -1){
+            if(player.getInventory().firstEmpty() != -1){
                 String[] lore = stack.getItemMeta().getLore().get(0).split(" ");
                 System.out.println(lore[0].substring(2));
                 int amount = Integer.parseInt(lore[0].substring(2));
-                Material costmaterial = Material.valueOf(lore[1].substring(2).toUpperCase());
+                String material = lore[1].substring(2);
+                if(!material.startsWith("E"))
+                    material=material+"_INGOT";
+                Material costmaterial = Material.valueOf(material.toUpperCase());
                 if(player.getInventory().contains(costmaterial, amount)){
 
-                    player.getInventory().remove(new ItemStack(costmaterial, amount));
+                    player.getInventory().removeItem(new ItemStack(costmaterial, amount));
                     ItemMeta meta = stack.getItemMeta();
                     meta.setLore(new ArrayList<>());
                     stack.setItemMeta(meta);
@@ -114,8 +122,10 @@ public class InventoryListeners implements Listener {
                         player.getInventory().setBoots(addEnchantment(Material.valueOf(name+"_BOOTS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
                     }
                     player.getInventory().addItem(stack);
-                } else
+                } else {
                     BWMain.getInstance().messagehandler.sendMessage(player, BWMessages.MISSING_AMOUNT);
+                    player.closeInventory();
+                }
             } else
                 BWMain.getInstance().messagehandler.sendMessage(player, BWMessages.FULL_INVENTORY);
         }

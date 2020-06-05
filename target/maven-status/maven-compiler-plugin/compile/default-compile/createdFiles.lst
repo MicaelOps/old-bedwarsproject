@@ -5,8 +5,10 @@ br\com\logicmc\bedwars\extra\YamlFile.class
 br\com\logicmc\bedwars\BWMain.class
 br\com\logicmc\bedwars\game\phase\EndPhase.class
 br\com\logicmc\bedwars\game\engine\Arena.class
+br\com\logicmc\bedwars\game\shop\ShopItem.class
 br\com\logicmc\bedwars\listeners\PhaseListener.class
 br\com\logicmc\bedwars\game\engine\generator\NormalGenerator.class
+br\com\logicmc\bedwars\game\shop\ShopItem$1.class
 br\com\logicmc\bedwars\extra\StaffArena.class
 br\com\logicmc\bedwars\game\BWManager.class
 br\com\logicmc\bedwars\game\engine\generator\IGenerator.class
@@ -20,6 +22,7 @@ br\com\logicmc\bedwars\game\engine\PhaseControl.class
 br\com\logicmc\bedwars\game\player\team\BWTeam.class
 br\com\logicmc\bedwars\extra\BWMessages.class
 br\com\logicmc\bedwars\game\phase\WaitingPhase.class
+br\com\logicmc\bedwars\game\shop\ShopCategory.class
 br\com\logicmc\bedwars\listeners\InventoryListeners.class
 br\com\logicmc\bedwars\listeners\PhaseListener$2.class
 br\com\logicmc\bedwars\commands\PartyCommand.class

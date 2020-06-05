@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
@@ -170,6 +171,7 @@ public class IngamePhase implements PhaseControl {
             //prepare player
             Player player = Bukkit.getPlayer(uuid);
             arena.updateScoreboardTeam(player, bwPlayer.getTeamcolor(), "§a V §7(You)");
+            arena.getScoreboard().getTeam(bwPlayer.getTeamcolor()).addEntry(player.getName());
             player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor().toUpperCase())).findFirst().get().getSpawn());
             player.setGameMode(GameMode.SURVIVAL);
             player.getInventory().clear();
@@ -177,7 +179,20 @@ public class IngamePhase implements PhaseControl {
             player.getInventory().setItem(1,new ItemStack(Material.COMPASS));
             player.setDisplayName(BWTeam.valueOf(bwPlayer.getTeamcolor()).getChatColor()+player.getName());
         }
-        
+
+        for(UUID uuid : arena.getPlayers()){
+            Player player = Bukkit.getPlayer(uuid);
+            BWPlayer bwplayer = BWManager.getInstance().getBWPlayer(uuid);
+            ArrayList<String> enemy = new ArrayList<>();
+            arena.getPlayers().stream().filter(e->!BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->enemy.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
+            if(!enemy.isEmpty())
+                BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "enemy",enemy);
+            List<String> aa = arena.getScoreboard().getTeam(bwplayer.getTeamcolor()).getEntries().stream().collect(Collectors.toList());
+            aa.remove(aa.size()-1);
+    
+            arena.getScoreboard().getTeam(bwplayer.getTeamcolor()).removeEntry(player.getName());
+            BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "friend", aa);
+        }
 
         arena.getIslands().removeIf(island -> BWMain.getInstance().playermanager.getPlayers().stream().noneMatch(bwPlayerPlayerBase -> bwPlayerPlayerBase.getData().getTeamcolor().equalsIgnoreCase(island.getTeam().name())));
 
