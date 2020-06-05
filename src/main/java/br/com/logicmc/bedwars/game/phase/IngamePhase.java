@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.*;
@@ -80,7 +81,7 @@ public class IngamePhase implements PhaseControl {
         if (hologram != null) {
             int remainingtime = generator.getTime() - time;
             int i = remainingtime / 60;
-            hologram.editText("§e" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
+            hologram.editLine(0,"§e" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
         }
     }
     @Override
@@ -89,7 +90,7 @@ public class IngamePhase implements PhaseControl {
         arena.setGamestate(Arena.INGAME);
         islandgenerators = arena.getTime() + 5;
         
-        int index = 0;
+        int index = 0,score=0;
 
         for(UUID vips : arena.getPreteam().keySet()){
             String team = arena.getPreteam().get(vips);
@@ -101,6 +102,7 @@ public class IngamePhase implements PhaseControl {
                 }
             }
         }
+
 
         //add players to team
         for(UUID uuid : arena.getPlayers()) {
@@ -160,9 +162,9 @@ public class IngamePhase implements PhaseControl {
             }
             Team scteam = scoreboard.getTeam(bwPlayer.getTeamcolor());
             if(scteam.getEntries().isEmpty()) {
-                scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§"+index).setScore(index+5);
-                scteam.addEntry("§"+index);
-                index++;
+                scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§"+score).setScore(score+5);
+                scteam.addEntry("§"+score);
+                score++;
             }
 
             //prepare player
@@ -235,8 +237,8 @@ public class IngamePhase implements PhaseControl {
         createTeam(scoreboard, "kills", "§fMatou: ","§a0","§d");
         createTeam(scoreboard, "beds", "§fCapturas: ","§a0","§c");
         createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§a");
-        
-
+        createTeam(scoreboard, "enemy", "§c","","");
+        createTeam(scoreboard, "friend", "§a","","");
         islandgenerators = 3;
         int index = 0;
         for(BWTeam team : BWTeam.values()){

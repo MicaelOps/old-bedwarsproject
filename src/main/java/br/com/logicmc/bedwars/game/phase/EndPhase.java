@@ -22,7 +22,8 @@ public class EndPhase implements PhaseControl {
 
     @Override
     public void init(Arena arena) {
-
+        arena.getBlocks().clear();
+        arena.getPlayers().clear();
     }
 
     @Override

@@ -23,6 +23,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.UUID;
 
@@ -100,7 +101,14 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void chat(AsyncPlayerChatEvent event){
         event.setCancelled(true);
-        Bukkit.broadcastMessage(event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+        Arena arena = BWManager.getInstance().getArena(event.getPlayer().getLocation().getWorld().getName());
+
+        if(event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY) && arena.getGamestate() != Arena.END)
+            return;
+
+        for(UUID uuid : arena.getPlayers()){
+            Bukkit.getPlayer(uuid).sendMessage(event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+        }
     }
 
     @EventHandler
@@ -126,14 +134,4 @@ public class PlayerListeners implements Listener {
         }
     }
 
-    @EventHandler
-    public void interactnpc(PlayerInteractEntityEvent event){
-
-        Player player =event.getPlayer();
-        Entity entity = event.getRightClicked();
-        if(entity.getType() == EntityType.VILLAGER){
-            Inventory inventory = Bukkit.createInventory(null, 27, "Categorias");
-            player.openInventory(inventory);
-        }
-    }
 }

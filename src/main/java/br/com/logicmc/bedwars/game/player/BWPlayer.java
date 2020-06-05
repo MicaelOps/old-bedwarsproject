@@ -6,6 +6,7 @@ import br.com.logicmc.core.account.addons.Parceable;
 
 
 import com.google.gson.JsonObject;
+import org.bukkit.Material;
 
 public class BWPlayer extends Parceable<BWPlayer> {
 
@@ -14,6 +15,7 @@ public class BWPlayer extends Parceable<BWPlayer> {
 
     private String teamcolor;
 
+    private Material armor;
     private int kills, beds, deaths, wins, defeats;
 
     public BWPlayer() {
@@ -22,6 +24,7 @@ public class BWPlayer extends Parceable<BWPlayer> {
         wins=0;
         defeats=0;
         teamcolor=null;
+        armor = Material.AIR;
     }
 
     public String getMapname() {
@@ -39,7 +42,13 @@ public class BWPlayer extends Parceable<BWPlayer> {
         this.teamcolor = teamcolor;
     }
 
+    public void setArmor(Material armor) {
+        this.armor = armor;
+    }
 
+    public Material getArmor() {
+        return armor;
+    }
 
     public int getBeds() {
         return beds;

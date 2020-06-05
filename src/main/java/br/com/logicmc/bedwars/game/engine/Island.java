@@ -30,6 +30,14 @@ public class Island {
         sharpness = 0;
     }
 
+    public void setSharpness(int sharpness) {
+        this.sharpness = sharpness;
+    }
+
+    public int getSharpness() {
+        return sharpness;
+    }
+
     public void setBedbroken(boolean bedbroken) {
         this.bedbroken = bedbroken;
     }

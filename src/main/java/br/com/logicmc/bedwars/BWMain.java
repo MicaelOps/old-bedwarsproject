@@ -11,10 +11,12 @@ import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
+import br.com.logicmc.bedwars.game.shop.ShopCategory;
+import br.com.logicmc.bedwars.game.shop.ShopItem;
 import br.com.logicmc.bedwars.listeners.InventoryListeners;
 import br.com.logicmc.bedwars.listeners.PhaseListener;
 import br.com.logicmc.bedwars.listeners.PlayerListeners;
-import br.com.logicmc.core.addons.hologram.Hologram;
+import br.com.logicmc.core.addons.hologram.types.Global;
 import br.com.logicmc.core.system.command.CommandLoader;
 import br.com.logicmc.core.system.minigame.ArenaInfoPacket;
 import br.com.logicmc.core.system.minigame.MinigamePlugin;
@@ -30,12 +32,9 @@ import org.bukkit.craftbukkit.v1_8_R3.scoreboard.CraftScoreboard;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Team;
+import org.bukkit.inventory.ItemStack;
 
+import org.bukkit.scoreboard.Scoreboard;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -51,7 +50,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     public YamlFile mainconfig;
     private boolean maintenance;
     private Location spawnlocation;
-
+    private ShopCategory blocks,fight,utilities;
 
     @Override
     public void onEnable() {
@@ -74,6 +73,9 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         
         super.onEnable();
 
+        blocks = new ShopCategory(FixedItems.SHOP_BLOCKS);
+        fight = new ShopCategory(FixedItems.SHOP_FIGHT);
+        utilities = new ShopCategory(FixedItems.SHOP_UTILITIES);
 
         Bukkit.getPluginManager().registerEvents(new InventoryListeners(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListeners(), this);
@@ -86,6 +88,18 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
     public static BWMain getInstance() {
         return instance;
+    }
+
+    public ShopCategory getBlocks() {
+        return blocks;
+    }
+
+    public ShopCategory getFight() {
+        return fight;
+    }
+
+    public ShopCategory getUtilities() {
+        return utilities;
     }
 
     @Override
@@ -116,6 +130,14 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     public ServerState getArenaState(String arenaname) {
         return BWManager.getInstance().getArena(arenaname).getServerState();
     }
+
+    @Override
+    public List<String> getArenas() {
+        ArrayList<String> arrayList = new ArrayList<>();
+        BWManager.getInstance().getArenas().forEach(arena->arrayList.add(arena.getName()));
+        return arrayList;
+    }
+
     private void deleteFolder(File folder) {
         for(File file : folder.listFiles()) {
             if(file.isDirectory())
@@ -231,11 +253,13 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 }
                 for(NormalGenerator generator : diamond) { 
                     generator.getLocation().setWorld(world);
-                    generator.setHologram(new Hologram(generator.getLocation().add(0.0D, 0.9D, 0.0D), "10:00"));
+                    generator.setHologram(new Global(generator.getLocation().add(0.0D, 0.9D, 0.0D)).setLine("10:00"));
+                    generator.getHologram().build();
                 }
                 for(NormalGenerator generator : emerald) { 
                     generator.getLocation().setWorld(world);
-                    generator.setHologram(new Hologram(generator.getLocation().add(0.0D, 0.9D, 0.0D), "10:00"));
+                    generator.setHologram(new Global(generator.getLocation().add(0.0D, 0.9D, 0.0D)).setLine("10:00"));
+                    generator.getHologram().build();
                 }
                 BWManager.getInstance().addGame(arena, new Arena(arena, 8, Arena.DUO, lobbyloc.get(), islands, diamond,emerald));
                 BWManager.getInstance().getArena(arena).startTimer(BWMain.getInstance());
@@ -279,7 +303,18 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             player.sendMessage("failed to update scoreboard please report this to the administrator.");
         }
     }
-
+    public void updateEntry(Player player, Scoreboard sc, String team, String newentry) {
+        net.minecraft.server.v1_8_R3.Scoreboard scoreboard = ((CraftScoreboard)sc).getHandle();
+        PacketPlayOutScoreboardTeam updatepacket = new PacketPlayOutScoreboardTeam(scoreboard.getTeam(team), 0);
+        try {
+            Field field = updatepacket.getClass().getDeclaredField("g");
+            field.setAccessible(true);
+            field.set(updatepacket, new ArrayList<String>());
+            ((CraftPlayer)player).getHandle().playerConnection.sendPacket(updatepacket);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            player.sendMessage("failed to update scoreboard please report this to the administrator.");
+        }
+    }
     public void giveItem(Player player, int slot, FixedItems item) {
         player.getInventory().setItem(slot, item.getBuild(messagehandler, playermanager.getPlayerBase(player).getPreferences().getLang()));
     }

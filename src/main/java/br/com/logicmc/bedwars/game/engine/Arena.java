@@ -39,6 +39,7 @@ public class Arena {
     private final int teamcomposition;
     private final HashSet<UUID> players;
     private final HashSet<Island> islands;
+    private final HashSet<Location> blocks;
     private final HashSet<NormalGenerator> diamond,emerald;
     private final PhaseControl[] controls = {new WaitingPhase(), new IngamePhase(), new EndPhase()};
 
@@ -57,7 +58,7 @@ public class Arena {
         this.emerald = emerald;
         this.islands = islands;
         this.lobby = lobby;
-
+        blocks = new HashSet<>();
         players = new HashSet<>();
         time = 500;
         allotedplayers = 0;
@@ -68,6 +69,10 @@ public class Arena {
             control.preinit(this);
         }
 
+    }
+
+    public HashSet<Location> getBlocks() {
+        return blocks;
     }
 
     public HashMap<UUID, String> getPreteam() {
