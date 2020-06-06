@@ -36,7 +36,7 @@ public class PhaseListener implements Listener {
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockdamage(EntityExplodeEvent event) {
         if(event.getEntityType() == EntityType.PRIMED_TNT){
-            event.blockList().removeIf(block->BWManager.getInstance().getArena(block.getLocation().getWorld().getName()).getBlocks().contains(block.getLocation()));
+            event.blockList().removeIf(block->!BWManager.getInstance().getArena(block.getLocation().getWorld().getName()).getBlocks().contains(block.getLocation()));
         }
     }
 
@@ -55,6 +55,8 @@ public class PhaseListener implements Listener {
                         else {
                             BWTeam bwTeam = island.getTeam();
                             island.setBedbroken(true);
+                            bwPlayer.getData().increaseBeds();
+                            arena.updateScoreboardTeam(player, "beds", ChatColor.GREEN+""+bwPlayer.getData().getBeds());
                             for(UUID uuid : arena.getPlayers()){
                                 Player everyone = Bukkit.getPlayer(uuid);
                                 String string = BWMain.getInstance().messagehandler.getMessage(BWMessages.BED_DESTROYED, BWMain.getInstance().playermanager.getPlayerBase(uuid).getPreferences().getLang());
@@ -93,12 +95,15 @@ public class PhaseListener implements Listener {
     }
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(PlayerDropItemEvent event) {
-        event.setCancelled(check(event.getPlayer().getLocation(), event.getPlayer()));
+        boolean cancelled = check(event.getPlayer().getLocation(), event.getPlayer());
+        if(!cancelled)
+            cancelled = event.getItemDrop().getItemStack().getType().name().contains("_SWORD");
+        event.setCancelled(cancelled);
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(EntitySpawnEvent event) {
-        event.setCancelled(event.getEntityType()== EntityType.DROPPED_ITEM || event.getEntityType() == EntityType.ARMOR_STAND|| event.getEntityType() == EntityType.VILLAGER);
+        event.setCancelled(event.getEntityType()!= EntityType.DROPPED_ITEM || event.getEntityType() == EntityType.ARMOR_STAND|| event.getEntityType() == EntityType.VILLAGER);
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
@@ -107,8 +112,12 @@ public class PhaseListener implements Listener {
     }
     @EventHandler(priority= EventPriority.HIGHEST)
     public void entitydamage(EntityDamageEvent event) {
-        boolean damage = event.getEntityType()==EntityType.VILLAGER || check(event.getEntity().getLocation(), event.getEntity());
+        boolean damage = event.getEntityType()==EntityType.VILLAGER || event.getEntityType()==EntityType.ARMOR_STAND;
+
+        if(!damage)
+            damage = check(event.getEntity().getLocation(), event.getEntity());
         if(!damage) {
+                
             if(event.getDamage() >= ((Player) event.getEntity()).getHealth()) {
                 damage = true;
                 Player player = (Player) event.getEntity();
@@ -187,6 +196,8 @@ public class PhaseListener implements Listener {
                         Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
                         PlayerBase<BWPlayer> bwPlayer = BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId());
                         BWPlayer bedwars = bwPlayer.getData();
+                        bwPlayer.getData().increaseKills();
+                        arena.updateScoreboardTeam(player, "kills", ChatColor.GREEN+""+bwPlayer.getData().getKills());
                         for (Island island : arena.getIslands()) {
                             if (island.getTeam().name().equalsIgnoreCase(bedwars.getTeamcolor())) {
 
@@ -195,6 +206,7 @@ public class PhaseListener implements Listener {
                                 player.setAllowFlight(true);
                                 player.setFlying(true);
                                 player.getInventory().setArmorContents(null);
+                                
 
 
                                 if (island.isBedbroken()) {

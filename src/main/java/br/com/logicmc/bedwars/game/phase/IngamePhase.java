@@ -37,7 +37,7 @@ public class IngamePhase implements PhaseControl {
     private final List<String> available;
 
     private Scoreboard scoreboard;
-    private int islandgenerators,diamondgenerators,emeraldgenerators;
+    private int islandgenerators;
 
     public IngamePhase() {
         available = new ArrayList<>();
@@ -171,7 +171,6 @@ public class IngamePhase implements PhaseControl {
             //prepare player
             Player player = Bukkit.getPlayer(uuid);
             arena.updateScoreboardTeam(player, bwPlayer.getTeamcolor(), "§a V §7(You)");
-            arena.getScoreboard().getTeam(bwPlayer.getTeamcolor()).addEntry(player.getName());
             player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor().toUpperCase())).findFirst().get().getSpawn());
             player.setGameMode(GameMode.SURVIVAL);
             player.getInventory().clear();
@@ -183,15 +182,13 @@ public class IngamePhase implements PhaseControl {
         for(UUID uuid : arena.getPlayers()){
             Player player = Bukkit.getPlayer(uuid);
             BWPlayer bwplayer = BWManager.getInstance().getBWPlayer(uuid);
-            ArrayList<String> enemy = new ArrayList<>();
-            arena.getPlayers().stream().filter(e->!BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->enemy.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
-            if(!enemy.isEmpty())
-                BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "enemy",enemy);
-            List<String> aa = arena.getScoreboard().getTeam(bwplayer.getTeamcolor()).getEntries().stream().collect(Collectors.toList());
-            aa.remove(aa.size()-1);
-    
-            arena.getScoreboard().getTeam(bwplayer.getTeamcolor()).removeEntry(player.getName());
-            BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "friend", aa);
+            ArrayList<String> list = new ArrayList<>();
+            arena.getPlayers().stream().filter(e->!BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
+            if(!list.isEmpty())
+                BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "enemy",list);
+            list.clear();
+            arena.getPlayers().stream().filter(e->BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
+            BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "friend", list);
         }
 
         arena.getIslands().removeIf(island -> BWMain.getInstance().playermanager.getPlayers().stream().noneMatch(bwPlayerPlayerBase -> bwPlayerPlayerBase.getData().getTeamcolor().equalsIgnoreCase(island.getTeam().name())));

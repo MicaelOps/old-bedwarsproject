@@ -258,12 +258,12 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 }
                 for(NormalGenerator generator : diamond) { 
                     generator.getLocation().setWorld(world);
-                    generator.setHologram(new Global(generator.getLocation().add(0.0D, 0.9D, 0.0D)).setLine("10:00"));
+                    generator.setHologram(new Global(generator.getLocation().add(0.0D, 0.3D, 0.0D)).setLine("10:00"));
                     generator.getHologram().build();
                 }
                 for(NormalGenerator generator : emerald) { 
                     generator.getLocation().setWorld(world);
-                    generator.setHologram(new Global(generator.getLocation().add(0.0D, 0.9D, 0.0D)).setLine("10:00"));
+                    generator.setHologram(new Global(generator.getLocation().add(0.0D, 0.3D, 0.0D)).setLine("10:00"));
                     generator.getHologram().build();
                 }
                 BWManager.getInstance().addGame(arena, new Arena(arena, 8, Arena.DUO, lobbyloc.get(), islands, diamond,emerald));

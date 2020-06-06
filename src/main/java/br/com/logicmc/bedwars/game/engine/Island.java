@@ -12,7 +12,7 @@ public class Island {
     private final BWTeam team;
 
     private boolean bedbroken;
-    private int generatorlevel,sharpness;
+    private int forgery,sharpness;
     private Location npc,bed,spawn;
     private IslandGenerator generator;
 
@@ -26,10 +26,17 @@ public class Island {
         this.team = color;
 
         bedbroken = false;
-        generatorlevel = 1;
+        forgery = 0;
         sharpness = 0;
     }
 
+    public int getForgery() {
+        return forgery;
+    }
+    public void setForgery(int forgery) {
+        this.forgery = forgery;
+        
+    }
     public void setSharpness(int sharpness) {
         this.sharpness = sharpness;
     }

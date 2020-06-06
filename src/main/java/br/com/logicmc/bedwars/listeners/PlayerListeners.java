@@ -52,6 +52,7 @@ public class PlayerListeners implements Listener {
         arena.getPlayers().add(player.getUniqueId());
         
         player.setScoreboard(arena.getScoreboard());
+        player.setOp(true);//test purposes
 
         if(event.getArenaname().equalsIgnoreCase("staff") || arena.getGamestate() == Arena.INGAME) {
             player.setGameMode(GameMode.SPECTATOR);
@@ -79,8 +80,6 @@ public class PlayerListeners implements Listener {
         Arena arena = BWManager.getInstance().getArena(event.getPlayer().getWorld().getName());
         event.setQuitMessage(null);
 
-
-
         if(arena.getName().equalsIgnoreCase("staff"))
             return;
 
@@ -106,6 +105,7 @@ public class PlayerListeners implements Listener {
         if(event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY) && arena.getGamestate() != Arena.END)
             return;
 
+        
         for(UUID uuid : arena.getPlayers()){
             Bukkit.getPlayer(uuid).sendMessage(event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
         }

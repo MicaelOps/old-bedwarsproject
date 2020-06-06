@@ -97,10 +97,10 @@ public class WaitingPhase implements PhaseControl {
 		createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");
 
 		for(NormalGenerator normalGenerator : arena.getDiamond()) {
-		    createArmostand(normalGenerator.getLocation(), Material.DIAMOND_BLOCK);
+		    createArmostand(normalGenerator.getLocation().add(0.0d, 0.7D, 0.0D), Material.DIAMOND_BLOCK);
         }
         for(NormalGenerator normalGenerator : arena.getEmerald()) {
-            createArmostand(normalGenerator.getLocation(), Material.EMERALD_BLOCK);
+            createArmostand(normalGenerator.getLocation().add(0.0d, 0.7D, 0.0D), Material.EMERALD_BLOCK);
         }
         for(Island island : arena.getIslands()){
             Villager villager = (Villager) island.getNpc().getWorld().spawnEntity(island.getNpc(), EntityType.VILLAGER);

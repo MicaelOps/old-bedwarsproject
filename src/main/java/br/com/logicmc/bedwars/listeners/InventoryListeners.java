@@ -55,20 +55,24 @@ public class InventoryListeners implements Listener {
             int i = 10;
 
             if (stack.getType() == Material.DIAMOND_SWORD) {
-                inventory = Bukkit.createInventory(null, 27, "Shop");
+                inventory = Bukkit.createInventory(null, 36, "Shop");
                 for (ShopItem shopItem : BWMain.getInstance().getFight().getListitems()) {
-                    if (i == 18)
+                    if (i == 17)
                         i = 19;
+                    else if(i== 26)
+                        i = 28;
                     inventory.setItem(i, shopItem.getMenu());
                     i++;
                 }
             } else if (stack.getType() == Material.GOLDEN_APPLE) {
-                inventory = Bukkit.createInventory(null, 36, "Shop");
+                inventory = Bukkit.createInventory(null, 45, "Shop");
                 for (ShopItem shopItem : BWMain.getInstance().getUtilities().getListitems()) {
-                    if (i == 18)
+                    if (i == 17)
                         i = 19;
-                    else if(i== 27)
+                    else if(i== 26)
                         i = 28;
+                    else if(i== 35)
+                        i = 37;
                     inventory.setItem(i, shopItem.getMenu());
                     i++;
                 }
@@ -97,7 +101,7 @@ public class InventoryListeners implements Listener {
                 Material costmaterial = Material.valueOf(material.toUpperCase());
                 if(player.getInventory().contains(costmaterial, amount)){
 
-                    player.getInventory().removeItem(new ItemStack(costmaterial, amount));
+                    removeItem(new ItemStack(costmaterial, amount), player.getInventory());
                     ItemMeta meta = stack.getItemMeta();
                     meta.setLore(new ArrayList<>());
                     stack.setItemMeta(meta);
@@ -151,5 +155,27 @@ public class InventoryListeners implements Listener {
         if(level != 0)
             itemStack.addEnchantment(enchantment,level);
         return itemStack;
+    }
+
+    private void removeItem(ItemStack stack, Inventory inventory){
+        ItemStack[] contents = inventory.getContents();
+        int amount = stack.getAmount();
+        for(int i = 0; i<contents.length; i++){
+            if(contents[i] != null && contents[i].getType() == stack.getType()){
+                ItemStack content = contents[i];
+                if(content.getAmount() > amount){
+                    content.setAmount(content.getAmount() - amount);
+                    inventory.setItem(i, content);
+                    return;
+                } else if(content.getAmount() == amount){
+                    inventory.setItem(i, new ItemStack(Material.AIR));
+                    return;
+                } else {
+                    inventory.setItem(i, new ItemStack(Material.AIR));
+                    amount = amount-stack.getAmount();
+                    System.out.println(amount);
+                }
+            }
+        }
     }
 }
