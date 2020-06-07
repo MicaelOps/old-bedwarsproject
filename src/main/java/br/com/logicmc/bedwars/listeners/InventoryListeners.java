@@ -4,9 +4,11 @@ import br.com.logicmc.bedwars.BWMain;
 import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Island;
+import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import br.com.logicmc.bedwars.game.shop.ShopItem;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
@@ -21,9 +23,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 public class InventoryListeners implements Listener {
 
+    private final BWMain plugin;
+    
+    public InventoryListeners() {
+        plugin = BWMain.getInstance();
+    }
 
     @EventHandler
     public void onclick(InventoryClickEvent event) {
@@ -39,7 +47,7 @@ public class InventoryListeners implements Listener {
             player.closeInventory();
 
             player.getInventory().remove(Material.WOOL);
-            BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId()).getData().setTeamcolor(bwTeam.name());
+            plugin.playermanager.getPlayerBase(player.getUniqueId()).getData().setTeamcolor(bwTeam.name());
             player.sendMessage(bwTeam.getChatColor() + bwTeam.name() + " selected");
             BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getPreteam().put(player.getUniqueId(), bwTeam.name());
 
@@ -49,6 +57,40 @@ public class InventoryListeners implements Listener {
             vv.setItemMeta(meta);
             player.getInventory().addItem(vv);
             event.setCancelled(true);
+        } else if (event.getInventory().getName().equalsIgnoreCase("Upgrades")) {
+
+            event.setCancelled(true);
+            Player player = (Player) event.getWhoClicked();
+            BWPlayer bwplayer =BWManager.getInstance().getBWPlayer(player.getUniqueId());
+
+            for(Island island : BWManager.getInstance().getArena(bwplayer.getMapname()).getIslands()){
+                if(island.getTeam().name().equalsIgnoreCase(bwplayer.getTeamcolor())) {
+
+                    ItemStack cost = new ItemStack(Material.AIR);
+                    Consumer<Island> upgrade = null;
+
+                    if(stack.getType() == Material.IRON_CHESTPLATE) {
+                        cost = plugin.getArmor().getCost(island);
+                        upgrade = plugin.getArmor().getUpgrademethod();
+                    } else if(stack.getType() == Material.DIAMOND_SWORD) {
+                        cost = plugin.getSharpness().getCost(island);
+                        upgrade = plugin.getSharpness().getUpgrademethod();
+                    } else if(stack.getType() == Material.FURNACE) {
+                        cost = plugin.getForgery().getCost(island);
+                        upgrade = plugin.getForgery().getUpgrademethod();
+                    }
+
+                    if(cost.getType() != Material.AIR && upgrade != null){
+                        if(player.getInventory().contains(cost)) {
+                            upgrade.accept(island);
+                            player.closeInventory();
+                        } else
+                            plugin.messagehandler.sendMessage(player, BWMessages.MISSING_AMOUNT);
+                    }
+                    break;
+                }
+            }
+
         } else if (event.getInventory().getName().equalsIgnoreCase("Categories")) {
             event.setCancelled(true);
             Inventory inventory = null;
@@ -56,7 +98,7 @@ public class InventoryListeners implements Listener {
 
             if (stack.getType() == Material.DIAMOND_SWORD) {
                 inventory = Bukkit.createInventory(null, 36, "Shop");
-                for (ShopItem shopItem : BWMain.getInstance().getFight().getListitems()) {
+                for (ShopItem shopItem : plugin.getFight().getListitems()) {
                     if (i == 17)
                         i = 19;
                     else if(i== 26)
@@ -66,7 +108,7 @@ public class InventoryListeners implements Listener {
                 }
             } else if (stack.getType() == Material.GOLDEN_APPLE) {
                 inventory = Bukkit.createInventory(null, 45, "Shop");
-                for (ShopItem shopItem : BWMain.getInstance().getUtilities().getListitems()) {
+                for (ShopItem shopItem : plugin.getUtilities().getListitems()) {
                     if (i == 17)
                         i = 19;
                     else if(i== 26)
@@ -78,7 +120,7 @@ public class InventoryListeners implements Listener {
                 }
             } else if (stack.getType() == Material.STONE) {
                 inventory = Bukkit.createInventory(null, 27, "Shop");
-                for (ShopItem shopItem : BWMain.getInstance().getBlocks().getListitems()) {
+                for (ShopItem shopItem : plugin.getBlocks().getListitems()) {
                     if (i == 18)
                         i = 19;
                     inventory.setItem(i, shopItem.getMenu());
@@ -120,18 +162,18 @@ public class InventoryListeners implements Listener {
                         BWManager.getInstance().getBWPlayer(player.getUniqueId()).setArmor(stack.getType());
                         Island island = BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getIslands().stream().filter(islands -> player.getDisplayName().contains(""+islands.getTeam().getChatColor())).findFirst().get();
 
-                        player.getInventory().setHelmet(addEnchantment(Material.valueOf(name+"_HELMET"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                        player.getInventory().setChestplate(addEnchantment(Material.valueOf(name+"_CHESTPLATE"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                        player.getInventory().setLeggings(addEnchantment(Material.valueOf(name+"_LEGGINGS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                        player.getInventory().setBoots(addEnchantment(Material.valueOf(name+"_BOOTS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
+                        player.getInventory().setHelmet(addEnchantment(Material.valueOf(name+"_HELMET"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor()));
+                        player.getInventory().setChestplate(addEnchantment(Material.valueOf(name+"_CHESTPLATE"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor()));
+                        player.getInventory().setLeggings(addEnchantment(Material.valueOf(name+"_LEGGINGS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor()));
+                        player.getInventory().setBoots(addEnchantment(Material.valueOf(name+"_BOOTS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor()));
                     }
                     player.getInventory().addItem(stack);
                 } else {
-                    BWMain.getInstance().messagehandler.sendMessage(player, BWMessages.MISSING_AMOUNT);
+                    plugin.messagehandler.sendMessage(player, BWMessages.MISSING_AMOUNT);
                     player.closeInventory();
                 }
             } else
-                BWMain.getInstance().messagehandler.sendMessage(player, BWMessages.FULL_INVENTORY);
+                plugin.messagehandler.sendMessage(player, BWMessages.FULL_INVENTORY);
         }
 
     }
@@ -141,13 +183,28 @@ public class InventoryListeners implements Listener {
 
         Player player =event.getPlayer();
         Entity entity = event.getRightClicked();
+
+        if(player.getGameMode() != GameMode.SURVIVAL)
+            return;
+
+
         if(entity.getType() == EntityType.VILLAGER){
+
             event.setCancelled(true);
-            Inventory inventory = Bukkit.createInventory(null, 27, "Categories");
-            inventory.setItem(11, BWMain.getInstance().getBlocks().getMenu().getBuild(BWMain.getInstance().messagehandler, BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
-            inventory.setItem(13, BWMain.getInstance().getFight().getMenu().getBuild(BWMain.getInstance().messagehandler, BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
-            inventory.setItem(15, BWMain.getInstance().getUtilities().getMenu().getBuild(BWMain.getInstance().messagehandler, BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
-            player.openInventory(inventory);
+
+            if(entity.getCustomName().equalsIgnoreCase("Upgrades")) {
+                Inventory inventory = Bukkit.createInventory(null, 27, "Upgrades");
+                inventory.setItem(11, plugin.getArmor().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
+                inventory.setItem(12, plugin.getForgery().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
+                inventory.setItem(13, plugin.getSharpness().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
+                player.openInventory(inventory);
+            } else {
+                Inventory inventory = Bukkit.createInventory(null, 27, "Categories");
+                inventory.setItem(11, plugin.getBlocks().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
+                inventory.setItem(13, plugin.getFight().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
+                inventory.setItem(15, plugin.getUtilities().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
+                player.openInventory(inventory);
+            }
         }
     }
     private ItemStack addEnchantment(Material material, Enchantment enchantment, int level){
@@ -172,8 +229,7 @@ public class InventoryListeners implements Listener {
                     return;
                 } else {
                     inventory.setItem(i, new ItemStack(Material.AIR));
-                    amount = amount-stack.getAmount();
-                    System.out.println(amount);
+                    amount = amount-content.getAmount();
                 }
             }
         }

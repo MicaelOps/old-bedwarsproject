@@ -91,7 +91,7 @@ public class SetLocations extends CommandAdapter {
         if(strings.length == 0) {
             player.sendMessage("use /setisland list");
             player.sendMessage("use /setisland create <name> <color>  (na localizacao do spawn)");
-            player.sendMessage("use /setisland <name> <npc/generator/bed>");
+            player.sendMessage("use /setisland <name> <npc/upgrade/generator/bed>");
         } else {
             Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
 
@@ -121,6 +121,14 @@ public class SetLocations extends CommandAdapter {
                             player.sendMessage("Ilha salva com sucesso;");
                         }
                     }
+                } else if(strings[1].toLowerCase().equalsIgnoreCase("upgrade")) {
+                    for(Island island : arena.getIslands()) {
+                        if(island.getName().equalsIgnoreCase(strings[0].toLowerCase())){
+                            island.setUpgrade(player.getLocation());
+                            island.save(arena.getName(), BWMain.getInstance().mainconfig);
+                            player.sendMessage("Ilha salva com sucesso;");
+                        }
+                    }
                 } else if(strings[1].toLowerCase().equalsIgnoreCase("bed")) {
                     for(Island island : arena.getIslands()) {
                         if(island.getName().equalsIgnoreCase(strings[0].toLowerCase())){
@@ -138,7 +146,7 @@ public class SetLocations extends CommandAdapter {
                         }
                     }
                     if(!exist){
-                        Island island = new Island(strings[1].toLowerCase(), BWTeam.valueOf(strings[2].toUpperCase()), player.getLocation(), null, null, null);
+                        Island island = new Island(strings[1].toLowerCase(), player.getLocation().getWorld().getName(), BWTeam.valueOf(strings[2].toUpperCase()), player.getLocation(), null, null,  null,null);
                         island.save(arena.getName(), BWMain.getInstance().mainconfig);
                         arena.getIslands().add(island);
                         player.sendMessage("Ilha criada com sucesso");

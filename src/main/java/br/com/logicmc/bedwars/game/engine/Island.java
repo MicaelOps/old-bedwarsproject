@@ -8,17 +8,19 @@ import org.bukkit.Location;
 
 public class Island {
 
-    private final String name;
+    private final String name,arena;
     private final BWTeam team;
+    private final Location spawn;
 
     private boolean bedbroken;
-    private int forgery,sharpness;
-    private Location npc,bed,spawn;
+    private int forgery,sharpness,armor;
+    private Location npc,bed,upgrade;
     private IslandGenerator generator;
 
 
-    public Island(String name, BWTeam color , Location spawn, Location npc, Location bed, Location generator) {
+    public Island(String name, String arena, BWTeam color , Location spawn, Location npc, Location upgrade, Location bed, Location generator) {
         this.name = name;
+        this.arena = arena;
         this.npc = npc;
         this.bed = bed;
         this.generator = new IslandGenerator(generator);
@@ -28,6 +30,11 @@ public class Island {
         bedbroken = false;
         forgery = 0;
         sharpness = 0;
+        armor = 0;
+    }
+
+    public String getArena() {
+        return arena;
     }
 
     public int getForgery() {
@@ -35,8 +42,16 @@ public class Island {
     }
     public void setForgery(int forgery) {
         this.forgery = forgery;
-        
     }
+
+    public int getArmor() {
+        return armor;
+    }
+
+    public void setArmor(int armor) {
+        this.armor = armor;
+    }
+
     public void setSharpness(int sharpness) {
         this.sharpness = sharpness;
     }
@@ -81,6 +96,14 @@ public class Island {
         this.bed = bed;
     }
 
+    public Location getUpgrade() {
+        return upgrade;
+    }
+
+    public void setUpgrade(Location upgrade) {
+        this.upgrade = upgrade;
+    }
+
     public IslandGenerator getGenerator() {
         return generator;
     }
@@ -95,6 +118,8 @@ public class Island {
             System.out.println("[Arena] Generator location of "+name+" from arena "+arenaname+" is null");
         if(spawn == null)
             System.out.println("[Arena] Spawn location of "+name+" from arena "+arenaname+" is null");
+        if(upgrade == null)
+            System.out.println("[Arena] upgrade location of "+name+" from arena "+arenaname+" is null");
     }
     public void save(String arenaname, YamlFile file) {
         file.getConfig().set(arenaname+".islands."+name+".color" , team.name());
@@ -106,6 +131,8 @@ public class Island {
             file.setLocation(arenaname+".islands."+name+".bed" , bed);
         if(generator.getLocation() !=null)
             file.setLocation(arenaname+".islands."+name+".generator" , generator.getLocation());
+        if(upgrade !=null)
+            file.setLocation(arenaname+".islands."+name+".upgrade" , upgrade);
     }
 
     public void setGenerator(IslandGenerator islandGenerator) {

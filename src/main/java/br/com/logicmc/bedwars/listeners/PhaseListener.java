@@ -16,7 +16,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -30,9 +29,13 @@ import java.util.HashSet;
 import java.util.UUID;
 
 public class PhaseListener implements Listener {
-
-
-
+    
+    private final BWMain plugin;
+    
+    public PhaseListener(){
+        plugin = BWMain.getInstance();
+    }
+    
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockdamage(EntityExplodeEvent event) {
         if(event.getEntityType() == EntityType.PRIMED_TNT){
@@ -49,7 +52,7 @@ public class PhaseListener implements Listener {
                 Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
                 for(Island island : arena.getIslands()){
                     if(!island.isBedbroken() &&island.getBed().distance(event.getBlock().getLocation()) < 5.0D){
-                        PlayerBase<BWPlayer> bwPlayer = BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId());
+                        PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
                         if(bwPlayer.getData().getTeamcolor().equalsIgnoreCase(island.getTeam().name()))
                             cancelled = true;
                         else {
@@ -59,7 +62,7 @@ public class PhaseListener implements Listener {
                             arena.updateScoreboardTeam(player, "beds", ChatColor.GREEN+""+bwPlayer.getData().getBeds());
                             for(UUID uuid : arena.getPlayers()){
                                 Player everyone = Bukkit.getPlayer(uuid);
-                                String string = BWMain.getInstance().messagehandler.getMessage(BWMessages.BED_DESTROYED, BWMain.getInstance().playermanager.getPlayerBase(uuid).getPreferences().getLang());
+                                String string = plugin.messagehandler.getMessage(BWMessages.BED_DESTROYED, plugin.playermanager.getPlayerBase(uuid).getPreferences().getLang());
                                 everyone.sendTitle(""+ChatColor.BOLD+bwTeam.getChatColor()+bwTeam.name(),  string);
                                 if(everyone.getDisplayName().contains(bwTeam.getChatColor()+""))
                                     arena.updateScoreboardTeam(everyone, bwTeam.name(), ChatColor.RED+" X (You)");
@@ -112,17 +115,16 @@ public class PhaseListener implements Listener {
     }
     @EventHandler(priority= EventPriority.HIGHEST)
     public void entitydamage(EntityDamageEvent event) {
-        boolean damage = event.getEntityType()==EntityType.VILLAGER || event.getEntityType()==EntityType.ARMOR_STAND;
+        boolean damage = !(event.getEntity() instanceof Player);
 
         if(!damage)
-            damage = check(event.getEntity().getLocation(), event.getEntity());
-        if(!damage) {
-                
-            if(event.getDamage() >= ((Player) event.getEntity()).getHealth()) {
+            damage = check(event.getEntity().getLocation());
+        if(!damage && event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK){
+        	 if(event.getFinalDamage() >= ((Player) event.getEntity()).getHealth()) {
                 damage = true;
                 Player player = (Player) event.getEntity();
                 Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
-                PlayerBase<BWPlayer> bwPlayer = BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId());
+                PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
                 BWPlayer bedwars = bwPlayer.getData();
                 for (Island island : arena.getIslands()) {
                     if (island.getTeam().name().equalsIgnoreCase(bedwars.getTeamcolor())) {
@@ -131,21 +133,20 @@ public class PhaseListener implements Listener {
                         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999 ,5));
                         player.setAllowFlight(true);
                         player.setFlying(true);
-                        player.getInventory().setArmorContents(null);
 
                         if (island.isBedbroken()) {
-                            player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
+                            player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
                             arena.getPlayers().remove(player.getUniqueId());
                             player.setDisplayName("[SPECTATOR] "+player.getName());
                             for (UUID uuid : arena.getPlayers()) {
                                 Bukkit.getPlayer(uuid).hidePlayer(player);
                             }
                             player.getInventory().clear();
-                            BWMain.getInstance().giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
-                            BWMain.getInstance().giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
-                            BWMain.getInstance().giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
+                            plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
+                            plugin.giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
+                            plugin.giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
                         } else {
-                            player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + BWMain.getInstance().messagehandler.getMessage(BWMessages.DEAD, bwPlayer.getPreferences().getLang()), BWMain.getInstance().messagehandler.getMessage(BWMessages.RESPAWN_MESSAGE, bwPlayer.getPreferences().getLang()));
+                            player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.DEAD, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.RESPAWN_MESSAGE, bwPlayer.getPreferences().getLang()));
                             new BukkitRunnable() {
                                 @Override
                                 public void run() {
@@ -155,23 +156,15 @@ public class PhaseListener implements Listener {
                                     player.setAllowFlight(false);
                                     player.setFlying(false);
                                     player.getActivePotionEffects().forEach(potion->player.removePotionEffect(potion.getType()));
-                                    if(bedwars.getArmor() != Material.AIR){
-                                        String name = bedwars.getArmor().name().replace("_CHESTPLATE","");
-
-                                        player.getInventory().setHelmet(addEnchantment(Material.valueOf(name+"_HELMET"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                        player.getInventory().setChestplate(addEnchantment(Material.valueOf(name+"_CHESTPLATE"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                        player.getInventory().setLeggings(addEnchantment(Material.valueOf(name+"_LEGGINGS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                        player.getInventory().setBoots(addEnchantment(Material.valueOf(name+"_BOOTS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                    }
-        
                                 }
-                            }.runTaskLater(BWMain.getInstance(), 60L);
+                            }.runTaskLater(plugin, 60L);
                         }
                         break;
                     }
                 }
             }
         }
+        
         event.setCancelled(damage);
     }
 
@@ -185,16 +178,17 @@ public class PhaseListener implements Listener {
     @EventHandler(priority=EventPriority.HIGHEST)
     public void entitydamage(EntityDamageByEntityEvent event) {
         boolean damage = check(event.getEntity().getLocation());
+        System.out.println("edde " + damage);
         if(!damage){
             if(event.getEntity() instanceof Player && event.getDamager() instanceof Player){
-                damage = BWMain.getInstance().playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(BWMain.getInstance().playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
-                System.out.println(damage);
+                damage = plugin.playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(plugin.playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
+                System.out.println("edde " +damage);
                 if(!damage) {
-                    if(event.getDamage() >= ((Player) event.getEntity()).getHealth()) {
+                    if(event.getFinalDamage() >= ((Player) event.getEntity()).getHealth()) {
                         damage = true;
                         Player player = (Player) event.getEntity();
                         Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
-                        PlayerBase<BWPlayer> bwPlayer = BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId());
+                        PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
                         BWPlayer bedwars = bwPlayer.getData();
                         bwPlayer.getData().increaseKills();
                         arena.updateScoreboardTeam(player, "kills", ChatColor.GREEN+""+bwPlayer.getData().getKills());
@@ -205,23 +199,20 @@ public class PhaseListener implements Listener {
                                 player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999 ,5));
                                 player.setAllowFlight(true);
                                 player.setFlying(true);
-                                player.getInventory().setArmorContents(null);
-                                
-
 
                                 if (island.isBedbroken()) {
-                                    player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), BWMain.getInstance().messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
+                                    player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
                                     arena.getPlayers().remove(player.getUniqueId());
                                     player.setDisplayName("[SPECTATOR] "+player.getName());
                                     for (UUID uuid : arena.getPlayers()) {
                                         Bukkit.getPlayer(uuid).hidePlayer(player);
                                     }
                                     player.getInventory().clear();
-                                    BWMain.getInstance().giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
-                                    BWMain.getInstance().giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
-                                    BWMain.getInstance().giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
+                                    plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
+                                    plugin.giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
+                                    plugin.giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
                                 } else {
-                                    player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + BWMain.getInstance().messagehandler.getMessage(BWMessages.DEAD, bwPlayer.getPreferences().getLang()), BWMain.getInstance().messagehandler.getMessage(BWMessages.RESPAWN_MESSAGE, bwPlayer.getPreferences().getLang()));
+                                    player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.DEAD, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.RESPAWN_MESSAGE, bwPlayer.getPreferences().getLang()));
                                     new BukkitRunnable() {
                                         @Override
                                         public void run() {
@@ -231,16 +222,9 @@ public class PhaseListener implements Listener {
                                             player.setAllowFlight(false);
                                             player.setFlying(false);
                                             player.getActivePotionEffects().forEach(potion->player.removePotionEffect(potion.getType()));
-                                            if(bedwars.getArmor() != Material.AIR){
-                                                String name = bedwars.getArmor().name().replace("_CHESTPLATE","");
-        
-                                                player.getInventory().setHelmet(addEnchantment(Material.valueOf(name+"_HELMET"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                                player.getInventory().setChestplate(addEnchantment(Material.valueOf(name+"_CHESTPLATE"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                                player.getInventory().setLeggings(addEnchantment(Material.valueOf(name+"_LEGGINGS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                                player.getInventory().setBoots(addEnchantment(Material.valueOf(name+"_BOOTS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getSharpness()));
-                                            }
+
                                         }
-                                    }.runTaskLater(BWMain.getInstance(), 60L);
+                                    }.runTaskLater(plugin, 60L);
                                 }
                                 break;
                             }

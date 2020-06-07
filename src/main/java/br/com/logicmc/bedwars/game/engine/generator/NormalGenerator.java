@@ -12,7 +12,7 @@ public class NormalGenerator implements IGenerator{
     private final int reset;
 
     private Hologram holograms;
-    private int time;
+    private int time,generatorlevel;
 
     public NormalGenerator(Location location, Material material, Hologram holograms, int reset) {
         this.material = material;
@@ -21,7 +21,15 @@ public class NormalGenerator implements IGenerator{
         this.reset = reset;
 
         time = reset;
+        generatorlevel = 0;
 
+    }
+
+    public int getGeneratorlevel() {
+        return generatorlevel;
+    }
+    public void increaseGeneratorLevel(){
+        this.generatorlevel++;
     }
 
     @Override

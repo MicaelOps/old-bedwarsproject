@@ -2,7 +2,11 @@ package br.com.logicmc.bedwars.game.phase;
 
 import java.util.Random;
 
+import br.com.logicmc.bedwars.game.BWManager;
+import br.com.logicmc.bedwars.game.player.BWPlayer;
+import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -23,7 +27,8 @@ public class EndPhase implements PhaseControl {
     @Override
     public void init(Arena arena) {
         arena.getBlocks().clear();
-        arena.getPlayers().clear();
+        BWPlayer bwPlayer = BWManager.getInstance().getBWPlayer(arena.getPlayers().stream().filter(uuid-> Bukkit.getPlayer(uuid).getGameMode()== GameMode.SURVIVAL).findFirst().get());
+        arena.updateScoreboardForAll("winner", "§fTeam "+ BWTeam.valueOf(bwPlayer.getTeamcolor()).getChatColor()+bwPlayer.getTeamcolor());
     }
 
     @Override
@@ -60,15 +65,12 @@ public class EndPhase implements PhaseControl {
         objective.setDisplayName("§b§lBEDWARS");
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
-        objective.getScore("§5").setScore(5);
-		objective.getScore("§4").setScore(4);
 		objective.getScore("§3").setScore(3);
 		objective.getScore("§2").setScore(2);
 		objective.getScore("§1").setScore(1);
 		objective.getScore("§0").setScore(0);
 
-		createTeam(scoreboard, "time", "§fTempo: ","§a00:00","§4");
-		createTeam(scoreboard, "players", "§fOnline: ","§a-1","§2");
+		createTeam(scoreboard, "winner", "§fTeam","§fganhou!","§2");
 		createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");
     }
 }

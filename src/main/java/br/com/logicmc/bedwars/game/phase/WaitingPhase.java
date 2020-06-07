@@ -1,6 +1,7 @@
 package br.com.logicmc.bedwars.game.phase;
 
 import br.com.logicmc.bedwars.BWMain;
+import br.com.logicmc.bedwars.extra.customentity.EntityManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.engine.PhaseControl;
@@ -103,9 +104,8 @@ public class WaitingPhase implements PhaseControl {
             createArmostand(normalGenerator.getLocation().add(0.0d, 0.7D, 0.0D), Material.EMERALD_BLOCK);
         }
         for(Island island : arena.getIslands()){
-            Villager villager = (Villager) island.getNpc().getWorld().spawnEntity(island.getNpc(), EntityType.VILLAGER);
-            villager.setCustomName("vc e ruim no pvp");
-            villager.setCustomNameVisible(true);
+            EntityManager.getInstance().spawnImmobileVillager(island.getNpc(), "Blocks & Tools");
+            EntityManager.getInstance().spawnImmobileVillager(island.getUpgrade(), "Upgrades");
         }
 
     }

@@ -5,6 +5,7 @@ import br.com.logicmc.bedwars.extra.FixedItems;
 import br.com.logicmc.bedwars.extra.Schematic;
 import br.com.logicmc.bedwars.extra.StaffArena;
 import br.com.logicmc.bedwars.extra.YamlFile;
+import br.com.logicmc.bedwars.extra.customentity.EntityManager;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.Island;
@@ -13,6 +14,7 @@ import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import br.com.logicmc.bedwars.game.shop.ShopCategory;
 import br.com.logicmc.bedwars.game.shop.ShopItem;
+import br.com.logicmc.bedwars.game.shop.upgrades.UpgradeItem;
 import br.com.logicmc.bedwars.listeners.InventoryListeners;
 import br.com.logicmc.bedwars.listeners.PhaseListener;
 import br.com.logicmc.bedwars.listeners.PlayerListeners;
@@ -53,7 +55,9 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     public YamlFile mainconfig;
     private boolean maintenance;
     private Location spawnlocation;
+
     private ShopCategory blocks,fight,utilities;
+    private UpgradeItem sharpness,armor,forgery;
 
     @Override
     public void onEnable() {
@@ -74,6 +78,9 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             arena.startTimer(this);
         }
         
+        CommandLoader.loadPackage(this, BWMain.class, "br.com.logicmc.bedwars.commands");
+        EntityManager.getInstance().registerEntities();
+        
         super.onEnable();
 
         blocks = new ShopCategory(FixedItems.SHOP_BLOCKS);
@@ -85,7 +92,6 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         Bukkit.getPluginManager().registerEvents(new PhaseListener(), this);
 
         messagehandler.loadMessage(BWMessages.PLAYER_LEAVE_INGAME, this);
-        CommandLoader.loadPackage(this, BWMain.class, "br.com.logicmc.bedwars.commands");
         BWManager.getInstance().addGame("staff", new StaffArena());
 
         loadItens();
@@ -93,6 +99,18 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
     public static BWMain getInstance() {
         return instance;
+    }
+
+    public UpgradeItem getArmor() {
+        return armor;
+    }
+
+    public UpgradeItem getSharpness() {
+        return sharpness;
+    }
+
+    public UpgradeItem getForgery() {
+        return forgery;
     }
 
     public ShopCategory getBlocks() {
@@ -227,7 +245,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
                     if(visland.equalsIgnoreCase("islands"))
                         mainconfig.loopThroughSectionKeys(finalArena +".islands", (island)->{       
-                             islands.add(new Island(island, BWTeam.valueOf(mainconfig.getConfig().getString(finalArena+".islands."+island+".color")),mainconfig.getLocation(finalArena +".islands."+island+".spawn"),mainconfig.getLocation(finalArena +".islands."+island+".npc") , mainconfig.getLocation(finalArena +".islands."+island+".bed"), mainconfig.getLocation(finalArena +".islands."+island+".generator")));
+                             islands.add(new Island(island, finalArena, BWTeam.valueOf(mainconfig.getConfig().getString(finalArena+".islands."+island+".color")),mainconfig.getLocation(finalArena +".islands."+island+".spawn"),mainconfig.getLocation(finalArena +".islands."+island+".npc") , mainconfig.getLocation(finalArena +".islands."+island+".upgrade") ,mainconfig.getLocation(finalArena +".islands."+island+".bed"), mainconfig.getLocation(finalArena +".islands."+island+".generator")));
                         });
                     else if(visland.equalsIgnoreCase("diamond"))
                         mainconfig.loopThroughSectionKeys(finalArena +".diamond", (string)->diamond.add(new NormalGenerator(mainconfig.getLocation(finalArena +".diamond."+string), Material.DIAMOND,
@@ -254,6 +272,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                     island.getNpc().setWorld(world);
                     island.getSpawn().setWorld(world);
                     island.getBed().setWorld(world);
+                    island.getUpgrade().setWorld(world);
                     
                 }
                 for(NormalGenerator generator : diamond) { 
@@ -292,8 +311,6 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         mainconfig = new YamlFile("config.yml");
         return mainconfig.loadResource(this);
     }
-
-
 
 
     public void updateSuffix(Player player, Scoreboard sc, String team, String suffix) {
@@ -370,6 +387,68 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         utilities.getListitems().add(new ShopItem(new ItemStack(Material.ENDER_PEARL, 1), new ItemStack(Material.EMERALD, 4)));
         utilities.getListitems().add(new ShopItem(new ItemStack(Material.WATER_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 3)));
         utilities.getListitems().add(new ShopItem(new ItemStack(Material.MILK_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 4)));
+
+        sharpness = new UpgradeItem(FixedItems.UPGRADE_SHARPNESS,  (island) -> {
+            int teamcomp = BWManager.getInstance().getArena(island.getArena()).getTeamcomposition();
+            if(teamcomp == Arena.SOLO || teamcomp == Arena.DUO)
+                return new ItemStack(Material.DIAMOND, 4);
+            else
+                return new ItemStack(Material.DIAMOND, 8);
+        },(island)->island.setSharpness(1));
+
+        forgery = new UpgradeItem(FixedItems.UPGRADE_FORGERY, (island) -> {
+            int teamcomp = BWManager.getInstance().getArena(island.getArena()).getTeamcomposition();
+            if(teamcomp == Arena.SOLO || teamcomp == Arena.DUO){
+                if(island.getForgery() == 0)
+                    return new ItemStack(Material.DIAMOND, 2);
+                else if(island.getForgery() == 1)
+                    return new ItemStack(Material.DIAMOND, 4);
+                else if(island.getForgery() == 2)
+                    return new ItemStack(Material.DIAMOND, 6);
+                else if(island.getForgery() == 3)
+                    return new ItemStack(Material.DIAMOND, 8);
+                else
+                    return new ItemStack(Material.AIR);
+            } else {
+                if(island.getForgery() == 0)
+                    return new ItemStack(Material.DIAMOND, 4);
+                else if(island.getForgery() == 1)
+                    return new ItemStack(Material.DIAMOND, 8);
+                else if(island.getForgery() == 2)
+                    return new ItemStack(Material.DIAMOND, 12);
+                else if(island.getForgery() == 3)
+                    return new ItemStack(Material.DIAMOND, 16);
+                else
+                    return new ItemStack(Material.AIR);
+            }
+        }, (island)->island.setForgery(island.getForgery()+1));
+
+        armor = new UpgradeItem(FixedItems.UPGRADE_ARMOR, (island) -> {
+            int teamcomp = BWManager.getInstance().getArena(island.getArena()).getTeamcomposition();
+            if(teamcomp == Arena.SOLO || teamcomp == Arena.DUO) {
+                if(island.getArmor() == 0)
+                    return new ItemStack(Material.DIAMOND, 2);
+                else if(island.getArmor() == 1)
+                    return new ItemStack(Material.DIAMOND, 4);
+                else if(island.getArmor() == 2)
+                    return new ItemStack(Material.DIAMOND, 8);
+                else if(island.getArmor() == 3)
+                    return new ItemStack(Material.DIAMOND, 16);
+                else
+                    return new ItemStack(Material.AIR);
+            } else {
+                if(island.getArmor() == 0)
+                    return new ItemStack(Material.DIAMOND, 5);
+                else if(island.getArmor() == 1)
+                    return new ItemStack(Material.DIAMOND, 10);
+                else if(island.getArmor() == 2)
+                    return new ItemStack(Material.DIAMOND, 20);
+                else if(island.getArmor() == 3)
+                    return new ItemStack(Material.DIAMOND, 30);
+                else
+                    return new ItemStack(Material.AIR);
+            }
+        }, (island)->island.setArmor(island.getArmor()+1));
     }
     private ItemStack addPotion(PotionEffectType type , int duration, int power){
         ItemStack itemStack = new ItemStack(Material.POTION, 1);

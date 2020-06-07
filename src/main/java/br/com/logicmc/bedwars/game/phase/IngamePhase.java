@@ -1,19 +1,16 @@
 package br.com.logicmc.bedwars.game.phase;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.function.Consumer;
 
 import br.com.logicmc.bedwars.game.BWManager;
+import br.com.logicmc.bedwars.game.phase.event.BedDestroyedEvent;
+import br.com.logicmc.bedwars.game.phase.event.GeneratorEvent;
+import br.com.logicmc.bedwars.game.phase.event.PhaseEvent;
+import br.com.logicmc.bedwars.game.phase.event.SuddenDeathEvent;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.*;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
@@ -37,11 +34,16 @@ public class IngamePhase implements PhaseControl {
     private final List<String> available;
 
     private Scoreboard scoreboard;
-    private int islandgenerators;
+    private int islandgenerators,stopupgrade;
+
+    private PhaseEvent event;
 
     public IngamePhase() {
         available = new ArrayList<>();
         islandgenerators = -1;
+        stopupgrade = 25*60;
+
+        event = new GeneratorEvent(300, "Diamond II", 0);
     }
     /**
      * islandgenerators is not used as a cooldown but as a minimum cooldown to verify if the generators are in cooldown;
@@ -68,6 +70,30 @@ public class IngamePhase implements PhaseControl {
 
         for (NormalGenerator generator : arena.getEmerald()) {
             resetGenerator(generator, time);
+        }
+
+        // event load
+        int remainingtime = event.getInittime() - time;
+
+        if(remainingtime > 0){
+
+            int i = remainingtime / 60;
+            arena.updateScoreboardForAll("time","§fem §a" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
+
+        } else {
+            event.execute(arena);
+
+            if(time < stopupgrade) {
+                if (event.getEventname().contains("diamond"))
+                    event = new GeneratorEvent(time + 300, event.getEventname().replace("Diamond","Emerald")+"I", 1);
+                else
+                    event = new GeneratorEvent(time + 300, event.getEventname().replace("Emerald","Diamond")+"I", 0);
+            } else if(event.getEventname().equalsIgnoreCase("Camas destruidas"))
+                event = new SuddenDeathEvent(time+(10*60));
+            else
+                event = new BedDestroyedEvent(time+(10*60));
+
+            arena.updateScoreboardForAll("upgrade", "§f"+event.getEventname());
         }
         return time;
     }
@@ -181,17 +207,23 @@ public class IngamePhase implements PhaseControl {
 
         for(UUID uuid : arena.getPlayers()){
             Player player = Bukkit.getPlayer(uuid);
-            BWPlayer bwplayer = BWManager.getInstance().getBWPlayer(uuid);
-            ArrayList<String> list = new ArrayList<>();
-            arena.getPlayers().stream().filter(e->!BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
-            if(!list.isEmpty())
-                BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "enemy",list);
-            list.clear();
-            arena.getPlayers().stream().filter(e->BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
-            BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "friend", list);
-        }
+            if(player == null){
+                arena.getPlayers().remove(uuid);
+            } else {
+                BWPlayer bwplayer = BWManager.getInstance().getBWPlayer(uuid);
+                List<String> list = new ArrayList<>();
+                arena.getPlayers().stream().filter(e->!BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
 
-        arena.getIslands().removeIf(island -> BWMain.getInstance().playermanager.getPlayers().stream().noneMatch(bwPlayerPlayerBase -> bwPlayerPlayerBase.getData().getTeamcolor().equalsIgnoreCase(island.getTeam().name())));
+
+                if(!list.isEmpty()) {
+                    BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "enemy", list);
+                    list.clear();
+                }
+
+                arena.getPlayers().stream().filter(e->BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
+                BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "friend", list);
+            }
+        }
 
         scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§l").setScore((index+5+1));
         scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§k").setScore((index+5+2));
@@ -245,7 +277,7 @@ public class IngamePhase implements PhaseControl {
 		objective.getScore("§b").setScore(1);
 		objective.getScore("§a").setScore(0);
 
-        createTeam(scoreboard, "upgrade", "§fDiamond II em","§a 00:00","");
+        createTeam(scoreboard, "upgrade", "§f"+event.getEventname(),"§fem §a 00:00","");
         createTeam(scoreboard, "kills", "§fMatou: ","§a0","§d");
         createTeam(scoreboard, "beds", "§fCapturas: ","§a0","§c");
         createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§a");
@@ -254,7 +286,7 @@ public class IngamePhase implements PhaseControl {
         islandgenerators = 3;
         int index = 0;
         for(BWTeam team : BWTeam.values()){
-            createTeam(scoreboard, team.name(),team.getChatColor()+WordUtils.capitalize(team.name().toLowerCase()) ,ChatColor.GREEN+" V", "");
+            createTeam(scoreboard, team.name(),ChatColor.BOLD+""+team.getChatColor()+team.name().charAt(0)+" §f"+WordUtils.capitalize(team.name().toLowerCase()) ,ChatColor.GREEN+" V", "");
             for(int i = 0; i < arena.getTeamcomposition(); i++) {
                 available.add(index, team.name());
                 index++;
