@@ -11,6 +11,7 @@ public class ImmobileVillager extends EntityVillager {
     public ImmobileVillager(World world) {
         super(((CraftWorld)world).getHandle());
 
+        /** 
         //clearing entity intelligence
         List<?> goalB = (List<?>)getPrivateField("b", PathfinderGoalSelector.class, goalSelector); goalB.clear();
         List<?> goalC = (List<?>)getPrivateField("c", PathfinderGoalSelector.class, goalSelector); goalC.clear();
@@ -20,24 +21,20 @@ public class ImmobileVillager extends EntityVillager {
         //adding intelligence
         this.goalSelector.a(0, new PathfinderGoalFloat(this));
         this.goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
-        this.goalSelector.a(2, new PathfinderGoalRandomLookaround(this));
+        this.goalSelector.a(2, new PathfinderGoalRandomLookaround(this));*/
     }
 
-    @Override
-    public int getId() {
-        return 98;
-    }
-
-    @Override
-    public void move(double d0, double d1, double d2) {
-
-    }
 
     @Override
     public boolean damageEntity(DamageSource damagesource, float f) {
         return false;
     }
 
+    @Override
+    public String getCustomName() {
+        // TODO Auto-generated method stub
+        return "asd";
+    }
     @Override
     public boolean getCustomNameVisible() {
         return true;

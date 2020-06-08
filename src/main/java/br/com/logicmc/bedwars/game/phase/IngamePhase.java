@@ -78,7 +78,7 @@ public class IngamePhase implements PhaseControl {
         if(remainingtime > 0){
 
             int i = remainingtime / 60;
-            arena.updateScoreboardForAll("time","§fem §a" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
+            arena.updateScoreboardForAll("upgrade","§f em §a" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
 
         } else {
             event.execute(arena);
@@ -277,7 +277,7 @@ public class IngamePhase implements PhaseControl {
 		objective.getScore("§b").setScore(1);
 		objective.getScore("§a").setScore(0);
 
-        createTeam(scoreboard, "upgrade", "§f"+event.getEventname(),"§fem §a 00:00","");
+        createTeam(scoreboard, "upgrade", "§f"+event.getEventname(),"§f em §a 00:00","");
         createTeam(scoreboard, "kills", "§fMatou: ","§a0","§d");
         createTeam(scoreboard, "beds", "§fCapturas: ","§a0","§c");
         createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§a");

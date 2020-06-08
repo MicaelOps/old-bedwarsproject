@@ -116,10 +116,13 @@ public class PhaseListener implements Listener {
     @EventHandler(priority= EventPriority.HIGHEST)
     public void entitydamage(EntityDamageEvent event) {
         boolean damage = !(event.getEntity() instanceof Player);
-
+        System.out.println("ede " + damage);
         if(!damage)
             damage = check(event.getEntity().getLocation());
+
+        System.out.println("ede " + damage);
         if(!damage && event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK){
+            System.out.println("ede " + damage);
         	 if(event.getFinalDamage() >= ((Player) event.getEntity()).getHealth()) {
                 damage = true;
                 Player player = (Player) event.getEntity();
@@ -175,8 +178,8 @@ public class PhaseListener implements Listener {
         return itemStack;
     }
 
-    @EventHandler(priority=EventPriority.HIGHEST)
-    public void entitydamage(EntityDamageByEntityEvent event) {
+    @EventHandler
+    public void damageby(EntityDamageByEntityEvent event) {
         boolean damage = check(event.getEntity().getLocation());
         System.out.println("edde " + damage);
         if(!damage){
@@ -234,7 +237,7 @@ public class PhaseListener implements Listener {
             }
         }
 
-        event.setCancelled(damage);
+        event.setCancelled(false);
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)

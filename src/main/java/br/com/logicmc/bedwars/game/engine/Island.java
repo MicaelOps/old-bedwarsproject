@@ -26,6 +26,7 @@ public class Island {
         this.generator = new IslandGenerator(generator);
         this.spawn = spawn;
         this.team = color;
+        this.upgrade = upgrade;
 
         bedbroken = false;
         forgery = 0;

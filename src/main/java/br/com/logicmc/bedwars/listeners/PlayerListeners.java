@@ -107,6 +107,7 @@ public class PlayerListeners implements Listener {
 
         
         for(UUID uuid : arena.getPlayers()){
+            //ChatColor.BOLD+""+team.getChatColor()+team.name().charAt(0)+" §f"+WordUtils.capitalize(team.name().toLowerCase());
             Bukkit.getPlayer(uuid).sendMessage(event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
         }
     }
@@ -114,23 +115,33 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void interactpl(PlayerInteractEvent event) {
         ItemStack item = event.getItem();
-        if (item == null || item.getType().equals(Material.AIR) || !item.hasItemMeta() || !event.getAction().name().contains("RIGHT"))
+
+
+        if (item == null || item.getType().equals(Material.AIR))
             return;
 
-        if(item.getType() == Material.WOOL && event.getPlayer().getGameMode() == GameMode.ADVENTURE){
-            PlayerBase<BWPlayer> base = BWMain.getInstance().playermanager.getPlayerBase(event.getPlayer().getUniqueId());
-            if(base.isVip() || base.isStaff()){
-                Inventory inventory = Bukkit.createInventory(null, 9, "Teams");
-                for(BWTeam team : BWTeam.values()){
-                    ItemStack stack = new ItemStack(Material.WOOL, 1 , team.getData());
-                    ItemMeta meta = stack.getItemMeta();
-                    meta.setDisplayName(team.getChatColor()+team.name());
-                    stack.setItemMeta(meta);
-                    inventory.addItem(stack);
-                }
-                event.getPlayer().openInventory(inventory);
-            } else
-                event.getPlayer().sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.ERROR_ONLY_VIP, base.getPreferences().getLang()));
+        if(item.getType() == Material.COMPASS)
+            event.setCancelled(true);
+
+        if(!item.hasItemMeta() || !event.getAction().name().contains("RIGHT"))
+            return;
+
+        if(event.getAction().name().contains("RIGHT")) {
+            if(item.getType() == Material.WOOL && event.getPlayer().getGameMode() == GameMode.ADVENTURE){
+                PlayerBase<BWPlayer> base = BWMain.getInstance().playermanager.getPlayerBase(event.getPlayer().getUniqueId());
+                if(base.isVip() || base.isStaff()){
+                    Inventory inventory = Bukkit.createInventory(null, 9, "Teams");
+                    for(BWTeam team : BWTeam.values()){
+                        ItemStack stack = new ItemStack(Material.WOOL, 1 , team.getData());
+                        ItemMeta meta = stack.getItemMeta();
+                        meta.setDisplayName(team.getChatColor()+team.name());
+                        stack.setItemMeta(meta);
+                        inventory.addItem(stack);
+                    }
+                    event.getPlayer().openInventory(inventory);
+                } else
+                    event.getPlayer().sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.ERROR_ONLY_VIP, base.getPreferences().getLang()));
+            }
         }
     }
 

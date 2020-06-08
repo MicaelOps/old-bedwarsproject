@@ -3,8 +3,11 @@ main: br.com.logicmc.bedwars.BWMain
 version: 1.0
 author: icarus
 depend:
-  - corezao
+  - core
 commands:
+  tempmute:
+  mute:
+  lobby:
   party:
   tempo:
   setisland:

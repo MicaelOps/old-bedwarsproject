@@ -12,11 +12,15 @@ public class EntityManager {
     public static EntityManager instance;
 
     public static EntityManager getInstance(){
+
+        if(instance == null)
+            instance = new EntityManager();
+        
         return instance;
     }
 
     public void registerEntities(){
-        addToMaps(ImmobileVillager.class, "Villager", 120);
+  //     addToMaps(ImmobileVillager.class, "Villager", 340);
     }
 
     public void spawnImmobileVillager(Location location, String name){
