@@ -23,6 +23,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.UUID;
@@ -41,6 +42,52 @@ public class PlayerListeners implements Listener {
     }
 
     @EventHandler
+    public void showworldplayers(PlayerChangedWorldEvent event){
+        Player player = event.getPlayer();
+        System.out.println("asa");
+        BWPlayer bwPlayer =plugin.playermanager.getPlayerBase(player).getData();
+        if(!bwPlayer.getMapname().equalsIgnoreCase("staff")) {
+            plugin.giveItem(player, 0, FixedItems.STAFF_ARENA_SPECTATE);
+            plugin.playermanager.getPlayerBase(player).getData().setMap(player.getWorld().getName());
+            BWManager.getInstance().getArenabyUUID(player.getUniqueId()).getPlayers().remove(player.getUniqueId());
+        }
+
+        Arena arena = BWManager.getInstance().getArena(player.getWorld().getName());
+        arena.getPlayers().add(player.getUniqueId());
+
+        for(Player other : Bukkit.getOnlinePlayers()) {
+            if(!event.getPlayer().getWorld().getName().equalsIgnoreCase(other.getLocation().getWorld().getName())) {
+                event.getPlayer().hidePlayer(other);
+            } else {
+                if(arena.getGamestate() == Arena.WAITING) {
+                    player.showPlayer(other);
+                    player.setDisplayName(player.getName());
+                    other.showPlayer(player);
+                } else {
+                    player.setDisplayName("[SPECTATOR] "+player.getName());
+                    player.showPlayer(other);
+                }
+            }
+        }
+        if(arena.getGamestate() == Arena.WAITING){
+            arena.incrementAllotedPlayers();
+            player.getInventory().clear();
+            player.setDisplayName(player.getName());
+            bwPlayer.setTeamcolor("");
+            player.getInventory().setArmorContents(null);
+            plugin.giveItem(player, 0, FixedItems.ONLY_VIP_CHOOSETEAM);
+            player.setGameMode(GameMode.ADVENTURE);
+        } else {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999, 3));
+            player.setGameMode(GameMode.SURVIVAL);
+            player.setAllowFlight(true);
+            player.setFlying(true);
+            plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
+        }
+        arena.updateScoreboardForAll("players", ChatColor.GREEN+""+arena.getPlayers().size());
+        player.setScoreboard(arena.getScoreboard());
+    }
+    @EventHandler
     public void onplayerjoinarena(PlayerJoinArenaEvent event) {
         Player player = event.getPlayer();
         plugin.playermanager.getPlayerBase(player).getData().setMap(event.getArenaname());
@@ -48,32 +95,48 @@ public class PlayerListeners implements Listener {
         plugin.utils.cleanPlayer(player);
         plugin.utils.clearChat(player);
 
-        Arena arena = BWManager.getInstance().getArena(event.getArenaname());
-        arena.getPlayers().add(player.getUniqueId());
-        
-        player.setScoreboard(arena.getScoreboard());
         player.setOp(true);//test purposes
 
-        if(event.getArenaname().equalsIgnoreCase("staff") || arena.getGamestate() == Arena.INGAME) {
-            player.setGameMode(GameMode.SPECTATOR);
-            player.setAllowFlight(true);
-            player.setFlying(true);
-            plugin.giveItem(player, 0, FixedItems.STAFF_ARENA_SPECTATE);
-            plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
-        } else {
-            for(Player other : Bukkit.getOnlinePlayers()) {
-                if(!event.getArenaname().toLowerCase().equalsIgnoreCase(other.getLocation().getWorld().getName())) {
-                    player.hidePlayer(other);
+        Arena arena = BWManager.getInstance().getArena(event.getArenaname());
+        arena.getPlayers().add(player.getUniqueId());
+
+        for(Player other : Bukkit.getOnlinePlayers()) {
+            if(!event.getPlayer().getWorld().getName().equalsIgnoreCase(other.getLocation().getWorld().getName())) {
+                event.getPlayer().hidePlayer(other);
+            } else {
+                if(arena.getGamestate() == Arena.WAITING) {
+                    player.showPlayer(other);
+                    player.setDisplayName(player.getName());
+                    other.showPlayer(player);
+                } else {
+                    player.setDisplayName("[SPECTATOR] "+player.getName());
+                    player.showPlayer(other);
                 }
             }
-            arena.getPlayers().forEach((inuuid) ->plugin.messagehandler.sendMessage(Bukkit.getPlayer(inuuid), BWMessages.NEWPLAYER));
-            BWManager.getInstance().getArena(event.getArenaname()).updateScoreboardForAll("players" , ChatColor.GRAY+""+arena.getPlayers().size());
-
-            player.teleport(arena.getLobby());
-            plugin.giveItem(player, 0, FixedItems.ONLY_VIP_CHOOSETEAM);
         }
-        
-        
+
+        player.setScoreboard(arena.getScoreboard());
+        player.teleport(BWManager.getInstance().getArena(event.getArenaname()).getLobby());
+
+        if(arena.getGamestate() == Arena.WAITING){
+            arena.incrementAllotedPlayers();
+            player.getInventory().clear();
+            player.setDisplayName(player.getName());
+            player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+            player.getInventory().setArmorContents(null);
+            plugin.giveItem(player, 0, FixedItems.ONLY_VIP_CHOOSETEAM);
+            player.setGameMode(GameMode.ADVENTURE);
+            arena.updateScoreboardForAll("players", ChatColor.GREEN+""+arena.getPlayers().size());
+        } else {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999, 3));
+            player.setGameMode(GameMode.SURVIVAL);
+            player.setAllowFlight(true);
+            player.setFlying(true);
+            plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
+        }
+
+
+
     }
     @EventHandler
     public void onquitplayer(PlayerQuitEvent event) {
@@ -102,13 +165,18 @@ public class PlayerListeners implements Listener {
         event.setCancelled(true);
         Arena arena = BWManager.getInstance().getArena(event.getPlayer().getLocation().getWorld().getName());
 
-        if(event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY) && arena.getGamestate() != Arena.END)
+        if(event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY))
             return;
 
-            
-        for(UUID uuid : arena.getPlayers()){
-            if(Bukkit.getPlayer(uuid).getDisplayName().charAt(1) == event.getPlayer().getDisplayName().charAt(1)){
-                Bukkit.getPlayer(uuid).sendMessage(ChatColor.GREEN+"[TEAM] "+event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+        if(arena.getGamestate() == Arena.WAITING){
+            for(UUID uuid : arena.getPlayers()){
+                Bukkit.getPlayer(uuid).sendMessage(ChatColor.WHITE+event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+            }
+        } else {
+            for(UUID uuid : arena.getPlayers()){
+                if(Bukkit.getPlayer(uuid).getDisplayName().charAt(1) == event.getPlayer().getDisplayName().charAt(1)){
+                    Bukkit.getPlayer(uuid).sendMessage(ChatColor.GREEN+"[TEAM] "+event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+                }
             }
         }
     }

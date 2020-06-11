@@ -81,7 +81,7 @@ public class InventoryListeners implements Listener {
                     }
 
                     if(cost.getType() != Material.AIR && upgrade != null){
-                        if(player.getInventory().contains(cost)) {
+                        if(player.getInventory().contains(cost.getType(), cost.getAmount())) {
                             upgrade.accept(island);
                             player.closeInventory();
                         } else
@@ -150,7 +150,14 @@ public class InventoryListeners implements Listener {
 
                     String name = stack.getType().name();
                     if(name.contains("SWORD")){
-                        player.getInventory().addItem(stack);
+                        for(int i = 0; i< player.getInventory().getSize(); i++){
+                            ItemStack sword = player.getInventory().getItem(i);
+                            if(sword != null && sword.getType().name().contains("SWORD")) {
+                                player.getInventory().setItem(i, stack);
+                                break;
+                            }
+                        }
+
                         Island island = BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getIslands().stream().filter(islands -> player.getDisplayName().contains(""+islands.getTeam().getChatColor())).findFirst().get();
                         if(island.getSharpness() != 0)
                             stack.addEnchantment(Enchantment.DAMAGE_ALL, island.getSharpness());

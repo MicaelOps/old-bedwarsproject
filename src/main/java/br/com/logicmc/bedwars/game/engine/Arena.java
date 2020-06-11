@@ -65,12 +65,16 @@ public class Arena {
         gamestate = WAITING;
         phaseControl = 0;
 
+        initScoreboards();
+
+    }
+
+    public void initScoreboards(){
         for(PhaseControl control : controls) {
             control.preinit(this);
         }
 
     }
-
     public HashSet<Location> getBlocks() {
         return blocks;
     }

@@ -34,20 +34,16 @@ public class IngamePhase implements PhaseControl {
     private final List<String> available;
 
     private Scoreboard scoreboard;
-    private int islandgenerators,stopupgrade;
+    private int stopupgrade;
 
     private PhaseEvent event;
 
     public IngamePhase() {
         available = new ArrayList<>();
-        islandgenerators = -1;
         stopupgrade = 25*60;
 
         event = new GeneratorEvent(300, "Diamond II", 0);
     }
-    /**
-     * islandgenerators is not used as a cooldown but as a minimum cooldown to verify if the generators are in cooldown;
-     */
 
     @Override
     public int onTimerCall(Arena arena) {
@@ -55,14 +51,11 @@ public class IngamePhase implements PhaseControl {
         arena.setTime(arena.getTime() + 1);
         int time = arena.getTime();
 
-        if (islandgenerators == time ) {
-            for (Island island : arena.getIslands()) {
-                NormalGenerator generator = island.getGenerator();
-                generator.spawn();
-                generator.setNewReset();
-                
-            }
-            islandgenerators+=3;
+        for (Island island : arena.getIslands()) {
+            NormalGenerator generator = island.getGenerator();
+            generator.spawn();
+            generator.setNewReset();
+
         }
         for (NormalGenerator generator : arena.getDiamond()) {
             resetGenerator(generator, time);
@@ -84,7 +77,7 @@ public class IngamePhase implements PhaseControl {
             event.execute(arena);
 
             if(time < stopupgrade) {
-                if (event.getEventname().contains("diamond"))
+                if (event.getEventname().contains("Diamond"))
                     event = new GeneratorEvent(time + 300, event.getEventname().replace("diamond","Emerald")+"I", 1);
                 else
                     event = new GeneratorEvent(time + 300, event.getEventname().replace("emerald","Diamond")+"I", 0);
@@ -93,7 +86,7 @@ public class IngamePhase implements PhaseControl {
             else
                 event = new BedDestroyedEvent(time+(10*60));
 
-            arena.updateScoreboardForAll("upgrade", "§f"+event.getEventname());
+            arena.getScoreboard().getTeam("upgrade").setPrefix(ChatColor.WHITE+event.getEventname());
         }
         return time;
     }
@@ -115,7 +108,6 @@ public class IngamePhase implements PhaseControl {
     public void init(Arena arena) {
         arena.setTime(1);
         arena.setGamestate(Arena.INGAME);
-        islandgenerators = arena.getTime() + 5;
         
         int index = 0,score=0;
 
@@ -189,6 +181,7 @@ public class IngamePhase implements PhaseControl {
             }
             Team scteam = scoreboard.getTeam(bwPlayer.getTeamcolor());
             if(scteam.getEntries().isEmpty()) {
+                System.out.println(scteam.getName()+" "+score+" "+(score+5));
                 scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§"+score).setScore(score+5);
                 scteam.addEntry("§"+score);
                 score++;
@@ -240,7 +233,8 @@ public class IngamePhase implements PhaseControl {
     
     @Override
     public void stop(Arena engine) {
-
+        scoreboard.getObjective(DisplaySlot.SIDEBAR).unregister();
+        scoreboard.getTeams().forEach(Team::unregister);
     }
 
     @Override
@@ -286,7 +280,7 @@ public class IngamePhase implements PhaseControl {
         createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§a");
         createTeam(scoreboard, "enemy", "§c","","");
         createTeam(scoreboard, "friend", "§a","","");
-        islandgenerators = 3;
+
         int index = 0;
         for(BWTeam team : BWTeam.values()){
             createTeam(scoreboard, team.name(),ChatColor.BOLD+""+team.getChatColor()+team.name().charAt(0)+" §f"+WordUtils.capitalize(team.name().toLowerCase()) ,ChatColor.GREEN+" ✓", "");

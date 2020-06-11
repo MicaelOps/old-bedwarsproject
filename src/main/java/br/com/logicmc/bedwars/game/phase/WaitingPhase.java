@@ -64,7 +64,8 @@ public class WaitingPhase implements PhaseControl {
 
     @Override
     public void stop(Arena arena) {
-
+        scoreboard.getObjective(DisplaySlot.SIDEBAR).unregister();
+        scoreboard.getTeams().forEach(Team::unregister);
     }
 
     @Override

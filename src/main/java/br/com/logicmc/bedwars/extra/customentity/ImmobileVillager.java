@@ -33,6 +33,10 @@ public class ImmobileVillager extends EntityVillager {
         return false;
     }
 
+    @Override
+    public void move(double d0, double d1, double d2) {
+
+    }
 
     public static Object getPrivateField(String fieldName, Class<?> clazz, Object object)
     {

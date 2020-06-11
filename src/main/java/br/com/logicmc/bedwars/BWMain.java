@@ -272,6 +272,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 });
 
                 world.setStorm(false);
+                world.setPVP(true);
                 world.setAutoSave(false);
                 world.setThundering(false);
                 world.setThunderDuration(0);
@@ -280,16 +281,20 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 world.getEntities().forEach(Entity::remove);
                 world.getLivingEntities().forEach(LivingEntity::remove);
                 world.setGameRuleValue("doDaylightCycle", "false");
-                Location spawnlobby = lobbyloc.get();
+                Location spawnlobby = lobbyloc.get().clone();
                 spawnlobby.setWorld(world);
-                System.out.print(spawnlobby.getWorld().getName());
                 for (Island island : islands) { // debug arenas
                     island.report(arena);
-                    island.getGenerator().getLocation().setWorld(world);
-                    island.getNpc().setWorld(world);
-                    island.getSpawn().setWorld(world);
-                    island.getBed().setWorld(world);
-                    island.getUpgrade().setWorld(world);
+                    if(island.getGenerator().getLocation() !=null)
+                        island.getGenerator().getLocation().setWorld(world);
+                    if(island.getNpc() !=null)
+                        island.getNpc().setWorld(world);
+                    if(island.getSpawn()!=null)
+                        island.getSpawn().setWorld(world);
+                    if(island.getBed()!=null)
+                        island.getBed().setWorld(world);
+                    if(island.getUpgrade()!=null)
+                        island.getUpgrade().setWorld(world);
 
                 }
                 for (NormalGenerator generator : diamond) {

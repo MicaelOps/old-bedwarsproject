@@ -2,6 +2,7 @@ package br.com.logicmc.bedwars.commands;
 
 import java.util.UUID;
 
+import br.com.logicmc.bedwars.game.player.BWPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -22,6 +23,39 @@ public class UtilsCommands extends CommandAdapter {
 
     }
 
+    @SimpleComamnd(name = "tempo", permission = Groups.YOUTUBERPLUS)
+    public void settempo(BWMain plugin, Player player, PlayerBase<?> playerBase, String[] strings){
+
+        if(strings.length == 0) {
+            player.sendMessage("Use /tempo <tempo");
+        } else {
+            Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+
+            if( arena == null) {
+                player.sendMessage("Por favor entre no mundo de uma arena para usar este comando.");
+                return;
+            }
+
+            try{
+                int i = Integer.parseInt(strings[0]);
+
+                if(arena.getGamestate() == Arena.WAITING){
+                    if(i == 0)
+                        i = 3;
+                    else if( i > 800)
+                        i = 500;
+
+                }
+
+                arena.setTime(i);
+                player.sendMessage("tempo setado com sucesso");
+            } catch (Exception e) {
+                player.sendMessage("Erro ao carregar comando");
+            }
+        }
+
+    }
+
 
     @SimpleComamnd(name = "g", permission = Groups.PLAYER)
     public void globalchat(BWMain plugin, Player player, PlayerBase<?> playerBase, String[] strings){
@@ -39,7 +73,7 @@ public class UtilsCommands extends CommandAdapter {
     }
 
     @SimpleComamnd(name = "movearena", permission = Groups.YOUTUBERPLUS)
-    public void movearena(BWMain plugin, Player player, PlayerBase<?> playerBase, String[] strings){
+    public void movearena(BWMain plugin, Player player, PlayerBase<BWPlayer> playerBase, String[] strings){
         if(strings.length == 0) {
 
             BWManager.getInstance().getArenas().forEach(arena->player.sendMessage(arena.getName()));
@@ -52,6 +86,7 @@ public class UtilsCommands extends CommandAdapter {
                 location.setWorld(Bukkit.getWorld(strings[0]));
                 boolean result = player.teleport(arena.getLobby());
                 System.out.println("teleport to"+arena.getLobby().getWorld().getName()+" resulted in "+result);
+                playerBase.getData().setMap(arena.getName());
             } 
 
         } 
