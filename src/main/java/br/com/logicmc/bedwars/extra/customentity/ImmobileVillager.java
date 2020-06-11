@@ -1,17 +1,21 @@
 package br.com.logicmc.bedwars.extra.customentity;
 
 import net.minecraft.server.v1_8_R3.*;
-import org.bukkit.World;
+
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 
 import java.lang.reflect.Field;
 import java.util.List;
 
 public class ImmobileVillager extends EntityVillager {
-    public ImmobileVillager(World world) {
+    public ImmobileVillager(org.bukkit.World world) {
         super(((CraftWorld)world).getHandle());
 
-        /** 
+    }
+    public ImmobileVillager(World world) {
+        super(world);
+
+        
         //clearing entity intelligence
         List<?> goalB = (List<?>)getPrivateField("b", PathfinderGoalSelector.class, goalSelector); goalB.clear();
         List<?> goalC = (List<?>)getPrivateField("c", PathfinderGoalSelector.class, goalSelector); goalC.clear();
@@ -20,8 +24,7 @@ public class ImmobileVillager extends EntityVillager {
 
         //adding intelligence
         this.goalSelector.a(0, new PathfinderGoalFloat(this));
-        this.goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
-        this.goalSelector.a(2, new PathfinderGoalRandomLookaround(this));*/
+        this.goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 14.0F));
     }
 
 
@@ -30,20 +33,6 @@ public class ImmobileVillager extends EntityVillager {
         return false;
     }
 
-    @Override
-    public String getCustomName() {
-        // TODO Auto-generated method stub
-        return "asd";
-    }
-    @Override
-    public boolean getCustomNameVisible() {
-        return true;
-    }
-
-    @Override
-    public boolean isInvulnerable(DamageSource damagesource) {
-        return true;
-    }
 
     public static Object getPrivateField(String fieldName, Class<?> clazz, Object object)
     {

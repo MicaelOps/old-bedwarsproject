@@ -105,10 +105,11 @@ public class PlayerListeners implements Listener {
         if(event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY) && arena.getGamestate() != Arena.END)
             return;
 
-        
+            
         for(UUID uuid : arena.getPlayers()){
-            //ChatColor.BOLD+""+team.getChatColor()+team.name().charAt(0)+" §f"+WordUtils.capitalize(team.name().toLowerCase());
-            Bukkit.getPlayer(uuid).sendMessage(event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+            if(Bukkit.getPlayer(uuid).getDisplayName().charAt(1) == event.getPlayer().getDisplayName().charAt(1)){
+                Bukkit.getPlayer(uuid).sendMessage(ChatColor.GREEN+"[TEAM] "+event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+            }
         }
     }
 

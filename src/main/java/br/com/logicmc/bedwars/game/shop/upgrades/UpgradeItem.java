@@ -1,9 +1,15 @@
 package br.com.logicmc.bedwars.game.shop.upgrades;
 
+import br.com.logicmc.bedwars.BWMain;
 import br.com.logicmc.bedwars.extra.FixedItems;
+import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Island;
-import org.bukkit.inventory.ItemStack;
 
+import org.bukkit.ChatColor;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -29,7 +35,12 @@ public class UpgradeItem {
         return upgrademethod;
     }
 
-    public FixedItems getMenu() {
-        return item;
+    public ItemStack getMenu(String lang, Island island) {
+        ItemStack stackcost = cost.apply(island);
+        ItemStack itemStack = item.getBuild(BWMain.getInstance().messagehandler, lang);
+        ItemMeta meta = itemStack.getItemMeta();
+        meta.setLore(Collections.singletonList(ChatColor.YELLOW + "" + stackcost.getAmount()+ " " + ChatColor.AQUA + "DIAMOND"));
+        itemStack.setItemMeta(meta);
+        return itemStack;
     }
 }

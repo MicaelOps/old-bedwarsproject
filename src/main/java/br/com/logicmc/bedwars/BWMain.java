@@ -36,6 +36,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -56,14 +57,14 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     private boolean maintenance;
     private Location spawnlocation;
 
-    private ShopCategory blocks,fight,utilities;
-    private UpgradeItem sharpness,armor,forgery;
+    private ShopCategory blocks, fight, utilities;
+    private UpgradeItem sharpness, armor, forgery;
 
     @Override
     public void onEnable() {
         instance = this;
-        
-        if(!loadConfig()) {
+
+        if (!loadConfig()) {
             System.out.println("Error while loading config.yml");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
@@ -71,16 +72,16 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         spawnlocation = mainconfig.getLocation("spawn");
         maintenance = mainconfig.getConfig().getBoolean("maintenance");
 
-        if(spawnlocation == null)
+        if (spawnlocation == null)
             System.out.println("[Arena] Lobby location is null");
 
-        for(Arena arena : BWManager.getInstance().getArenas()) {
+        for (Arena arena : BWManager.getInstance().getArenas()) {
             arena.startTimer(this);
         }
-        
+
         CommandLoader.loadPackage(this, BWMain.class, "br.com.logicmc.bedwars.commands");
         EntityManager.getInstance().registerEntities();
-        
+
         super.onEnable();
 
         blocks = new ShopCategory(FixedItems.SHOP_BLOCKS);
@@ -94,6 +95,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         messagehandler.loadMessage(BWMessages.PLAYER_LEAVE_INGAME, this);
         BWManager.getInstance().addGame("staff", new StaffArena());
 
+        System.out.println(spawnlocation.getWorld().getName());
         loadItens();
     }
 
@@ -144,8 +146,9 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     public Consumer<String> getUpdateArenaMethod() {
         return (arena) -> {
             Arena gameEngine = BWManager.getInstance().getArena(arena);
-            System.out.println("arena update " +arena);
-            PacketManager.getInstance().sendChannelPacket(this, "lobby", new ArenaInfoPacket(Bukkit.getServerName(), arena, true, gameEngine.getPlayers().size(), gameEngine.getServerState()));
+            System.out.println("arena update " + arena);
+            PacketManager.getInstance().sendChannelPacket(this, "lobby", new ArenaInfoPacket(Bukkit.getServerName(),
+                    arena, true, gameEngine.getPlayers().size(), gameEngine.getServerState()));
         };
     }
 
@@ -157,13 +160,13 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     @Override
     public List<String> getArenas() {
         ArrayList<String> arrayList = new ArrayList<>();
-        BWManager.getInstance().getArenas().forEach(arena->arrayList.add(arena.getName()));
+        BWManager.getInstance().getArenas().forEach(arena -> arrayList.add(arena.getName()));
         return arrayList;
     }
 
     private void deleteFolder(File folder) {
-        for(File file : folder.listFiles()) {
-            if(file.isDirectory())
+        for (File file : folder.listFiles()) {
+            if (file.isDirectory())
                 deleteFolder(file);
             else
                 file.delete();
@@ -176,27 +179,27 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     public List<String> loadArenas() {
         List<String> schematics = mainconfig.getConfig().getStringList("schematics");
 
-        if(schematics == null) 
+        if (schematics == null)
             return new ArrayList<>();
 
-        if(schematics.isEmpty()) 
+        if (schematics.isEmpty())
             return new ArrayList<>();
 
         Schematic lobby = Schematic.read(getResource("LobbyBW.schematic"));
         boolean reload = false;
         // deleting unacessary worlds
-        for(World world : Bukkit.getWorlds()) {
-            boolean exist  = false;
-            if(world.getName().equalsIgnoreCase("world"))
+        for (World world : Bukkit.getWorlds()) {
+            boolean exist = false;
+            if (world.getName().equalsIgnoreCase("world"))
                 continue;
-            for(String arena : schematics) {
-                if(world.getName().equalsIgnoreCase(arena.replace(".schematic",""))) {
+            for (String arena : schematics) {
+                if (world.getName().equalsIgnoreCase(arena.replace(".schematic", ""))) {
                     exist = true;
                     reload = true;
                 }
             }
-            if(!exist) {
-                for(Chunk chunk : world.getLoadedChunks()) {
+            if (!exist) {
+                for (Chunk chunk : world.getLoadedChunks()) {
                     chunk.unload();
                 }
                 File folder = world.getWorldFolder();
@@ -204,55 +207,67 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 deleteFolder(folder);
             }
         }
-        if(reload) {
+        if (reload) {
             Bukkit.shutdown();
             return new ArrayList<>();
         }
 
-        for(String arena : schematics) {
+        for (String arena : schematics) {
 
-            arena = arena.replace(".schematic","");
+            arena = arena.replace(".schematic", "");
             World world = Bukkit.getWorld(arena);
 
-            if(world == null) {
-                
+            if (world == null) {
+
                 WorldCreator wc = new WorldCreator(arena);
                 wc.type(WorldType.FLAT);
-                wc.generatorSettings("2;0;1;"); 
+                wc.generatorSettings("2;0;1;");
                 wc.createWorld();
                 world = Bukkit.createWorld(wc);
-                System.out.println("[Arena] Pasting lobby for "+arena);
+                System.out.println("[Arena] Pasting lobby for " + arena);
                 lobby.paste(new Location(world, 0, 100, 0));
             }
 
+            Schematic schematic = Schematic.read(new File(getDataFolder(), arena + ".schematic"));
 
-            Schematic schematic = Schematic.read(new File(getDataFolder(), arena+".schematic"));
-
-            if(schematic == null)
-                schematics.remove(arena+".schematic");
+            if (schematic == null)
+                schematics.remove(arena + ".schematic");
             else {
-                System.out.println("[Arena] Pasting map for "+arena);
+                System.out.println("[Arena] Pasting map for " + arena);
                 schematic.paste(new Location(world, 250, 100, 250));
 
-                HashSet<Island> islands =new HashSet<>();
-                HashSet<NormalGenerator> diamond = new HashSet<>(),emerald =new HashSet<>();
+                HashSet<Island> islands = new HashSet<>();
+                HashSet<NormalGenerator> diamond = new HashSet<>(), emerald = new HashSet<>();
                 AtomicReference<Location> lobbyloc = new AtomicReference<>();
                 spawnlocation.setWorld(world);
                 lobbyloc.set(spawnlocation);
                 String finalArena = arena;
-                
+
                 mainconfig.loopThroughSectionKeys(arena, (visland) -> {
 
-                    if(visland.equalsIgnoreCase("islands"))
-                        mainconfig.loopThroughSectionKeys(finalArena +".islands", (island)->{       
-                             islands.add(new Island(island, finalArena, BWTeam.valueOf(mainconfig.getConfig().getString(finalArena+".islands."+island+".color")),mainconfig.getLocation(finalArena +".islands."+island+".spawn"),mainconfig.getLocation(finalArena +".islands."+island+".npc") , mainconfig.getLocation(finalArena +".islands."+island+".upgrade") ,mainconfig.getLocation(finalArena +".islands."+island+".bed"), mainconfig.getLocation(finalArena +".islands."+island+".generator")));
+                    if (visland.equalsIgnoreCase("islands"))
+                        mainconfig.loopThroughSectionKeys(finalArena + ".islands", (island) -> {
+                            islands.add(new Island(island, finalArena,
+                                    BWTeam.valueOf(mainconfig.getConfig()
+                                            .getString(finalArena + ".islands." + island + ".color")),
+                                    mainconfig.getLocation(finalArena + ".islands." + island + ".spawn"),
+                                    mainconfig.getLocation(finalArena + ".islands." + island + ".npc"),
+                                    mainconfig.getLocation(finalArena + ".islands." + island + ".upgrade"),
+                                    mainconfig.getLocation(finalArena + ".islands." + island + ".bed"),
+                                    mainconfig.getLocation(finalArena + ".islands." + island + ".generator")));
                         });
-                    else if(visland.equalsIgnoreCase("diamond"))
-                        mainconfig.loopThroughSectionKeys(finalArena +".diamond", (string)->diamond.add(new NormalGenerator(mainconfig.getLocation(finalArena +".diamond."+string), Material.DIAMOND,
-                                null, 80)));
-                    else if(visland.equalsIgnoreCase("emerald"))
-                        mainconfig.loopThroughSectionKeys(finalArena +".emerald", (string)->emerald.add(new NormalGenerator(mainconfig.getLocation(finalArena +".emerald."+string), Material.EMERALD,
-                                null, 90)));
+                    else if (visland.equalsIgnoreCase("diamond"))
+                        mainconfig
+                                .loopThroughSectionKeys(finalArena + ".diamond",
+                                        (string) -> diamond.add(new NormalGenerator(
+                                                mainconfig.getLocation(finalArena + ".diamond." + string),
+                                                Material.DIAMOND, null, 80)));
+                    else if (visland.equalsIgnoreCase("emerald"))
+                        mainconfig
+                                .loopThroughSectionKeys(finalArena + ".emerald",
+                                        (string) -> emerald.add(new NormalGenerator(
+                                                mainconfig.getLocation(finalArena + ".emerald." + string),
+                                                Material.EMERALD, null, 90)));
 
                 });
 
@@ -265,32 +280,37 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 world.getEntities().forEach(Entity::remove);
                 world.getLivingEntities().forEach(LivingEntity::remove);
                 world.setGameRuleValue("doDaylightCycle", "false");
-        
-                for(Island island : islands) { // debug arenas
+                Location spawnlobby = lobbyloc.get();
+                spawnlobby.setWorld(world);
+                System.out.print(spawnlobby.getWorld().getName());
+                for (Island island : islands) { // debug arenas
                     island.report(arena);
                     island.getGenerator().getLocation().setWorld(world);
                     island.getNpc().setWorld(world);
                     island.getSpawn().setWorld(world);
                     island.getBed().setWorld(world);
                     island.getUpgrade().setWorld(world);
-                    
+
                 }
-                for(NormalGenerator generator : diamond) { 
+                for (NormalGenerator generator : diamond) {
                     generator.getLocation().setWorld(world);
                     generator.setHologram(new Global(generator.getLocation().add(0.0D, 0.3D, 0.0D)).setLine("10:00"));
                     generator.getHologram().build();
                 }
-                for(NormalGenerator generator : emerald) { 
+                for (NormalGenerator generator : emerald) {
                     generator.getLocation().setWorld(world);
                     generator.setHologram(new Global(generator.getLocation().add(0.0D, 0.3D, 0.0D)).setLine("10:00"));
                     generator.getHologram().build();
                 }
-                BWManager.getInstance().addGame(arena, new Arena(arena, 8, Arena.DUO, lobbyloc.get(), islands, diamond,emerald));
-                BWManager.getInstance().getArena(arena).startTimer(BWMain.getInstance());
+                BWManager.getInstance().addGame(arena,
+                        new Arena(arena, 8, Arena.DUO, spawnlobby, islands, diamond, emerald));
+                BWManager.getInstance().getArena(arena).startTimer(this);
                 
             }
         }
-        return schematics;
+		ArrayList<String> arrayList = new ArrayList<>();
+        BWManager.getInstance().getArenas().forEach(arena->arrayList.add(arena.getName()));
+        return arrayList;
     }
 
     @Override
@@ -462,5 +482,13 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         ItemStack itemStack = new ItemStack(material);
         itemStack.addUnsafeEnchantment(enchantment,level);
         return itemStack;
+    }
+
+    public ItemStack createColorouedArmor(Material material, Color color){
+        ItemStack stack = new ItemStack(material);
+        LeatherArmorMeta meta = (LeatherArmorMeta) stack.getItemMeta();
+        meta.setColor(color);
+        stack.setItemMeta(meta);
+        return stack;
     }
 }

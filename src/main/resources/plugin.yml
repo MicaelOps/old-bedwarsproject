@@ -2,9 +2,11 @@ name: bedwars
 main: br.com.logicmc.bedwars.BWMain
 version: 1.0
 author: icarus
-depend:
+softdepend:
   - core
 commands:
+  movearena:
+  g:
   tempmute:
   mute:
   lobby:
@@ -14,10 +16,10 @@ commands:
   setlobby:
   setarena:
   ping:
-  gamemode:
   unban:
   unmute:
   tempban:
   ban:
   ping:
   admin:
+  kick:

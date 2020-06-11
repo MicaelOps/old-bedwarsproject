@@ -20,7 +20,7 @@ public class EntityManager {
     }
 
     public void registerEntities(){
-  //     addToMaps(ImmobileVillager.class, "Villager", 340);
+       addToMaps(ImmobileVillager.class, "Villager", 120);
     }
 
     public void spawnImmobileVillager(Location location, String name){

@@ -85,9 +85,9 @@ public class IngamePhase implements PhaseControl {
 
             if(time < stopupgrade) {
                 if (event.getEventname().contains("diamond"))
-                    event = new GeneratorEvent(time + 300, event.getEventname().replace("Diamond","Emerald")+"I", 1);
+                    event = new GeneratorEvent(time + 300, event.getEventname().replace("diamond","Emerald")+"I", 1);
                 else
-                    event = new GeneratorEvent(time + 300, event.getEventname().replace("Emerald","Diamond")+"I", 0);
+                    event = new GeneratorEvent(time + 300, event.getEventname().replace("emerald","Diamond")+"I", 0);
             } else if(event.getEventname().equalsIgnoreCase("Camas destruidas"))
                 event = new SuddenDeathEvent(time+(10*60));
             else
@@ -196,33 +196,34 @@ public class IngamePhase implements PhaseControl {
 
             //prepare player
             Player player = Bukkit.getPlayer(uuid);
-            arena.updateScoreboardTeam(player, bwPlayer.getTeamcolor(), "§a V §7(You)");
+            BWTeam team = BWTeam.valueOf(bwPlayer.getTeamcolor());
+            arena.updateScoreboardTeam(player, bwPlayer.getTeamcolor(), "§a ✓ §7(You)");
             player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor().toUpperCase())).findFirst().get().getSpawn());
             player.setGameMode(GameMode.SURVIVAL);
             player.getInventory().clear();
+            player.getInventory().setHelmet(BWMain.getInstance().createColorouedArmor(Material.LEATHER_HELMET, team.getColor()));
+            player.getInventory().setChestplate(BWMain.getInstance().createColorouedArmor(Material.LEATHER_CHESTPLATE, team.getColor()));
+            player.getInventory().setLeggings(BWMain.getInstance().createColorouedArmor(Material.LEATHER_LEGGINGS, team.getColor()));
+            player.getInventory().setBoots(BWMain.getInstance().createColorouedArmor(Material.LEATHER_BOOTS, team.getColor()));
             player.getInventory().setItem(0,new ItemStack(Material.WOOD_SWORD));
-            player.getInventory().setItem(1,new ItemStack(Material.COMPASS));
-            player.setDisplayName(BWTeam.valueOf(bwPlayer.getTeamcolor()).getChatColor()+player.getName());
+            player.setDisplayName(team.getChatColor()+player.getName());
+        
         }
 
         for(UUID uuid : arena.getPlayers()){
             Player player = Bukkit.getPlayer(uuid);
-            if(player == null){
-                arena.getPlayers().remove(uuid);
-            } else {
-                BWPlayer bwplayer = BWManager.getInstance().getBWPlayer(uuid);
-                List<String> list = new ArrayList<>();
-                arena.getPlayers().stream().filter(e->!BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
+            BWPlayer bwplayer = BWManager.getInstance().getBWPlayer(uuid);
+            List<String> list = new ArrayList<>();
+            arena.getPlayers().stream().filter(e->!BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
 
 
-                if(!list.isEmpty()) {
-                    BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "enemy", list);
-                    list.clear();
-                }
-
-                arena.getPlayers().stream().filter(e->BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
-                BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "friend", list);
+            if(!list.isEmpty()) {
+                BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "enemy", list);
+                list.clear();
             }
+
+            arena.getPlayers().stream().filter(e->BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
+            BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "friend", list);
         }
 
         scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§l").setScore((index+5+1));
@@ -231,10 +232,12 @@ public class IngamePhase implements PhaseControl {
         scoreboard.getTeam("upgrade").addEntry("§k");
 
         arena.getPreteam().clear();
+        arena.getIslands().removeIf(island -> arena.getPlayers().stream().noneMatch(uuid->BWManager.getInstance().getBWPlayer(uuid).getTeamcolor().equalsIgnoreCase(island.getTeam().name())));
 
         available.clear();
     }
 
+    
     @Override
     public void stop(Arena engine) {
 
@@ -286,7 +289,7 @@ public class IngamePhase implements PhaseControl {
         islandgenerators = 3;
         int index = 0;
         for(BWTeam team : BWTeam.values()){
-            createTeam(scoreboard, team.name(),ChatColor.BOLD+""+team.getChatColor()+team.name().charAt(0)+" §f"+WordUtils.capitalize(team.name().toLowerCase()) ,ChatColor.GREEN+" V", "");
+            createTeam(scoreboard, team.name(),ChatColor.BOLD+""+team.getChatColor()+team.name().charAt(0)+" §f"+WordUtils.capitalize(team.name().toLowerCase()) ,ChatColor.GREEN+" ✓", "");
             for(int i = 0; i < arena.getTeamcomposition(); i++) {
                 available.add(index, team.name());
                 index++;
