@@ -1,10 +1,15 @@
 package br.com.logicmc.bedwars.game.engine;
 
 import br.com.logicmc.bedwars.extra.YamlFile;
+import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.generator.IslandGenerator;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import org.bukkit.Color;
 import org.bukkit.Location;
+
+import java.util.Collection;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 public class Island {
 
@@ -143,6 +148,9 @@ public class Island {
             file.setLocation(arenaname+".islands."+name+".upgrade" , upgrade);
     }
 
+    public void forEachPlayers(Consumer<? super UUID> members){
+        BWManager.getInstance().getArena(getArena()).getPlayers().stream().filter(uuid -> BWManager.getInstance().getBWPlayer(uuid).getTeamcolor().equalsIgnoreCase(getTeam().name())).forEach(members);
+    }
     public void setGenerator(IslandGenerator islandGenerator) {
         this.generator= islandGenerator;
     }

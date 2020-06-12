@@ -230,11 +230,6 @@ public class InventoryListeners implements Listener {
             itemStack.addEnchantment(enchantment,level);
         return itemStack;
     }
-    private ItemStack addEnchantment(ItemStack itemStack, Enchantment enchantment, int level){
-        if(level != 0)
-            itemStack.addEnchantment(enchantment,level);
-        return itemStack;
-    }
 
     private void removeItem(ItemStack stack, Inventory inventory){
         ItemStack[] contents = inventory.getContents();

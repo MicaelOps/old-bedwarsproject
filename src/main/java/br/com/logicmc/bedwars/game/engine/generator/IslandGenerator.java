@@ -2,16 +2,22 @@ package br.com.logicmc.bedwars.game.engine.generator;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 public class IslandGenerator extends NormalGenerator{
 
 
+    private final ItemStack ironstack;
     private int gold,emerald;
 
     public IslandGenerator(Location location) {
         super(location, Material.IRON_INGOT, null, 3);
         gold = getTime() + 10;
+        ItemStack dummyiron = new ItemStack(Material.IRON_INGOT, 1);
+        net.minecraft.server.v1_8_R3.ItemStack iron = CraftItemStack.asNMSCopy(dummyiron);
+        iron.getItem().c(48);
+        ironstack = CraftItemStack.asBukkitCopy(iron);
         emerald=0;
     }
 
@@ -50,12 +56,16 @@ public class IslandGenerator extends NormalGenerator{
             }
         }
     }
+
+    private void setMaxStackSize(){
+
+    }
     private void multiplespawn(boolean can){
         if(can){
             getLocation().getWorld().dropItem(getLocation(), new ItemStack(Material.GOLD_INGOT));
             gold+=10;
         }
 
-        super.spawn();
+        getLocation().getWorld().dropItem(getLocation(), ironstack);
     } 
 }

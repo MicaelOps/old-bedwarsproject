@@ -179,14 +179,12 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     public List<String> loadArenas() {
         List<String> schematics = mainconfig.getConfig().getStringList("schematics");
 
-        if (schematics == null)
-            return new ArrayList<>();
-
-        if (schematics.isEmpty())
+        if (schematics == null || schematics.isEmpty())
             return new ArrayList<>();
 
         Schematic lobby = Schematic.read(getResource("LobbyBW.schematic"));
         boolean reload = false;
+
         // deleting unacessary worlds
         for (World world : Bukkit.getWorlds()) {
             boolean exist = false;
@@ -215,18 +213,14 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         for (String arena : schematics) {
 
             arena = arena.replace(".schematic", "");
-            World world = Bukkit.getWorld(arena);
 
-            if (world == null) {
-
-                WorldCreator wc = new WorldCreator(arena);
-                wc.type(WorldType.FLAT);
-                wc.generatorSettings("2;0;1;");
-                wc.createWorld();
-                world = Bukkit.createWorld(wc);
-                System.out.println("[Arena] Pasting lobby for " + arena);
-                lobby.paste(new Location(world, 0, 100, 0));
-            }
+            WorldCreator wc = new WorldCreator(arena);
+            wc.type(WorldType.FLAT);
+            wc.generatorSettings("2;0;1;");
+            wc.createWorld();
+            World world = Bukkit.createWorld(wc);
+            System.out.println("[Arena] Pasting lobby for " + arena);
+            lobby.paste(new Location(world, 0, 100, 0));
 
             Schematic schematic = Schematic.read(new File(getDataFolder(), arena + ".schematic"));
 
@@ -308,7 +302,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                     generator.getHologram().build();
                 }
                 BWManager.getInstance().addGame(arena,
-                        new Arena(arena, 8, Arena.DUO, spawnlobby, islands, diamond, emerald));
+                        new Arena(arena, 8, Arena.SOLO, spawnlobby, islands, diamond, emerald));
                 BWManager.getInstance().getArena(arena).startTimer(this);
                 
             }
@@ -419,7 +413,18 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 return new ItemStack(Material.DIAMOND, 4);
             else
                 return new ItemStack(Material.DIAMOND, 8);
-        },(island)->island.setSharpness(1));
+        },(island)-> {
+            island.setSharpness(1);
+            island.forEachPlayers(uuid -> {
+                Player player = Bukkit.getPlayer(uuid);
+                BWMain.getInstance().messagehandler.sendMessage(player, BWMessages.SHARPNESS_UPGRADED);
+                for(int i = 0; i <player.getInventory().getSize(); i++){
+                    ItemStack stack = player.getInventory().getItem(i);
+                    if(stack != null && stack.getType().name().contains("SWORD"))
+                        stack.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
+                }
+            });
+        });
 
         forgery = new UpgradeItem(FixedItems.UPGRADE_FORGERY, (island) -> {
             int teamcomp = BWManager.getInstance().getArena(island.getArena()).getTeamcomposition();
@@ -446,7 +451,10 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 else
                     return new ItemStack(Material.AIR);
             }
-        }, (island)->island.setForgery(island.getForgery()+1));
+        }, (island)-> {
+            island.setForgery(island.getForgery()+1);
+            island.forEachPlayers(uuid -> BWMain.getInstance().messagehandler.sendMessage(Bukkit.getPlayer(uuid), BWMessages.FORGERY_UPGRADED));
+        });
 
         armor = new UpgradeItem(FixedItems.UPGRADE_ARMOR, (island) -> {
             int teamcomp = BWManager.getInstance().getArena(island.getArena()).getTeamcomposition();
@@ -473,7 +481,17 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 else
                     return new ItemStack(Material.AIR);
             }
-        }, (island)->island.setArmor(island.getArmor()+1));
+        }, (island)-> {
+            island.setArmor(island.getArmor()+1);
+            island.forEachPlayers(uuid -> {
+                Player player = Bukkit.getPlayer(uuid);
+                BWMain.getInstance().messagehandler.sendMessage(player, BWMessages.ARMOR_UPGRADED);
+                player.getInventory().getHelmet().addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor());
+                player.getInventory().getChestplate().addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor());
+                player.getInventory().getLeggings().addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor());
+                player.getInventory().getBoots().addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor());
+            });
+        });
     }
     private ItemStack addPotion(PotionEffectType type , int duration, int power){
         ItemStack itemStack = new ItemStack(Material.POTION, 1);

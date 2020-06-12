@@ -74,7 +74,9 @@ public class IngamePhase implements PhaseControl {
             arena.updateScoreboardForAll("upgrade","§f em §a" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
 
         } else {
-            event.execute(arena);
+
+            arena.changePhase();
+            /*event.execute(arena);
 
             if(time < stopupgrade) {
                 if (event.getEventname().contains("Diamond"))
@@ -86,7 +88,7 @@ public class IngamePhase implements PhaseControl {
             else
                 event = new BedDestroyedEvent(time+(10*60));
 
-            arena.getScoreboard().getTeam("upgrade").setPrefix(ChatColor.WHITE+event.getEventname());
+            arena.getScoreboard().getTeam("upgrade").setPrefix(ChatColor.WHITE+event.getEventname());*/
         }
         return time;
     }

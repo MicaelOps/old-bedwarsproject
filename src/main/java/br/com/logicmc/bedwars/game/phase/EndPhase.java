@@ -3,12 +3,10 @@ package br.com.logicmc.bedwars.game.phase;
 import java.util.Random;
 import java.util.UUID;
 
-import br.com.logicmc.bedwars.BWMain;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
-import br.com.logicmc.core.system.redis.packet.PacketManager;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -35,7 +33,9 @@ public class EndPhase implements PhaseControl {
 
 
         if(time == 5) {
-
+            for(UUID uuid : arena.getPlayers()){
+                Bukkit.getPlayer(uuid).kickPlayer("test");
+            }
         } else if(time == 20){
             arena.getBlocks().forEach(location -> location.getBlock().setType(Material.AIR));
             arena.getBlocks().clear();

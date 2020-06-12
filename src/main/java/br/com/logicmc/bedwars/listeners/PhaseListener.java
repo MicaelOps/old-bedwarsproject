@@ -50,54 +50,50 @@ public class PhaseListener implements Listener {
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbuild(final BlockBreakEvent event){
-        
-        boolean cancelled = check(event.getPlayer().getLocation(), event.getPlayer());
-        if(!cancelled){
-            if(event.getBlock().getType() == Material.BED_BLOCK) {
+
+        event.setCancelled(check(event.getPlayer().getLocation(), event.getPlayer()));
+        if(!event.isCancelled()) {
+            if (event.getBlock().getType() == Material.BED_BLOCK) {
                 final Player player = event.getPlayer();
                 final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
-                for(final Island island : arena.getIslands()){
-                    if(!island.isBedbroken() &&island.getBed().distance(event.getBlock().getLocation()) < 5.0D){
+                for (final Island island : arena.getIslands()) {
+                    if (!island.isBedbroken() && island.getBed().distance(event.getBlock().getLocation()) < 5.0D) {
                         final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
-                        if(bwPlayer.getData().getTeamcolor().equalsIgnoreCase(island.getTeam().name()))
-                            cancelled = true;
+                        if (bwPlayer.getData().getTeamcolor().equalsIgnoreCase(island.getTeam().name()))
+                            event.setCancelled(true);
                         else {
                             final BWTeam bwTeam = island.getTeam();
                             island.setBedbroken(true);
                             bwPlayer.getData().increaseBeds();
-                            arena.updateScoreboardTeam(player, "beds", ChatColor.GREEN+""+bwPlayer.getData().getBeds());
+                            arena.updateScoreboardTeam(player, "beds", ChatColor.GREEN + "" + bwPlayer.getData().getBeds());
 
-                            for(final UUID uuid : arena.getPlayers()){
+                            for (final UUID uuid : arena.getPlayers()) {
                                 final Player target = Bukkit.getPlayer(uuid);
-                                target.sendTitle(""+ChatColor.BOLD+bwTeam.getChatColor()+bwTeam.name(),  plugin.messagehandler.getMessage(BWMessages.BED_DESTROYED, plugin.playermanager.getPlayerBase(uuid).getPreferences().getLang()));
-                                    
-                                if(target.getDisplayName().contains(bwTeam.getChatColor()+""))
-                                    arena.updateScoreboardTeam(target, bwTeam.name(), ChatColor.RED+" ✗ (You)");
+                                target.sendTitle("" + ChatColor.BOLD + bwTeam.getChatColor() + bwTeam.name(), plugin.messagehandler.getMessage(BWMessages.BED_DESTROYED, plugin.playermanager.getPlayerBase(uuid).getPreferences().getLang()));
+
+                                if (target.getDisplayName().contains(bwTeam.getChatColor() + ""))
+                                    arena.updateScoreboardTeam(target, bwTeam.name(), ChatColor.RED + " ✗ (You)");
                                 else
-                                    arena.updateScoreboardTeam(target, bwTeam.name(), ChatColor.RED+" ✗");
+                                    arena.updateScoreboardTeam(target, bwTeam.name(), ChatColor.RED + " ✗");
                             }
                         }
                         break;
                     }
                 }
-            } else{
+            } else {
                 final HashSet<Location> blocks = BWManager.getInstance().getArena(event.getBlock().getLocation().getWorld().getName()).getBlocks();
-                if(blocks.contains(event.getBlock().getLocation())){
+                if (blocks.contains(event.getBlock().getLocation())) {
                     blocks.remove(event.getBlock().getLocation());
                 } else
-                    cancelled=true;
+                    event.setCancelled(true);
             }
         }
-        event.setCancelled(cancelled);
     }
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(final BlockPlaceEvent event) {
-        final boolean cancelled = check(event.getBlock().getLocation());
-        event.setCancelled(cancelled);
-
-        if(!cancelled)
+        event.setCancelled(check(event.getBlock().getLocation()));
+        if(!event.isCancelled())
             BWManager.getInstance().getArena(event.getBlock().getLocation().getWorld().getName()).getBlocks().add(event.getBlock().getLocation());
-
     }
     
     @EventHandler(priority=EventPriority.HIGHEST)
@@ -106,10 +102,9 @@ public class PhaseListener implements Listener {
     }
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(final PlayerDropItemEvent event) {
-        boolean cancelled = check(event.getPlayer().getLocation(), event.getPlayer());
-        if(!cancelled)
-            cancelled = event.getItemDrop().getItemStack().getType().name().contains("_SWORD");
-        event.setCancelled(cancelled);
+        event.setCancelled(check(event.getPlayer().getLocation(), event.getPlayer()));
+        if(!event.isCancelled())
+            event.setCancelled(event.getItemDrop().getItemStack().getType().name().contains("_SWORD"));
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
@@ -117,7 +112,6 @@ public class PhaseListener implements Listener {
         if(event.getEntityType() == EntityType.DROPPED_ITEM){
             if(((Item)event.getEntity()).getItemStack().getType() == Material.BED){
                 event.setCancelled(true);
-                return;
             }
         }
     }
@@ -131,12 +125,11 @@ public class PhaseListener implements Listener {
     public void entitydamage(EntityDamageEvent event) {
 
         if(event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK && event.getEntity() instanceof Player){
-            boolean damage = check(event.getEntity().getLocation());
+            event.setCancelled(check(event.getEntity().getLocation()));
             final Player player = (Player) event.getEntity();
 
-            if(!damage) {
+            if(!event.isCancelled()) {
                 if(event.getFinalDamage() >= ((Player) event.getEntity()).getHealth()) {
-                    damage=true;
                     event.setCancelled(true);
                     if(player.getGameMode()==GameMode.SURVIVAL){
                         final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
@@ -196,7 +189,7 @@ public class PhaseListener implements Listener {
                     }
                 }
             }
-            if(!damage){
+            if(!event.isCancelled()){
                 if(player.getGameMode() == GameMode.SURVIVAL){
                     player.getInventory().getHelmet().setDurability((short)0);
                     player.getInventory().getChestplate().setDurability((short)0);
@@ -204,8 +197,6 @@ public class PhaseListener implements Listener {
                     player.getInventory().getBoots().setDurability((short)0);
                 }
             }
-            System.out.println("damage " + damage + " "+event.isCancelled());
-            event.setCancelled(damage);
         }
     }
     @EventHandler

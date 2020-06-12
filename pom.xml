@@ -38,6 +38,12 @@
             <version>1.0</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>br.com.logicmc</groupId>
+            <artifactId>plugin-core</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <!-- If you can't find the latest snapshot -->
