@@ -8,24 +8,18 @@ import org.bukkit.inventory.ItemStack;
 public class IslandGenerator extends NormalGenerator{
 
 
-    private final ItemStack ironstack;
+    private ItemStack ironstack,goldstack;
     private int gold,emerald;
 
     public IslandGenerator(Location location) {
         super(location, Material.IRON_INGOT, null, 3);
         gold = getTime() + 10;
-        ItemStack dummyiron = new ItemStack(Material.IRON_INGOT, 1);
-        net.minecraft.server.v1_8_R3.ItemStack iron = CraftItemStack.asNMSCopy(dummyiron);
-        iron.getItem().c(48);
-        ironstack = CraftItemStack.asBukkitCopy(iron);
+
+        ironstack = setStack(Material.IRON_INGOT, 48);
+        goldstack = setStack(Material.GOLD_INGOT, 12);
         emerald=0;
     }
 
-    @Override
-    public int getReset() {
-        return 1;
-    }
-  
     @Override
     public void spawn() {
         boolean generategold = gold <= getTime();
@@ -57,12 +51,18 @@ public class IslandGenerator extends NormalGenerator{
         }
     }
 
-    private void setMaxStackSize(){
-
+    public void setIronstack(ItemStack ironstack) {
+        this.ironstack = ironstack;
     }
+
+    public void setGoldstack(ItemStack goldstack) {
+        this.goldstack = goldstack;
+    }
+
+
     private void multiplespawn(boolean can){
         if(can){
-            getLocation().getWorld().dropItem(getLocation(), new ItemStack(Material.GOLD_INGOT));
+            getLocation().getWorld().dropItem(getLocation(), goldstack);
             gold+=10;
         }
 

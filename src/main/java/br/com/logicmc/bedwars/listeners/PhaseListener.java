@@ -69,7 +69,7 @@ public class PhaseListener implements Listener {
 
                             for (final UUID uuid : arena.getPlayers()) {
                                 final Player target = Bukkit.getPlayer(uuid);
-                                target.sendTitle("" + ChatColor.BOLD + bwTeam.getChatColor() + bwTeam.name(), plugin.messagehandler.getMessage(BWMessages.BED_DESTROYED, plugin.playermanager.getPlayerBase(uuid).getPreferences().getLang()));
+                                target.sendTitle("" + ChatColor.BOLD + bwTeam.getChatColor() + bwTeam.name(), plugin.messagehandler.getMessage(BWMessages.BED_DESTROYED, plugin.playermanager.getPlayerBase(uuid).getPreferences().getLang()).replace("{bed}",bwTeam.name()));
 
                                 if (target.getDisplayName().contains(bwTeam.getChatColor() + ""))
                                     arena.updateScoreboardTeam(target, bwTeam.name(), ChatColor.RED + " ✗ (You)");
@@ -134,55 +134,18 @@ public class PhaseListener implements Listener {
                     if(player.getGameMode()==GameMode.SURVIVAL){
                         final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
                         final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
-                        final BWPlayer bedwars = bwPlayer.getData();
 
                         for (final Island island : arena.getIslands()) {
-                            if (island.getTeam().name().equalsIgnoreCase(bedwars.getTeamcolor())) {
+                            if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
 
-
-                                player.setGameMode(GameMode.SPECTATOR);
-                                player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999 ,5));
-                                player.setAllowFlight(true);
-                                player.setFlying(true);
-                                if (island.isBedbroken()) {
-                                    player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
-
-                                    player.setDisplayName("[SPECTATOR] "+player.getName());
-                                    boolean end =true;
-                                    for (final UUID uuid : arena.getPlayers()) {
-                                        Player other = Bukkit.getPlayer(uuid);
-                                        if(other.getGameMode() == GameMode.SURVIVAL){
-                                            other.hidePlayer(player);
-                                            if(end)
-                                                end = bedwars.getTeamcolor().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor());
-                                        }
-
+                                for (final UUID uuid : arena.getPlayers()) {
+                                    Player other = Bukkit.getPlayer(uuid);
+                                    if(other.getGameMode() == GameMode.SURVIVAL){
+                                        other.hidePlayer(player);
                                     }
-                                    if(end)
-                                        arena.changePhase();
-
-                                    player.getInventory().clear();
-                                    plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
-                                    plugin.giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
-                                    plugin.giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
-
-
-                                } else {
-                                    player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.DEAD, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.RESPAWN_MESSAGE, bwPlayer.getPreferences().getLang()));
-                                    new BukkitRunnable() {
-                                        @Override
-                                        public void run() {
-                                            Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
-                                            player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor())).findFirst().get().getSpawn());
-                                            player.setHealth(20.0D);
-                                            player.setGameMode(GameMode.SURVIVAL);
-                                            player.setAllowFlight(false);
-                                            player.setFlying(false);
-                                            player.sendTitle("","");
-                                            player.getActivePotionEffects().forEach(potion->player.removePotionEffect(potion.getType()));
-                                        }
-                                    }.runTaskLater(plugin, 60L);
                                 }
+
+                                respawn(arena, island, bwPlayer, player);
                                 break;
                             }
                         }
@@ -217,57 +180,25 @@ public class PhaseListener implements Listener {
                         if(player.getGameMode()==GameMode.SURVIVAL) {
                             final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
                             final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
-                            final BWPlayer bedwars = bwPlayer.getData();
                             final BWPlayer killer = BWManager.getInstance().getBWPlayer(event.getDamager().getUniqueId());
                             killer.increaseKills();
                             arena.updateScoreboardTeam((Player) event.getDamager(), "kills", ChatColor.GREEN+""+killer.getKills());
                             for (final Island island : arena.getIslands()) {
-                                if (island.getTeam().name().equalsIgnoreCase(bedwars.getTeamcolor())) {
+                                if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
 
                                     player.setGameMode(GameMode.SPECTATOR);
-                                    ((Player) event.getDamager()).hidePlayer(player);
                                     player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999 ,5));
                                     player.setAllowFlight(true);
                                     player.setFlying(true);
 
-                                    if (island.isBedbroken()) {
-                                        player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
-
-                                        player.setDisplayName("[SPECTATOR] "+player.getName());
-
-                                        boolean end =true;
-                                        for (final UUID uuid : arena.getPlayers()) {
-                                            Player other = Bukkit.getPlayer(uuid);
-                                            if(other.getGameMode() == GameMode.SURVIVAL){
-                                                other.hidePlayer(player);
-                                                if(end)
-                                                    end = bedwars.getTeamcolor().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor());
-                                            }
-
+                                    for (final UUID uuid : arena.getPlayers()) {
+                                        Player other = Bukkit.getPlayer(uuid);
+                                        other.sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.PLAYER_KILLED_BY_PLAYER, BWMain.getInstance().getLang(other)).replace("{damager}", ((Player) event.getDamager()).getDisplayName()).replace("{player}",player.getName()));
+                                        if(other.getGameMode() == GameMode.SURVIVAL){
+                                            other.hidePlayer(player);
                                         }
-                                        if(end)
-                                            arena.changePhase();
-
-                                        player.getInventory().clear();
-                                        plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
-                                        plugin.giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
-                                        plugin.giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
-                                    } else {
-                                        player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.DEAD, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.RESPAWN_MESSAGE, bwPlayer.getPreferences().getLang()));
-                                        new BukkitRunnable() {
-                                            @Override
-                                            public void run() {
-                                                Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
-                                                player.sendTitle("","");
-                                                player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor())).findFirst().get().getSpawn());
-                                                player.setHealth(20.0D);
-                                                player.setGameMode(GameMode.SURVIVAL);
-                                                player.setAllowFlight(false);
-                                                player.setFlying(false);
-                                                player.getActivePotionEffects().forEach(potion->player.removePotionEffect(potion.getType()));
-                                            }
-                                        }.runTaskLater(plugin, 60L);
                                     }
+                                    respawn(arena, island, bwPlayer, player);
                                     break;
                                 }
                             }
@@ -278,12 +209,49 @@ public class PhaseListener implements Listener {
         }
         event.setCancelled(damage);
     }
+    private void respawn(Arena arena, Island island, PlayerBase<BWPlayer> bwPlayer, Player player) {
+
+        if (island.isBedbroken()) {
+            player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
+
+            player.setDisplayName("[SPECTATOR] "+player.getName());
+
+            if(arena.checkend())
+                arena.changePhase();
+
+            player.getInventory().clear();
+            plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
+            plugin.giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
+            plugin.giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
+        } else {
+            player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.DEAD, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.RESPAWN_MESSAGE, bwPlayer.getPreferences().getLang()));
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+                    for (final UUID uuid : arena.getPlayers()) {
+                        Player other = Bukkit.getPlayer(uuid);
+                        if(other.getGameMode() == GameMode.SURVIVAL){
+                            other.showPlayer(player);
+                        }
+                    }
+                    player.sendTitle("","");
+                    player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor())).findFirst().get().getSpawn());
+                    player.setHealth(20.0D);
+                    player.setGameMode(GameMode.SURVIVAL);
+                    player.setAllowFlight(false);
+                    player.setFlying(false);
+                    player.getActivePotionEffects().forEach(potion->player.removePotionEffect(potion.getType()));
+                }
+            }.runTaskLater(plugin, 60L);
+        }
+    }
     private boolean check(final Location location) {
-        return BWManager.getInstance().getArena(location.getWorld().getName()).getGamestate() == Arena.WAITING;
+        return BWManager.getInstance().getArena(location.getWorld().getName()).getGamestate() != Arena.INGAME;
     }
     private boolean check(final Location location, final Entity player) {
         if (player instanceof Player)
-            return BWManager.getInstance().getArena(location.getWorld().getName()).getGamestate() == Arena.WAITING || ((Player) player).hasPotionEffect(PotionEffectType.INVISIBILITY);
+            return BWManager.getInstance().getArena(location.getWorld().getName()).getGamestate()  != Arena.INGAME || ((Player) player).hasPotionEffect(PotionEffectType.INVISIBILITY);
         else
             return check(location);
     }

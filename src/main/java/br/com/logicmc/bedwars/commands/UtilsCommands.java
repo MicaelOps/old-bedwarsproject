@@ -61,15 +61,18 @@ public class UtilsCommands extends CommandAdapter {
     public void globalchat(BWMain plugin, Player player, PlayerBase<?> playerBase, String[] strings){
         Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
 
-        for(UUID uuid : arena.getPlayers()){
-            //ChatColor.BOLD+""+team.getChatColor()+team.name().charAt(0)+" §f"+WordUtils.capitalize(team.name().toLowerCase());
+        if(strings.length != 0){
+            for(UUID uuid : arena.getPlayers()){
+                //ChatColor.BOLD+""+team.getChatColor()+team.name().charAt(0)+" §f"+WordUtils.capitalize(team.name().toLowerCase());
 
-            StringBuilder builder = new StringBuilder();
-            for(int i = 0; i < strings.length; i++){
-                builder.append(strings[i]+" ");
+                StringBuilder builder = new StringBuilder();
+                for(int i = 0; i < strings.length; i++){
+                    builder.append(strings[i]+" ");
+                }
+                Bukkit.getPlayer(uuid).sendMessage(ChatColor.GOLD+"[GLOBAL] "+player.getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+builder.toString());
             }
-            Bukkit.getPlayer(uuid).sendMessage(ChatColor.GOLD+"[GLOBAL] "+player.getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+builder.toString());
-        }
+        } else
+            player.sendMessage("/g <msg>");
     }
 
     @SimpleComamnd(name = "movearena", permission = Groups.YOUTUBERPLUS)

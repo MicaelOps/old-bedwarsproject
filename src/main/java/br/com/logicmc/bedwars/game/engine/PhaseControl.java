@@ -11,10 +11,6 @@ public interface PhaseControl {
 
     void stop(Arena arena);
 
-    boolean end(Arena arena);
-
     org.bukkit.scoreboard.Scoreboard getScoreboard();
 
-
-    PhaseControl next();
 }

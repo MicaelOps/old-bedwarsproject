@@ -75,20 +75,19 @@ public class IngamePhase implements PhaseControl {
 
         } else {
 
-            arena.changePhase();
-            /*event.execute(arena);
+            event.execute(arena);
 
             if(time < stopupgrade) {
-                if (event.getEventname().contains("Diamond"))
-                    event = new GeneratorEvent(time + 300, event.getEventname().replace("diamond","Emerald")+"I", 1);
+                if (event.getEventname().startsWith("D"))
+                    event = new GeneratorEvent(time + 300, event.getEventname().replace("Diamond","Emerald")+"I", 1);
                 else
-                    event = new GeneratorEvent(time + 300, event.getEventname().replace("emerald","Diamond")+"I", 0);
+                    event = new GeneratorEvent(time + 300, event.getEventname().replace("Emerald","Diamond")+"I", 0);
             } else if(event.getEventname().equalsIgnoreCase("Camas destruidas"))
                 event = new SuddenDeathEvent(time+(10*60));
             else
                 event = new BedDestroyedEvent(time+(10*60));
 
-            arena.getScoreboard().getTeam("upgrade").setPrefix(ChatColor.WHITE+event.getEventname());*/
+            arena.getScoreboard().getTeam("upgrade").setPrefix(ChatColor.WHITE+event.getEventname());
         }
         return time;
     }
@@ -183,7 +182,6 @@ public class IngamePhase implements PhaseControl {
             }
             Team scteam = scoreboard.getTeam(bwPlayer.getTeamcolor());
             if(scteam.getEntries().isEmpty()) {
-                System.out.println(scteam.getName()+" "+score+" "+(score+5));
                 scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§"+score).setScore(score+5);
                 scteam.addEntry("§"+score);
                 score++;
@@ -193,7 +191,8 @@ public class IngamePhase implements PhaseControl {
             Player player = Bukkit.getPlayer(uuid);
             BWTeam team = BWTeam.valueOf(bwPlayer.getTeamcolor());
             arena.updateScoreboardTeam(player, bwPlayer.getTeamcolor(), "§a ✓ §7(You)");
-            player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor().toUpperCase())).findFirst().get().getSpawn());
+
+            player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor())).findFirst().get().getSpawn());
             player.setGameMode(GameMode.SURVIVAL);
             player.getInventory().clear();
             player.getInventory().setHelmet(BWMain.getInstance().createColorouedArmor(Material.LEATHER_HELMET, team.getColor()));
@@ -237,16 +236,6 @@ public class IngamePhase implements PhaseControl {
     public void stop(Arena engine) {
         scoreboard.getObjective(DisplaySlot.SIDEBAR).unregister();
         scoreboard.getTeams().forEach(Team::unregister);
-    }
-
-    @Override
-    public boolean end(Arena engine) {
-        return false;
-    }
-
-    @Override
-    public PhaseControl next() {
-        return new EndPhase();
     }
 
     @Override

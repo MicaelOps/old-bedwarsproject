@@ -24,6 +24,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -45,12 +46,15 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void showworldplayers(PlayerChangedWorldEvent event){
         Player player = event.getPlayer();
-        System.out.println("asa");
+
         BWPlayer bwPlayer =plugin.playermanager.getPlayerBase(player).getData();
+
+        BWManager.getInstance().getArenabyUUID(player.getUniqueId()).getPlayers().remove(player.getUniqueId());
+
         if(!bwPlayer.getMapname().equalsIgnoreCase("staff")) {
             plugin.giveItem(player, 0, FixedItems.STAFF_ARENA_SPECTATE);
-            plugin.playermanager.getPlayerBase(player).getData().setMap(player.getWorld().getName());
-            BWManager.getInstance().getArenabyUUID(player.getUniqueId()).getPlayers().remove(player.getUniqueId());
+            bwPlayer.setMap(player.getWorld().getName());
+            bwPlayer.setTeamcolor("");
         }
 
         Arena arena = BWManager.getInstance().getArena(player.getWorld().getName());
@@ -84,6 +88,8 @@ public class PlayerListeners implements Listener {
             player.setAllowFlight(true);
             player.setFlying(true);
             plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
+            plugin.giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
+            plugin.giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
         }
         arena.updateScoreboardForAll("players", ChatColor.GREEN+""+arena.getPlayers().size());
         player.setScoreboard(arena.getScoreboard());
@@ -92,6 +98,7 @@ public class PlayerListeners implements Listener {
     public void onplayerjoinarena(PlayerJoinArenaEvent event) {
         Player player = event.getPlayer();
         plugin.playermanager.getPlayerBase(player).getData().setMap(event.getArenaname());
+        plugin.playermanager.getPlayerBase(player).getData().setTeamcolor("");
 
         plugin.utils.cleanPlayer(player);
         plugin.utils.clearChat(player);
@@ -99,6 +106,8 @@ public class PlayerListeners implements Listener {
         player.setOp(true);//test purposes
 
         Arena arena = BWManager.getInstance().getArena(event.getArenaname());
+
+
         arena.getPlayers().add(player.getUniqueId());
 
         for(Player other : Bukkit.getOnlinePlayers()) {
@@ -134,6 +143,8 @@ public class PlayerListeners implements Listener {
             player.setAllowFlight(true);
             player.setFlying(true);
             plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
+            plugin.giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
+            plugin.giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
         }
 
 
@@ -147,18 +158,16 @@ public class PlayerListeners implements Listener {
         if(arena.getName().equalsIgnoreCase("staff"))
             return;
 
+        arena.getPlayers().remove(event.getPlayer().getUniqueId());
+
         if(arena.getGamestate() == Arena.WAITING) {
-            arena.getPlayers().remove(event.getPlayer().getUniqueId());
             arena.decrementAllotedPlayers();
             for(UUID ingameplayers : arena.getPlayers()) {
-
-                Player ingamePlayer = Bukkit.getPlayer(ingameplayers);
-
-                if(ingamePlayer != null)
-                    plugin.messagehandler.sendMessage(ingamePlayer, BWMessages.PLAYER_LEAVE_INGAME);
-
-                arena.updateScoreboardTeam(ingamePlayer, "players" , ChatColor.GRAY+""+arena.getPlayers().size());
+                arena.updateScoreboardTeam(Bukkit.getPlayer(ingameplayers), "players" , ChatColor.GRAY+""+arena.getPlayers().size());
             }
+        } else if(arena.getGamestate() == Arena.INGAME){
+            if(arena.checkend())
+                arena.changePhase();
         }
     }
     @EventHandler
@@ -212,6 +221,25 @@ public class PlayerListeners implements Listener {
                     event.getPlayer().openInventory(inventory);
                 } else
                     event.getPlayer().sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.ERROR_ONLY_VIP, base.getPreferences().getLang()));
+            } else if(event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY)){
+                if(item.getType() == Material.ENDER_PEARL){
+                    Arena arena = BWManager.getInstance().getArena(event.getPlayer().getWorld().getName());
+                    Inventory inventory = Bukkit.createInventory(null, 18, "Players");
+                    for(UUID uuid : arena.getPlayers()){
+                        Player target = Bukkit.getPlayer(uuid);
+                        if(target.getGameMode() == GameMode.SURVIVAL){
+                            ItemStack stack = new ItemStack(Material.SKULL_ITEM, 1 , (short)3);
+                            SkullMeta meta = (SkullMeta) stack.getItemMeta();
+                            meta.setOwner(target.getName());
+                            meta.setDisplayName(target.getDisplayName());
+                            stack.setItemMeta(meta);
+                            inventory.addItem(stack);
+                        }
+                    }
+                    event.getPlayer().openInventory(inventory);
+                } else if(item.getType() == Material.REDSTONE){
+                    BWMain.getInstance().sendRedirect(event.getPlayer(),"lobbybedwars-1");
+                }
             }
         }
     }

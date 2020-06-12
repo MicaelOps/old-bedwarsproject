@@ -3,27 +3,37 @@ package br.com.logicmc.bedwars.game.engine.generator;
 import br.com.logicmc.core.addons.hologram.Hologram;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import org.bukkit.inventory.ItemStack;
 
 
 public class NormalGenerator implements IGenerator{
 
-    private final Material material;
     private final Location location;
     private final int reset;
 
     private Hologram holograms;
     private int time,generatorlevel;
 
+    private ItemStack drop;
+
     public NormalGenerator(Location location, Material material, Hologram holograms, int reset) {
-        this.material = material;
         this.holograms = holograms;
         this.location =location;
         this.reset = reset;
 
         time = reset;
         generatorlevel = 0;
+        drop = setStack(material, 1);
 
     }
+    public ItemStack setStack(Material material, int amount){
+        ItemStack dummy = new ItemStack(material, 1);
+        net.minecraft.server.v1_8_R3.ItemStack nmsdummy = CraftItemStack.asNMSCopy(dummy);
+        nmsdummy.getItem().c(amount);
+        return CraftItemStack.asBukkitCopy(nmsdummy);
+    }
+
 
     public int getGeneratorlevel() {
         return generatorlevel;
@@ -32,20 +42,12 @@ public class NormalGenerator implements IGenerator{
         this.generatorlevel++;
     }
 
-    @Override
-    public Material getMaterial() {
-        return material;
-    }
 
     @Override
     public int getTime() {
         return time;
     }
 
-    @Override
-    public int getReset() {
-        return reset;
-    }
 
     @Override
     public void setNewReset() {
@@ -64,4 +66,9 @@ public class NormalGenerator implements IGenerator{
 	public void setHologram(Hologram hologram) {
         this.holograms=hologram;
 	}
+
+    @Override
+    public void spawn() {
+        getLocation().getWorld().dropItem(getLocation(), drop);
+    }
 }

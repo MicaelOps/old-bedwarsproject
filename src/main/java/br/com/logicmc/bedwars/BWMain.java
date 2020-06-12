@@ -9,6 +9,7 @@ import br.com.logicmc.bedwars.extra.customentity.EntityManager;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.Island;
+import br.com.logicmc.bedwars.game.engine.generator.IslandGenerator;
 import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
@@ -16,6 +17,7 @@ import br.com.logicmc.bedwars.game.shop.ShopCategory;
 import br.com.logicmc.bedwars.game.shop.ShopItem;
 import br.com.logicmc.bedwars.game.shop.upgrades.UpgradeItem;
 import br.com.logicmc.bedwars.listeners.InventoryListeners;
+import br.com.logicmc.bedwars.listeners.ShopInventoryListeners;
 import br.com.logicmc.bedwars.listeners.PhaseListener;
 import br.com.logicmc.bedwars.listeners.PlayerListeners;
 import br.com.logicmc.core.addons.hologram.types.Global;
@@ -71,6 +73,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         }
         spawnlocation = mainconfig.getLocation("spawn");
         maintenance = mainconfig.getConfig().getBoolean("maintenance");
+        new YamlFile("en-msg.yml").loadResource(this);
 
         if (spawnlocation == null)
             System.out.println("[Arena] Lobby location is null");
@@ -88,8 +91,9 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         fight = new ShopCategory(FixedItems.SHOP_FIGHT);
         utilities = new ShopCategory(FixedItems.SHOP_UTILITIES);
 
-        Bukkit.getPluginManager().registerEvents(new InventoryListeners(), this);
+        Bukkit.getPluginManager().registerEvents(new ShopInventoryListeners(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListeners(), this);
+        Bukkit.getPluginManager().registerEvents(new InventoryListeners(), this);
         Bukkit.getPluginManager().registerEvents(new PhaseListener(), this);
 
         messagehandler.loadMessage(BWMessages.PLAYER_LEAVE_INGAME, this);
@@ -275,7 +279,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 world.getEntities().forEach(Entity::remove);
                 world.getLivingEntities().forEach(LivingEntity::remove);
                 world.setGameRuleValue("doDaylightCycle", "false");
-                Location spawnlobby = lobbyloc.get().clone();
+                Location spawnlobby = lobbyloc.get().clone().add(0.0D, 1.2D, 0.0D);
                 spawnlobby.setWorld(world);
                 for (Island island : islands) { // debug arenas
                     island.report(arena);
@@ -283,8 +287,10 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                         island.getGenerator().getLocation().setWorld(world);
                     if(island.getNpc() !=null)
                         island.getNpc().setWorld(world);
-                    if(island.getSpawn()!=null)
+                    if(island.getSpawn()!=null) {
                         island.getSpawn().setWorld(world);
+                        island.getSpawn().add(0.0D, 1.0D, 0.0D);
+                    }
                     if(island.getBed()!=null)
                         island.getBed().setWorld(world);
                     if(island.getUpgrade()!=null)
@@ -453,6 +459,15 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             }
         }, (island)-> {
             island.setForgery(island.getForgery()+1);
+            IslandGenerator generator = island.getGenerator();
+            if(island.getForgery() == 1){
+                generator.setIronstack(generator.setStack(Material.IRON_INGOT, 64));
+                generator.setGoldstack(generator.setStack(Material.GOLD_INGOT, 24));
+            } else if(island.getForgery() == 2){
+                generator.setGoldstack(generator.setStack(Material.GOLD_INGOT, 36));
+            } else if(island.getForgery() == 3){
+                generator.setGoldstack(generator.setStack(Material.GOLD_INGOT, 48));
+            }
             island.forEachPlayers(uuid -> BWMain.getInstance().messagehandler.sendMessage(Bukkit.getPlayer(uuid), BWMessages.FORGERY_UPGRADED));
         });
 

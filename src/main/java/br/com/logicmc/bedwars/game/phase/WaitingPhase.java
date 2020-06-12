@@ -1,6 +1,7 @@
 package br.com.logicmc.bedwars.game.phase;
 
 import br.com.logicmc.bedwars.BWMain;
+import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.extra.customentity.EntityManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.Island;
@@ -31,9 +32,9 @@ public class WaitingPhase implements PhaseControl {
 
         if(time != 0 ) {
             if(time > 59 && time%60 == 0)
-                arena.broadcastMessage(ChatColor.YELLOW + "O jogo comeca em "+time/60+" minuto(s)");
+                arena.brocastTimeMessage(BWMessages.GAME_STARTS_IN_MINITUES,time/60);
             else if(time < 6)
-                arena.broadcastMessage(ChatColor.YELLOW + "O jogo comeca em "+time+" segundo(s)");
+                arena.brocastTimeMessage(BWMessages.GAME_STARTS_IN_SECONDS,time/60);
         } else {
             int size = arena.getPlayers().size();
             if(size == 0)
@@ -58,7 +59,7 @@ public class WaitingPhase implements PhaseControl {
 
     @Override
     public void init(Arena arena) {
-
+        arena.setGamestate(Arena.WAITING);
         arena.setTime(500);
      }
 
@@ -68,17 +69,7 @@ public class WaitingPhase implements PhaseControl {
         scoreboard.getTeams().forEach(Team::unregister);
     }
 
-    @Override
-    public boolean end(Arena arena) {
-        return false;
-    }
 
-    @Override
-    public PhaseControl next() {
-        return new IngamePhase();
-    }
-
- 
     @Override
     public void preinit(Arena arena) {
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();

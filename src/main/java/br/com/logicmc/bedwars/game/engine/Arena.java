@@ -2,7 +2,9 @@ package br.com.logicmc.bedwars.game.engine;
 
 import br.com.logicmc.bedwars.BWMain;
 
+import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.extra.YamlFile;
+import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.addons.TimeScheduler;
 import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
 import br.com.logicmc.bedwars.game.phase.EndPhase;
@@ -11,6 +13,7 @@ import br.com.logicmc.bedwars.game.phase.WaitingPhase;
 import br.com.logicmc.core.system.server.ServerState;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -69,11 +72,10 @@ public class Arena {
 
     }
 
-    public void initScoreboards(){
+    private void initScoreboards(){
         for(PhaseControl control : controls) {
             control.preinit(this);
         }
-
     }
     public HashSet<Location> getBlocks() {
         return blocks;
@@ -133,8 +135,13 @@ public class Arena {
 
     public void changePhase() {
         controls[phaseControl].stop(this);
-        phaseControl+=1;
-        controls[phaseControl].next();
+
+        if(controls[phaseControl] instanceof EndPhase) {
+            initScoreboards();
+            BWMain.getInstance().updateArena(getName());
+            phaseControl = 0;
+        }else
+            phaseControl+=1;
 
         for(UUID ingameplayers : getPlayers()) {
             Player ingamePlayer = Bukkit.getPlayer(ingameplayers);
@@ -150,6 +157,10 @@ public class Arena {
         return time;
     }
 
+
+    public boolean checkend(){
+        return getPlayers().stream().filter(uuid -> Bukkit.getPlayer(uuid).getGameMode()==GameMode.SURVIVAL).count() <= getTeamcomposition();
+    }
     public boolean hasSpaceforPlayer() {
         return allotedplayers < maxplayers;
     }
@@ -183,9 +194,9 @@ public class Arena {
         return name;
     }
 
-    public void broadcastMessage(String text) {
+    public void brocastTimeMessage(BWMessages messages, int time) {
         for(UUID ingameplayers : getPlayers()) {
-            Bukkit.getPlayer(ingameplayers).sendMessage(text);
+            Bukkit.getPlayer(ingameplayers).sendMessage(BWMain.getInstance().messagehandler.getMessage(messages, BWMain.getInstance().getLang(Bukkit.getPlayer(ingameplayers))).replace("{time}",""+time));
         }
     }
     public void updateScoreboardForAll(String team, String suffix) {
