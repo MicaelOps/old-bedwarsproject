@@ -34,7 +34,7 @@ public class WaitingPhase implements PhaseControl {
             if(time > 59 && time%60 == 0)
                 arena.brocastTimeMessage(BWMessages.GAME_STARTS_IN_MINITUES,time/60);
             else if(time < 6)
-                arena.brocastTimeMessage(BWMessages.GAME_STARTS_IN_SECONDS,time/60);
+                arena.brocastTimeMessage(BWMessages.GAME_STARTS_IN_SECONDS,time);
         } else {
             int size = arena.getPlayers().size();
             if(size == 0)

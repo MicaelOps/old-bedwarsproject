@@ -59,7 +59,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     private boolean maintenance;
     private Location spawnlocation;
 
-    private ShopCategory blocks, fight, utilities;
+    private ShopCategory blocks, fight, utilities, tools;
     private UpgradeItem sharpness, armor, forgery;
 
     @Override
@@ -98,6 +98,11 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
     public static BWMain getInstance() {
         return instance;
+    }
+
+
+    public ShopCategory getTools() {
+        return tools;
     }
 
     public UpgradeItem getArmor() {
@@ -349,6 +354,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         blocks = new ShopCategory(FixedItems.SHOP_BLOCKS);
         fight = new ShopCategory(FixedItems.SHOP_FIGHT);
         utilities = new ShopCategory(FixedItems.SHOP_UTILITIES);
+        tools = new ShopCategory(FixedItems.SHOP_TOOLS);
         
         blocks.getListitems().add(new ShopItem(new ItemStack(Material.WOOL, 16), new ItemStack(Material.IRON_INGOT, 4)));
         blocks.getListitems().add(new ShopItem(new ItemStack(Material.HARD_CLAY, 16), new ItemStack(Material.IRON_INGOT, 12)));
@@ -368,16 +374,16 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         fight.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_CHESTPLATE, 1), new ItemStack(Material.EMERALD, 7)));
         fight.getListitems().add(new ShopItem(new ItemStack(Material.SHEARS, 1), new ItemStack(Material.IRON_INGOT, 20)));
 
-          
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.WOOD_AXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.STONE_AXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.IRON_AXE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_AXE, 1), new ItemStack(Material.GOLD_INGOT, 6)));
 
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.WOOD_PICKAXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.IRON_PICKAXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.GOLD_PICKAXE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_PICKAXE, 1), new ItemStack(Material.GOLD_INGOT, 6)));
+        tools.getListitems().add(new ShopItem(new ItemStack(Material.WOOD_AXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
+        tools.getListitems().add(new ShopItem(new ItemStack(Material.STONE_AXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
+        tools.getListitems().add(new ShopItem(new ItemStack(Material.IRON_AXE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
+        tools.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_AXE, 1), new ItemStack(Material.GOLD_INGOT, 6)));
+
+        tools.getListitems().add(new ShopItem(new ItemStack(Material.WOOD_PICKAXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
+        tools.getListitems().add(new ShopItem(new ItemStack(Material.IRON_PICKAXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
+        tools.getListitems().add(new ShopItem(new ItemStack(Material.GOLD_PICKAXE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
+        tools.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_PICKAXE, 1), new ItemStack(Material.GOLD_INGOT, 6)));
 
 
         utilities.getListitems().add(new ShopItem(new ItemStack(Material.BOW, 1), new ItemStack(Material.GOLD_INGOT, 12)));
@@ -490,6 +496,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     }
     private void loadTranslations() {
         new YamlFile("en-msg.yml").loadResource(this);
+        new YamlFile("es-msg.yml").loadResource(this);
         messagehandler.loadMessage(BWMessages.PLAYER_LEAVE_INGAME, this);
     }
     private ItemStack addPotion(PotionEffectType type , int duration, int power){

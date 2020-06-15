@@ -1,5 +1,6 @@
 package br.com.logicmc.bedwars.game.player;
 
+import com.google.gson.Gson;
 import org.bukkit.ChatColor;
 
 import br.com.logicmc.core.account.addons.Parceable;
@@ -15,16 +16,15 @@ public class BWPlayer extends Parceable<BWPlayer> {
 
     private String teamcolor;
 
-    private Material armor;
-    private int kills, beds, deaths, wins, defeats;
+    private int kills, deaths, wins, level, beds;
 
     public BWPlayer() {
         kills=0;
-        beds=0;
+        level=0;
         wins=0;
-        defeats=0;
+		beds = 0;
+		deaths=0;
         teamcolor=null;
-        armor = Material.AIR;
     }
 
     public String getMapname() {
@@ -34,6 +34,7 @@ public class BWPlayer extends Parceable<BWPlayer> {
     public void setMap(String arena) {
         this.arena = arena;
     }
+	
     public String getTeamcolor() {
         return teamcolor;
     }
@@ -42,20 +43,13 @@ public class BWPlayer extends Parceable<BWPlayer> {
         this.teamcolor = teamcolor;
     }
 
-    public void setArmor(Material armor) {
-        this.armor = armor;
-    }
-
-    public Material getArmor() {
-        return armor;
-    }
-
-    public int getBeds() {
-        return beds;
-    }
 
     public int getKills() {
         return kills;
+    }
+	
+    public int getBeds() {
+        return beds;
     }
 
     public void increaseKills() {
@@ -68,23 +62,24 @@ public class BWPlayer extends Parceable<BWPlayer> {
 
     @Override
     public void parse(JsonObject data) {
-        if(data.has("beds")) {
-            this.kills = data.get("kills").getAsInt();
-            this.defeats = data.get("defeats").getAsInt();
-            this.beds = data.get("beds").getAsInt();
-            this.wins = data.get("wins").getAsInt();
-            this.deaths = data.get("deaths").getAsInt();
+        if(data.has("solo_stats")) {
+			JsonObject jsonObject = new Gson().fromJson(data.get("solo_stats").getAsString(), JsonObject.class);
+            this.kills = jsonObject.get("kills").getAsInt();
+            this.level = jsonObject.get("level").getAsInt();
+            this.wins = jsonObject.get("wins").getAsInt();
+            this.deaths = jsonObject.get("deaths").getAsInt();
         }
     }
 
     @Override
     public JsonObject toJson() {
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("kills", this.kills);
-        jsonObject.addProperty("deaths", this.deaths);
-        jsonObject.addProperty("beds", this.beds);
-        jsonObject.addProperty("wins", this.wins);
-        jsonObject.addProperty("defeats", this.defeats);
+        JsonObject datastats = new JsonObject();
+        datastats.addProperty("kills", this.kills);
+        datastats.addProperty("deaths", this.deaths);
+        datastats.addProperty("level", this.level);
+        datastats.addProperty("wins", this.wins);
+		jsonObject.add("solo_stats", datastats);
         return jsonObject;
     }
 

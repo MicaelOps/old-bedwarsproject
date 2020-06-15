@@ -125,10 +125,11 @@ public class PhaseListener implements Listener {
     public void entitydamage(EntityDamageEvent event) {
 
         if(event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK && event.getEntity() instanceof Player){
-            event.setCancelled(check(event.getEntity().getLocation()));
+            event.setCancelled(check(event.getEntity().getLocation(), event.getEntity()));
             final Player player = (Player) event.getEntity();
 
             if(!event.isCancelled()) {
+
                 if(event.getFinalDamage() >= ((Player) event.getEntity()).getHealth()) {
                     event.setCancelled(true);
                     if(player.getGameMode()==GameMode.SURVIVAL){
@@ -168,7 +169,7 @@ public class PhaseListener implements Listener {
     }
     @EventHandler
     public void damagedddby(EntityDamageByEntityEvent event) {
-        boolean damage = check(event.getEntity().getLocation());
+        boolean damage = check(event.getEntity().getLocation(), event.getEntity());
         if(!damage){
             if(event.getEntity() instanceof Player && event.getDamager() instanceof Player){
                 damage = plugin.playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(plugin.playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
@@ -211,6 +212,7 @@ public class PhaseListener implements Listener {
     }
     private void respawn(Arena arena, Island island, PlayerBase<BWPlayer> bwPlayer, Player player) {
 
+		player.setGameMode(GameMode.SPECTATOR);
         if (island.isBedbroken()) {
             player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
 

@@ -55,6 +55,10 @@ public class PlayerListeners implements Listener {
             plugin.giveItem(player, 0, FixedItems.STAFF_ARENA_SPECTATE);
             bwPlayer.setMap(player.getWorld().getName());
             bwPlayer.setTeamcolor("");
+        } else {
+            if(BWManager.getInstance().getArena(bwPlayer.getMapname()).checkend()){
+                BWManager.getInstance().getArena(bwPlayer.getMapname()).changePhase();
+            }
         }
 
         Bukkit.getPluginManager().callEvent(new PlayerJoinArenaEvent(player, player.getWorld().getName()));
@@ -86,6 +90,7 @@ public class PlayerListeners implements Listener {
                 } else {
                     player.setDisplayName("[SPECTATOR] "+player.getName());
                     player.showPlayer(other);
+                    other.hidePlayer(player);
                 }
             }
         }
@@ -105,7 +110,7 @@ public class PlayerListeners implements Listener {
             arena.updateScoreboardForAll("players", ChatColor.GREEN+""+arena.getPlayers().size());
         } else {
             player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999, 3));
-            player.setGameMode(GameMode.SURVIVAL);
+            player.setGameMode(GameMode.SPECTATOR);
             player.setAllowFlight(true);
             player.setFlying(true);
             plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
@@ -150,8 +155,14 @@ public class PlayerListeners implements Listener {
             }
         } else {
             for(UUID uuid : arena.getPlayers()){
-                if(Bukkit.getPlayer(uuid).getDisplayName().charAt(1) == event.getPlayer().getDisplayName().charAt(1)){
-                    Bukkit.getPlayer(uuid).sendMessage(ChatColor.GREEN+"[TEAM] "+event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+                if(event.getPlayer().getGameMode() != GameMode.SURVIVAL){
+                    if(Bukkit.getPlayer(uuid).getGameMode() != GameMode.SURVIVAL){
+                        Bukkit.getPlayer(uuid).sendMessage(event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+                    }
+                } else {
+                    if(Bukkit.getPlayer(uuid).getDisplayName().charAt(1) == event.getPlayer().getDisplayName().charAt(1)){
+                        Bukkit.getPlayer(uuid).sendMessage(ChatColor.GREEN+"[TEAM] "+event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+                    }
                 }
             }
         }

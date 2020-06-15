@@ -5,6 +5,7 @@ import java.util.UUID;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -69,7 +70,14 @@ public class UtilsCommands extends CommandAdapter {
                 for(int i = 0; i < strings.length; i++){
                     builder.append(strings[i]+" ");
                 }
-                Bukkit.getPlayer(uuid).sendMessage(ChatColor.GOLD+"[GLOBAL] "+player.getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+builder.toString());
+
+                if(player.getGameMode() != GameMode.SURVIVAL){
+                    if(Bukkit.getPlayer(uuid).getGameMode() != GameMode.SURVIVAL){
+                        Bukkit.getPlayer(uuid).sendMessage(player.getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+builder.toString());
+                    }
+                } else {
+                    Bukkit.getPlayer(uuid).sendMessage(ChatColor.GOLD+"[GLOBAL] "+player.getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+builder.toString());
+                }
             }
         } else
             player.sendMessage("/g <msg>");

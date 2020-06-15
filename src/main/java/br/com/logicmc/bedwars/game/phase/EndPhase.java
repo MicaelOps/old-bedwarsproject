@@ -43,7 +43,7 @@ public class EndPhase implements PhaseControl {
             for(UUID uuid : arena.getPlayers()){
                 BWMain.getInstance().sendRedirect(Bukkit.getPlayer(uuid),"lobbybedwars-1");
             }
-        } else if(time == (kickall+1)){
+        } else if(time == (kickall+5)){
             arena.getBlocks().forEach(location -> location.getBlock().setType(Material.AIR));
             arena.getBlocks().clear();
             arena.getPreteam().clear();

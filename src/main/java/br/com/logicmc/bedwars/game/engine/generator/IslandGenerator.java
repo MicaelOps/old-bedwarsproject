@@ -13,15 +13,16 @@ public class IslandGenerator extends NormalGenerator{
 
     public IslandGenerator(Location location) {
         super(location, Material.IRON_INGOT, null, 3);
-        gold = getTime() + 10;
+        gold = 10;
 
         ironstack = setStack(Material.IRON_INGOT, 48);
         goldstack = setStack(Material.GOLD_INGOT, 12);
-        emerald=0;
+        emerald=16;
     }
 
     @Override
     public void spawn() {
+        gold-=1;
         boolean generategold = gold <= getTime();
         if(getGeneratorlevel() == 0){
             multiplespawn(generategold);
@@ -63,7 +64,7 @@ public class IslandGenerator extends NormalGenerator{
     private void multiplespawn(boolean can){
         if(can){
             getLocation().getWorld().dropItem(getLocation(), goldstack);
-            gold+=10;
+            gold+=6;
         }
 
         getLocation().getWorld().dropItem(getLocation(), ironstack);

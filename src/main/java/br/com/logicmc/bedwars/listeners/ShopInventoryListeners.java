@@ -109,6 +109,16 @@ public class ShopInventoryListeners implements Listener {
                     inventory.setItem(i, shopItem.getMenu());
                     i++;
                 }
+            } else if (stack.getType() == Material.IRON_PICKAXE) {
+                inventory = Bukkit.createInventory(null, 36, "Shop");
+                for (ShopItem shopItem : plugin.getTools().getListitems()) {
+                    if (i == 17)
+                        i = 19;
+                    else if (i == 26)
+                        i = 28;
+                    inventory.setItem(i, shopItem.getMenu());
+                    i++;
+                }
             }
 
             event.getWhoClicked().openInventory(inventory);
@@ -154,7 +164,6 @@ public class ShopInventoryListeners implements Listener {
                             stack.addEnchantment(Enchantment.DIG_SPEED, island.getSharpness());
                     } else if(name.contains("CHESTPLATE")){
                         name = name.replace("_CHESTPLATE","");
-                        BWManager.getInstance().getBWPlayer(player.getUniqueId()).setArmor(stack.getType());
                         Island island = BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getIslands().stream().filter(islands -> player.getDisplayName().contains(""+islands.getTeam().getChatColor())).findFirst().get();
 
                         player.getInventory().setLeggings(addEnchantment(Material.valueOf(name+"_LEGGINGS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor()));
@@ -200,9 +209,10 @@ public class ShopInventoryListeners implements Listener {
                 }
             } else {
                 Inventory inventory = Bukkit.createInventory(null, 27, "Categories");
-                inventory.setItem(11, plugin.getBlocks().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
-                inventory.setItem(13, plugin.getFight().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
-                inventory.setItem(15, plugin.getUtilities().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
+                inventory.setItem(10, plugin.getBlocks().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
+                inventory.setItem(11, plugin.getFight().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
+                inventory.setItem(12, plugin.getUtilities().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
+                inventory.setItem(13, plugin.getTools().getMenu().getBuild(plugin.messagehandler, plugin.playermanager.getPlayerBase(player.getUniqueId()).getPreferences().getLang()));
                 player.openInventory(inventory);
             }
         }

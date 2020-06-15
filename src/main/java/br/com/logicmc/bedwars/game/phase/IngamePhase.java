@@ -40,7 +40,7 @@ public class IngamePhase implements PhaseControl {
 
     public IngamePhase() {
         available = new ArrayList<>();
-        stopupgrade = 25*60;
+        stopupgrade = 1198;
 
         event = new GeneratorEvent(300, "Diamond II", 0);
     }
@@ -70,7 +70,7 @@ public class IngamePhase implements PhaseControl {
         if(remainingtime > 0){
 
             int i = remainingtime / 60;
-            arena.updateScoreboardForAll("upgrade","§f em §a" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
+            arena.getScoreboard().getTeam("upgrade").setSuffix("§f em §a" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
 
         } else {
 
@@ -78,7 +78,7 @@ public class IngamePhase implements PhaseControl {
 
             if(time < stopupgrade) {
                 if (event.getEventname().startsWith("D"))
-                    event = new GeneratorEvent(time + 300, event.getEventname().replace("Diamond","Emerald")+"I", 1);
+                    event = new GeneratorEvent(time + 300, event.getEventname().replace("Diamond","Emerald"), 1);
                 else
                     event = new GeneratorEvent(time + 300, event.getEventname().replace("Emerald","Diamond")+"I", 0);
             } else if(event.getEventname().equalsIgnoreCase("Camas destruidas"))
