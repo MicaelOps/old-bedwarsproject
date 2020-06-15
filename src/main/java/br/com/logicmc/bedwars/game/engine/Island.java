@@ -39,13 +39,6 @@ public class Island {
         armor = 0;
     }
 
-    public void reset(){
-        bedbroken = false;
-        forgery = 0;
-        sharpness = 0;
-        armor = 0;
-        this.generator = new IslandGenerator(generator.getLocation());
-    }
     public String getArena() {
         return arena;
     }

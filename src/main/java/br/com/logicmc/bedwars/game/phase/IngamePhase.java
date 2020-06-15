@@ -54,7 +54,6 @@ public class IngamePhase implements PhaseControl {
         for (Island island : arena.getIslands()) {
             NormalGenerator generator = island.getGenerator();
             generator.spawn();
-            generator.setNewReset();
 
         }
         for (NormalGenerator generator : arena.getDiamond()) {
@@ -212,12 +211,12 @@ public class IngamePhase implements PhaseControl {
 
 
             if(!list.isEmpty()) {
-                BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "enemy", list);
+                arena.updateEntry(player, arena.getScoreboard(), "enemy", list);
                 list.clear();
             }
 
             arena.getPlayers().stream().filter(e->BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
-            BWMain.getInstance().updateEntry(player, arena.getScoreboard(), "friend", list);
+            arena.updateEntry(player, arena.getScoreboard(), "friend", list);
         }
 
         scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§l").setScore((index+5+1));

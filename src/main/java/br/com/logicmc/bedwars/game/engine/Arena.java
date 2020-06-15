@@ -11,21 +11,22 @@ import br.com.logicmc.bedwars.game.phase.EndPhase;
 import br.com.logicmc.bedwars.game.phase.IngamePhase;
 import br.com.logicmc.bedwars.game.phase.WaitingPhase;
 import br.com.logicmc.core.system.server.ServerState;
+import net.minecraft.server.v1_8_R3.PacketPlayOutScoreboardTeam;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_8_R3.scoreboard.CraftScoreboard;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.UUID;
+import java.lang.reflect.Field;
+import java.util.*;
 
 
 public class Arena {
@@ -206,7 +207,7 @@ public class Arena {
         }
     }
     public void updateScoreboardTeam(Player player, String team, String suffix) {
-        BWMain.getInstance().updateSuffix(player, player.getScoreboard(), team, suffix);
+        updateSuffix(player, player.getScoreboard(), team, suffix);
     }
 
     /***
@@ -229,5 +230,22 @@ public class Arena {
         if(section != null) {
             section.getKeys(false).forEach((string)->config.getConfig().set(path,null)); // deleting old
         }
+    }
+    private void updateSuffix(Player player, Scoreboard sc, String team, String suffix) {
+        net.minecraft.server.v1_8_R3.Scoreboard scoreboard = ((CraftScoreboard)sc).getHandle();
+        PacketPlayOutScoreboardTeam updatepacket = new PacketPlayOutScoreboardTeam(scoreboard.getTeam(team), 2);
+        try {
+            Field field = updatepacket.getClass().getDeclaredField("d");
+            field.setAccessible(true);
+            field.set(updatepacket, suffix);
+            ((CraftPlayer)player).getHandle().playerConnection.sendPacket(updatepacket);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            player.sendMessage("failed to update scoreboard please report this to the administrator.");
+        }
+    }
+    public void updateEntry(Player player, Scoreboard sc, String team, List<String> entries) {
+        net.minecraft.server.v1_8_R3.Scoreboard scoreboard = ((CraftScoreboard)sc).getHandle();
+        PacketPlayOutScoreboardTeam updatepacket = new PacketPlayOutScoreboardTeam(scoreboard.getTeam(team), entries, 3);
+        ((CraftPlayer)player).getHandle().playerConnection.sendPacket(updatepacket);
     }
 }

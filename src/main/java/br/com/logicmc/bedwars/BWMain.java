@@ -71,35 +71,28 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
+
         spawnlocation = mainconfig.getLocation("spawn");
         maintenance = mainconfig.getConfig().getBoolean("maintenance");
-        new YamlFile("en-msg.yml").loadResource(this);
+
 
         if (spawnlocation == null)
             System.out.println("[Arena] Lobby location is null");
-
-        for (Arena arena : BWManager.getInstance().getArenas()) {
-            arena.startTimer(this);
-        }
 
         CommandLoader.loadPackage(this, BWMain.class, "br.com.logicmc.bedwars.commands");
         EntityManager.getInstance().registerEntities();
 
         super.onEnable();
 
-        blocks = new ShopCategory(FixedItems.SHOP_BLOCKS);
-        fight = new ShopCategory(FixedItems.SHOP_FIGHT);
-        utilities = new ShopCategory(FixedItems.SHOP_UTILITIES);
+        getServer().getPluginManager().registerEvents(new ShopInventoryListeners(), this);
+        getServer().getPluginManager().registerEvents(new PlayerListeners(), this);
+        getServer().getPluginManager().registerEvents(new InventoryListeners(), this);
+        getServer().getPluginManager().registerEvents(new PhaseListener(), this);
 
-        Bukkit.getPluginManager().registerEvents(new ShopInventoryListeners(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerListeners(), this);
-        Bukkit.getPluginManager().registerEvents(new InventoryListeners(), this);
-        Bukkit.getPluginManager().registerEvents(new PhaseListener(), this);
 
-        messagehandler.loadMessage(BWMessages.PLAYER_LEAVE_INGAME, this);
         BWManager.getInstance().addGame("staff", new StaffArena());
 
-        System.out.println(spawnlocation.getWorld().getName());
+        loadTranslations();
         loadItens();
     }
 
@@ -150,7 +143,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     public Consumer<String> getUpdateArenaMethod() {
         return (arena) -> {
             Arena gameEngine = BWManager.getInstance().getArena(arena);
-            System.out.println("arena update " + arena);
+            System.out.println("updating arena " + arena);
             PacketManager.getInstance().sendChannelPacket(this, "lobby", new ArenaInfoPacket(Bukkit.getServerName(),
                     arena, true, gameEngine.getPlayers().size(), gameEngine.getServerState()));
         };
@@ -338,23 +331,6 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     }
 
 
-    public void updateSuffix(Player player, Scoreboard sc, String team, String suffix) {
-        net.minecraft.server.v1_8_R3.Scoreboard scoreboard = ((CraftScoreboard)sc).getHandle();
-        PacketPlayOutScoreboardTeam updatepacket = new PacketPlayOutScoreboardTeam(scoreboard.getTeam(team), 2);
-        try {
-            Field field = updatepacket.getClass().getDeclaredField("d");
-            field.setAccessible(true);
-            field.set(updatepacket, suffix);
-            ((CraftPlayer)player).getHandle().playerConnection.sendPacket(updatepacket);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            player.sendMessage("failed to update scoreboard please report this to the administrator.");
-        }
-    }
-    public void updateEntry(Player player, Scoreboard sc, String team, List<String> entries) {
-        net.minecraft.server.v1_8_R3.Scoreboard scoreboard = ((CraftScoreboard)sc).getHandle();
-        PacketPlayOutScoreboardTeam updatepacket = new PacketPlayOutScoreboardTeam(scoreboard.getTeam(team), entries, 3);
-        ((CraftPlayer)player).getHandle().playerConnection.sendPacket(updatepacket);
-    }
     public void giveItem(Player player, int slot, FixedItems item) {
         player.getInventory().setItem(slot, item.getBuild(messagehandler, playermanager.getPlayerBase(player).getPreferences().getLang()));
     }
@@ -369,6 +345,10 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     }
 
     private void loadItens(){
+
+        blocks = new ShopCategory(FixedItems.SHOP_BLOCKS);
+        fight = new ShopCategory(FixedItems.SHOP_FIGHT);
+        utilities = new ShopCategory(FixedItems.SHOP_UTILITIES);
         
         blocks.getListitems().add(new ShopItem(new ItemStack(Material.WOOL, 16), new ItemStack(Material.IRON_INGOT, 4)));
         blocks.getListitems().add(new ShopItem(new ItemStack(Material.HARD_CLAY, 16), new ItemStack(Material.IRON_INGOT, 12)));
@@ -507,6 +487,10 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 player.getInventory().getBoots().addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor());
             });
         });
+    }
+    private void loadTranslations() {
+        new YamlFile("en-msg.yml").loadResource(this);
+        messagehandler.loadMessage(BWMessages.PLAYER_LEAVE_INGAME, this);
     }
     private ItemStack addPotion(PotionEffectType type , int duration, int power){
         ItemStack itemStack = new ItemStack(Material.POTION, 1);

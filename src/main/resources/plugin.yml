@@ -5,6 +5,7 @@ author: icarus
 softdepend:
   - core
 commands:
+  givebox:
   movearena:
   g:
   tempmute:

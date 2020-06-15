@@ -57,42 +57,7 @@ public class PlayerListeners implements Listener {
             bwPlayer.setTeamcolor("");
         }
 
-        Arena arena = BWManager.getInstance().getArena(player.getWorld().getName());
-        arena.getPlayers().add(player.getUniqueId());
-
-        for(Player other : Bukkit.getOnlinePlayers()) {
-            if(!event.getPlayer().getWorld().getName().equalsIgnoreCase(other.getLocation().getWorld().getName())) {
-                event.getPlayer().hidePlayer(other);
-            } else {
-                if(arena.getGamestate() == Arena.WAITING) {
-                    player.showPlayer(other);
-                    player.setDisplayName(player.getName());
-                    other.showPlayer(player);
-                } else {
-                    player.setDisplayName("[SPECTATOR] "+player.getName());
-                    player.showPlayer(other);
-                }
-            }
-        }
-        if(arena.getGamestate() == Arena.WAITING){
-            arena.incrementAllotedPlayers();
-            player.getInventory().clear();
-            player.setDisplayName(player.getName());
-            bwPlayer.setTeamcolor("");
-            player.getInventory().setArmorContents(null);
-            plugin.giveItem(player, 0, FixedItems.ONLY_VIP_CHOOSETEAM);
-            player.setGameMode(GameMode.ADVENTURE);
-        } else {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999, 3));
-            player.setGameMode(GameMode.SURVIVAL);
-            player.setAllowFlight(true);
-            player.setFlying(true);
-            plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
-            plugin.giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
-            plugin.giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
-        }
-        arena.updateScoreboardForAll("players", ChatColor.GREEN+""+arena.getPlayers().size());
-        player.setScoreboard(arena.getScoreboard());
+        Bukkit.getPluginManager().callEvent(new PlayerJoinArenaEvent(player, player.getWorld().getName()));
     }
     @EventHandler
     public void onplayerjoinarena(PlayerJoinArenaEvent event) {
@@ -129,6 +94,7 @@ public class PlayerListeners implements Listener {
         player.teleport(BWManager.getInstance().getArena(event.getArenaname()).getLobby());
 
         if(arena.getGamestate() == Arena.WAITING){
+
             arena.incrementAllotedPlayers();
             player.getInventory().clear();
             player.setDisplayName(player.getName());
