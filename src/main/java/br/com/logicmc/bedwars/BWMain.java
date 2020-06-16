@@ -498,6 +498,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         });
     }
     private void loadTranslations() {
+		new YamlFile("pt-msg.yml").loadResource(this);
         new YamlFile("en-msg.yml").loadResource(this);
         new YamlFile("es-msg.yml").loadResource(this);
         messagehandler.loadMessage(BWMessages.PLAYER_LEAVE_INGAME, this);
