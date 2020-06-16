@@ -190,6 +190,9 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         // deleting unacessary worlds
         for (World world : Bukkit.getWorlds()) {
             boolean exist = false;
+			
+			System.out.println(world.getName());
+			
             if (world.getName().equalsIgnoreCase("world"))
                 continue;
             for (String arena : schematics) {
