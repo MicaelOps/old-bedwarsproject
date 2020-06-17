@@ -24,6 +24,7 @@ br\com\logicmc\bedwars\extra\customentity\EntityManager.class
 br\com\logicmc\bedwars\game\engine\Island.class
 br\com\logicmc\bedwars\game\phase\event\SuddenDeathEvent.class
 br\com\logicmc\bedwars\extra\Schematic.class
+br\com\logicmc\bedwars\extra\customentity\SuperDragon.class
 br\com\logicmc\bedwars\game\addons\TimeScheduler.class
 br\com\logicmc\bedwars\game\engine\PhaseControl.class
 br\com\logicmc\bedwars\game\phase\event\BedDestroyedEvent.class

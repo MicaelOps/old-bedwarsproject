@@ -27,6 +27,7 @@ import org.bukkit.scoreboard.Scoreboard;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.Consumer;
 
 
 public class Arena {
@@ -117,8 +118,20 @@ public class Arena {
     public HashSet<UUID> getPlayers() {
         return players;
     }
-    public Scoreboard getScoreboard() {
-        return controls[phaseControl].getScoreboard();
+    public Scoreboard getScoreboard(String lang) {
+        return controls[phaseControl].getScoreboards()[getPositionScoreboard(lang)];
+    }
+    public int getPositionScoreboard(String lang){
+        switch (lang) {
+            case "en":
+                return 0;
+            case "pt":
+                return 1;
+            case "es":
+                return 2;
+            default:
+                return 0;
+        }
     }
 
     public int getGamestate() {
@@ -146,7 +159,7 @@ public class Arena {
 
         for(UUID ingameplayers : getPlayers()) {
             Player ingamePlayer = Bukkit.getPlayer(ingameplayers);
-            ingamePlayer.setScoreboard(controls[phaseControl].getScoreboard());
+            ingamePlayer.setScoreboard(controls[phaseControl].getScoreboards()[getPositionScoreboard(BWMain.getInstance().playermanager.getPlayerBase(ingamePlayer).getPreferences().getLang())]);
         }
         controls[phaseControl].init(this);
     }
@@ -158,6 +171,12 @@ public class Arena {
         return time;
     }
 
+
+    public void forEachScoreboard(Consumer<Scoreboard> action){
+        for(Scoreboard scoreboard : controls[phaseControl].getScoreboards()){
+            action.accept(scoreboard);
+        }
+    }
 
     public boolean checkend(){
         return getPlayers().stream().filter(uuid -> Bukkit.getPlayer(uuid).getGameMode()==GameMode.SURVIVAL).count() <= getTeamcomposition();

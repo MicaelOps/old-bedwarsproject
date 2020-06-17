@@ -1,6 +1,9 @@
 package br.com.logicmc.bedwars.game.engine;
 
 
+import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Scoreboard;
+
 public interface PhaseControl {
 
     int onTimerCall(Arena arena);
@@ -11,6 +14,9 @@ public interface PhaseControl {
 
     void stop(Arena arena);
 
-    org.bukkit.scoreboard.Scoreboard getScoreboard();
+    void translateScoreboard(Arena arena, Player player);
+
+    Scoreboard createScoreboard(String lang);
+    org.bukkit.scoreboard.Scoreboard[] getScoreboards();
 
 }

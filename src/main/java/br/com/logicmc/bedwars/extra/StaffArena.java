@@ -9,7 +9,7 @@ import java.util.HashSet;
 
 public class StaffArena extends Arena {
     public StaffArena() {
-        super("staff", 1000, Arena.SOLO, new Location(Bukkit.getWorlds().get(0), 0, 100, 0), new HashSet<>(), new HashSet<>(), new HashSet<>());
+        super("staff", 1000, Arena.SOLO, Bukkit.getWorld("world").getSpawnLocation(), new HashSet<>(), new HashSet<>(), new HashSet<>());
     }
 
     @Override
@@ -25,5 +25,10 @@ public class StaffArena extends Arena {
     @Override
     public void startTimer(JavaPlugin plugin) {
 
+    }
+
+    @Override
+    public Location getLobby() {
+        return Bukkit.getWorld("world").getSpawnLocation();
     }
 }

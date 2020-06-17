@@ -1,11 +1,13 @@
 package br.com.logicmc.bedwars.game.phase;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import br.com.logicmc.bedwars.BWMain;
+import br.com.logicmc.bedwars.extra.Schematic;
 import br.com.logicmc.bedwars.extra.YamlFile;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Island;
@@ -15,6 +17,7 @@ import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -49,16 +52,13 @@ public class EndPhase implements PhaseControl {
             arena.getPreteam().clear();
             arena.getPlayers().clear();
             arena.getIslands().clear();
-            arena.setTime(0);
+            time = 2;
             World world = Bukkit.getWorld(arena.getName());
             world.getEntities().forEach(Entity::remove);
             world.getLivingEntities().forEach(LivingEntity::remove);
-
-            arena.setGamestate(Arena.WAITING);
-            arena.changePhase();
-
             YamlFile mainconfig = BWMain.getInstance().mainconfig;
-            
+            Schematic schematic = Schematic.read(new File(BWMain.getInstance().getDataFolder(), arena + ".schematic"));
+            schematic.paste(new Location(world, 250, 100, 250));
             mainconfig.loopThroughSectionKeys(arena.getName()+".islands", (visland) -> {
                 arena.getIslands().add(new Island(visland, arena.getName(),
                         BWTeam.valueOf(mainconfig.getConfig()
@@ -84,6 +84,10 @@ public class EndPhase implements PhaseControl {
                 if (island.getUpgrade() != null)
                     island.getUpgrade().setWorld(world);
             }
+
+            arena.setGamestate(Arena.WAITING);
+            arena.changePhase();
+
         }
         return time;
     }
@@ -94,12 +98,22 @@ public class EndPhase implements PhaseControl {
         arena.setGamestate(Arena.END);
         kickall = arena.getTime()+10;
         if(!arena.getPlayers().isEmpty()){
-            BWPlayer bwPlayer = BWManager.getInstance().getBWPlayer(arena.getPlayers().stream().filter(uuid-> Bukkit.getPlayer(uuid).getGameMode()== GameMode.SURVIVAL).findFirst().get());
-            arena.updateScoreboardForAll("winner",BWTeam.valueOf(bwPlayer.getTeamcolor()).getChatColor()+bwPlayer.getTeamcolor());
+            BWTeam winner = null;
             for(UUID uuid : arena.getPlayers()){
-                Bukkit.getPlayer(uuid).playSound(Bukkit.getPlayer(uuid).getLocation(), Sound.EXPLODE, 20F, 20F);
-                Bukkit.getPlayer(uuid).sendTitle(ChatColor.BOLD+""+ChatColor.GREEN+"WINNER", "§fTeam "+ BWTeam.valueOf(bwPlayer.getTeamcolor()).getChatColor()+bwPlayer.getTeamcolor());
+                Player player = Bukkit.getPlayer(uuid);
+                BWPlayer bwPlayer = BWManager.getInstance().getBWPlayer(uuid);
+                if(player.getGameMode() == GameMode.SURVIVAL){
+                    winner = BWTeam.valueOf(bwPlayer.getTeamcolor());
+                    arena.updateScoreboardForAll("winner",winner.getChatColor()+bwPlayer.getTeamcolor());
+                }
+                if(winner == BWTeam.valueOf(bwPlayer.getTeamcolor())){
+                    bwPlayer.increaseWins();
+                } else {
+                    bwPlayer.increaseLoses();
+                }
             }
+            BWTeam finalWinner = winner;
+            Bukkit.getOnlinePlayers().forEach(player -> player.sendTitle(ChatColor.BOLD+""+ChatColor.GREEN+"WINNER", "§fTeam "+ finalWinner.getChatColor()+ finalWinner.name()));
 
         }
 
@@ -109,6 +123,11 @@ public class EndPhase implements PhaseControl {
     public void stop(Arena arena) {
         scoreboard.getObjective(DisplaySlot.SIDEBAR).unregister();
         scoreboard.getTeams().forEach(Team::unregister);
+    }
+
+    @Override
+    public void translateScoreboard(Player player) {
+
     }
 
 

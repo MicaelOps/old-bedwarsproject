@@ -66,6 +66,11 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onplayerjoinarena(PlayerJoinArenaEvent event) {
         Player player = event.getPlayer();
+        BWPlayer bwPlayer = plugin.playermanager.getPlayerBase(player).getData();
+
+        bwPlayer.setLevel(20);
+        bwPlayer.setUuid(player.getUniqueId());
+        bwPlayer.setName(player.getName());
         plugin.playermanager.getPlayerBase(player).getData().setMap(event.getArenaname());
         plugin.playermanager.getPlayerBase(player).getData().setTeamcolor("");
 
@@ -75,7 +80,7 @@ public class PlayerListeners implements Listener {
         player.setOp(true);//test purposes
 
         Arena arena = BWManager.getInstance().getArena(event.getArenaname());
-
+        bwPlayer.setTeamComp(arena.getTeamcomposition());
 
         arena.getPlayers().add(player.getUniqueId());
 
@@ -96,6 +101,7 @@ public class PlayerListeners implements Listener {
         }
 
         player.setScoreboard(arena.getScoreboard());
+        arena.translateScoreboard(player);
         player.teleport(BWManager.getInstance().getArena(event.getArenaname()).getLobby());
 
         if(arena.getGamestate() == Arena.WAITING){
@@ -137,6 +143,7 @@ public class PlayerListeners implements Listener {
                 arena.updateScoreboardTeam(Bukkit.getPlayer(ingameplayers), "players" , ChatColor.GRAY+""+arena.getPlayers().size());
             }
         } else if(arena.getGamestate() == Arena.INGAME){
+            BWManager.getInstance().getBWPlayer(event.getPlayer().getUniqueId()).increaseLoses();
             if(arena.checkend())
                 arena.changePhase();
         }

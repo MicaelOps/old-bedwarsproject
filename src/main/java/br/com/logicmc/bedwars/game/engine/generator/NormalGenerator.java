@@ -15,7 +15,7 @@ public class NormalGenerator implements IGenerator{
     private Hologram holograms;
     private int time,generatorlevel;
 
-    private ItemStack drop;
+    private final ItemStack drop;
 
     public NormalGenerator(Location location, Material material, Hologram holograms, int reset) {
         this.holograms = holograms;
@@ -24,7 +24,7 @@ public class NormalGenerator implements IGenerator{
 
         time = reset;
         generatorlevel = 0;
-        drop = setStack(material, 1);
+        drop = setStack(material, 32);
 
     }
     public ItemStack setStack(Material material, int amount){

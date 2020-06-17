@@ -69,6 +69,11 @@ public class WaitingPhase implements PhaseControl {
         scoreboard.getTeams().forEach(Team::unregister);
     }
 
+    @Override
+    public void translateScoreboard(Arena arena, Player player) {
+        arena.up
+    }
+
 
     @Override
     public void preinit(Arena arena) {

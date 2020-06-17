@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
 public class InventoryListeners implements Listener {
@@ -27,30 +28,39 @@ public class InventoryListeners implements Listener {
         if (event.getCurrentItem() == null || !event.getCurrentItem().hasItemMeta())
             return;
 
-        if (event.getInventory().getName().equalsIgnoreCase("Teams")) {
 
-            Player player = (Player) event.getWhoClicked();
-            BWTeam bwTeam = BWTeam.valueOf(stack.getItemMeta().getDisplayName().substring(2));
-            player.closeInventory();
+        if(event.getClickedInventory() instanceof PlayerInventory){
+            event.setCancelled(stack.getType() == Material.WOOL  && event.getSlot() == 39);
+        }
+        else {
+            if (event.getInventory().getName().equalsIgnoreCase("Teams")) {
 
-            player.getInventory().remove(Material.WOOL);
-            plugin.playermanager.getPlayerBase(player.getUniqueId()).getData().setTeamcolor(bwTeam.name());
-            player.sendMessage(bwTeam.getChatColor() + bwTeam.name() + " selected");
-            BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getPreteam().put(player.getUniqueId(), bwTeam.name());
+                Player player = (Player) event.getWhoClicked();
+                BWTeam bwTeam = BWTeam.valueOf(stack.getItemMeta().getDisplayName().substring(2));
+                player.closeInventory();
 
-            ItemStack vv = new ItemStack(Material.WOOL, 1, bwTeam.getData());
-            ItemMeta meta = stack.getItemMeta();
-            meta.setDisplayName(bwTeam.getChatColor() + bwTeam.name());
-            vv.setItemMeta(meta);
-            player.getInventory().addItem(vv);
-            event.setCancelled(true);
-        } else if (event.getInventory().getName().equalsIgnoreCase("Players")) {
+                player.getInventory().remove(Material.WOOL);
+                plugin.playermanager.getPlayerBase(player.getUniqueId()).getData().setTeamcolor(bwTeam.name());
+                player.sendMessage(bwTeam.getChatColor() + bwTeam.name() + " selected");
+                BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getPreteam().put(player.getUniqueId(), bwTeam.name());
 
-            String name = stack.getItemMeta().getDisplayName().substring(2);
-            Player target = Bukkit.getPlayer(name);
-            if(target!=null)
-                event.getWhoClicked().teleport(target);
-            event.getWhoClicked().closeInventory();
+                ItemStack vv = new ItemStack(Material.WOOL, 1, bwTeam.getData());
+                ItemMeta meta = stack.getItemMeta();
+                meta.setDisplayName(bwTeam.getChatColor() + bwTeam.name());
+                vv.setItemMeta(meta);
+                player.getInventory().addItem(vv);
+                player.getInventory().setHelmet(vv);
+                event.setCancelled(true);
+            }
+
+            else if (event.getInventory().getName().equalsIgnoreCase("Players")) {
+
+                String name = stack.getItemMeta().getDisplayName().substring(2);
+                Player target = Bukkit.getPlayer(name);
+                if(target!=null)
+                    event.getWhoClicked().teleport(target);
+                event.getWhoClicked().closeInventory();
+            }
         }
     }
 }

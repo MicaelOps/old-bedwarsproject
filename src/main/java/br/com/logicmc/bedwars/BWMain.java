@@ -20,6 +20,7 @@ import br.com.logicmc.bedwars.listeners.InventoryListeners;
 import br.com.logicmc.bedwars.listeners.ShopInventoryListeners;
 import br.com.logicmc.bedwars.listeners.PhaseListener;
 import br.com.logicmc.bedwars.listeners.PlayerListeners;
+import br.com.logicmc.core.account.addons.DataStats;
 import br.com.logicmc.core.addons.hologram.types.Global;
 import br.com.logicmc.core.system.command.CommandLoader;
 import br.com.logicmc.core.system.minigame.ArenaInfoPacket;
@@ -45,6 +46,9 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Scoreboard;
 import java.io.File;
 import java.lang.reflect.Field;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -94,6 +98,56 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
         loadTranslations();
         loadItens();
+    }
+
+
+    @Override
+    public BWPlayer read(MySQL mysql, UUID uuid, String name) {
+        BWPlayer data = null;
+        PreparedStatement stm = null;
+        ResultSet rs = null;
+        try {
+            stm = mysql.getConnection().prepareStatement("SELECT * FROM bedwars_players WHERE uuid='" + uuid + "';");
+            rs = stm.executeQuery();
+            if (rs.next()) {
+                data = new BWPlayer(uuid, name, rs.getInt("level"),
+                        getGson().fromJson(rs.getString("solo_stats"), DataStats.class),
+                        getGson().fromJson(rs.getString("squad_stats"), DataStats.class),0);
+            } else {
+                data = new BWPlayer(uuid, name, 0, new DataStats(), new DataStats(),0);
+            }
+            stm.close();
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return data;
+    }
+
+    @Override
+    public void write(MySQL mysql, UUID uuid) {
+        System.out.println("updating user mysql " + uuid);
+        PreparedStatement stm = null;
+        ResultSet rs = null;
+        BWPlayer data = playermanager.getPlayerBase(uuid).getData();
+        try {
+            stm = mysql.getConnection().prepareStatement("SELECT * FROM bedwars_players WHERE uuid='" + uuid + "';");
+            rs = stm.executeQuery();
+            if (rs.next()) {
+                mysql.update("UPDATE bedwars_players SET name='" + data.getName() + "', level=" + data.getLevel()
+                        + ", solo_stats='" + getGson().toJson(data.getSoloStats()) + "', squad_stats='"
+                        + getGson().toJson(data.getSquadStats()) + "' WHERE uuid='" + uuid + "';");
+            } else {
+                mysql.update("INSERT INTO bedwars_players (uuid, name, level, solo_stats, squad_stats) VALUES ('"
+                        + data.getUuid() + "','" + data.getName() + "'," + data.getLevel() + ",'"
+                        + getGson().toJson(data.getSoloStats()) + "','" + getGson().toJson(data.getSquadStats())
+                        + "');");
+            }
+            rs.close();
+            stm.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public static BWMain getInstance() {
@@ -149,7 +203,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         return (arena) -> {
             Arena gameEngine = BWManager.getInstance().getArena(arena);
             System.out.println("updating arena " + arena);
-            PacketManager.getInstance().sendChannelPacket(this, "lobby", new ArenaInfoPacket(Bukkit.getServerName(),
+            PacketManager.getInstance().sendChannelPacket(this, "server-listener", new ArenaInfoPacket(Bukkit.getServerName(),
                     arena, true, gameEngine.getPlayers().size(), gameEngine.getServerState()));
         };
     }
@@ -185,35 +239,6 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             return new ArrayList<>();
 
         Schematic lobby = Schematic.read(getResource("LobbyBW.schematic"));
-        boolean reload = false;
-
-        // deleting unacessary worlds
-        for (World world : Bukkit.getWorlds()) {
-            boolean exist = false;
-			
-			System.out.println(world.getName());
-			
-            if (world.getName().equalsIgnoreCase("world"))
-                continue;
-            for (String arena : schematics) {
-                if (world.getName().equalsIgnoreCase(arena.replace(".schematic", ""))) {
-                    exist = true;
-                    reload = true;
-                }
-            }
-            if (!exist) {
-                for (Chunk chunk : world.getLoadedChunks()) {
-                    chunk.unload();
-                }
-                File folder = world.getWorldFolder();
-                Bukkit.unloadWorld(world, false);
-                deleteFolder(folder);
-            }
-        }
-        if (reload) {
-            Bukkit.shutdown();
-            return new ArrayList<>();
-        }
 
         for (String arena : schematics) {
 
@@ -274,9 +299,11 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 world.setPVP(true);
                 world.setAutoSave(false);
                 world.setThundering(false);
+                world.setDifficulty(Difficulty.EASY);
                 world.setThunderDuration(0);
                 world.setWeatherDuration(0);
-                world.setDifficulty(Difficulty.PEACEFUL);
+                world.setGameRuleValue("mobGriefing", "true");
+                world.setGameRuleValue("tntExplodes", "true");
                 world.getEntities().forEach(Entity::remove);
                 world.getLivingEntities().forEach(LivingEntity::remove);
                 world.setGameRuleValue("doDaylightCycle", "false");
@@ -319,16 +346,6 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         return arrayList;
     }
 
-    @Override
-    public BWPlayer read(MySQL mysql, UUID uuid) {
-        return null;
-    }
-
-    @Override
-    public void write(MySQL mysql, UUID uuid) { }
-
-
-
     private boolean loadConfig() {
         
         if(!getDataFolder().exists())
@@ -349,7 +366,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
     @Override
     public BWPlayer createDataInstance() {
-        return new BWPlayer();
+        return new BWPlayer(null, "s", 0, new DataStats(), new DataStats(), Arena.SOLO);
     }
 
     private void loadItens(){
@@ -370,13 +387,13 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         fight.getListitems().add(new ShopItem(new ItemStack(Material.STONE_SWORD, 1), new ItemStack(Material.IRON_INGOT, 10)));
         fight.getListitems().add(new ShopItem(new ItemStack(Material.IRON_SWORD, 1), new ItemStack(Material.GOLD_INGOT, 7)));
         fight.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_SWORD, 1), new ItemStack(Material.EMERALD, 4)));
-        fight.getListitems().add(new ShopItem(addEnchantment(Material.STICK, Enchantment.KNOCKBACK, 1), new ItemStack(Material.EMERALD, 4)));
 
         fight.getListitems().add(new ShopItem(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1), new ItemStack(Material.IRON_INGOT, 40)));
         fight.getListitems().add(new ShopItem(new ItemStack(Material.IRON_CHESTPLATE, 1), new ItemStack(Material.GOLD_INGOT, 12)));
         fight.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_CHESTPLATE, 1), new ItemStack(Material.EMERALD, 7)));
-        fight.getListitems().add(new ShopItem(new ItemStack(Material.SHEARS, 1), new ItemStack(Material.IRON_INGOT, 20)));
 
+        utilities.getListitems().add(new ShopItem(addEnchantment(Material.STICK, Enchantment.KNOCKBACK, 1), new ItemStack(Material.EMERALD, 4)));
+        utilities.getListitems().add(new ShopItem(new ItemStack(Material.SHEARS, 1), new ItemStack(Material.IRON_INGOT, 20)));
 
         tools.getListitems().add(new ShopItem(new ItemStack(Material.WOOD_AXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
         tools.getListitems().add(new ShopItem(new ItemStack(Material.STONE_AXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
@@ -404,10 +421,14 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
         sharpness = new UpgradeItem(FixedItems.UPGRADE_SHARPNESS,  (island) -> {
             int teamcomp = BWManager.getInstance().getArena(island.getArena()).getTeamcomposition();
-            if(teamcomp == Arena.SOLO || teamcomp == Arena.DUO)
-                return new ItemStack(Material.DIAMOND, 4);
+            if(island.getSharpness() == 0){
+                if(teamcomp == Arena.SOLO || teamcomp == Arena.DUO)
+                    return new ItemStack(Material.DIAMOND, 4);
+                else
+                    return new ItemStack(Material.DIAMOND, 8);
+            }
             else
-                return new ItemStack(Material.DIAMOND, 8);
+                return new ItemStack(Material.AIR);
         },(island)-> {
             island.setSharpness(1);
             island.forEachPlayers(uuid -> {
@@ -449,6 +470,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         }, (island)-> {
             island.setForgery(island.getForgery()+1);
             IslandGenerator generator = island.getGenerator();
+            generator.increaseGeneratorLevel();
             if(island.getForgery() == 1){
                 generator.setIronstack(generator.setStack(Material.IRON_INGOT, 64));
                 generator.setGoldstack(generator.setStack(Material.GOLD_INGOT, 24));

@@ -19,7 +19,7 @@ import java.util.UUID;
 public class BedDestroyedEvent extends PhaseEvent{
 
     public BedDestroyedEvent(int inittime) {
-        super(inittime, "Camas destruidas");
+        super(inittime, "Cama destruida");
     }
 
     @Override

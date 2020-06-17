@@ -2,20 +2,13 @@ package br.com.logicmc.bedwars.extra.customentity;
 
 import net.minecraft.server.v1_8_R3.*;
 
-import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
-
 import java.lang.reflect.Field;
 import java.util.List;
 
 public class ImmobileVillager extends EntityVillager {
-    public ImmobileVillager(org.bukkit.World world) {
-        super(((CraftWorld)world).getHandle());
-
-    }
     public ImmobileVillager(World world) {
         super(world);
 
-        
         //clearing entity intelligence
         List<?> goalB = (List<?>)getPrivateField("b", PathfinderGoalSelector.class, goalSelector); goalB.clear();
         List<?> goalC = (List<?>)getPrivateField("c", PathfinderGoalSelector.class, goalSelector); goalC.clear();

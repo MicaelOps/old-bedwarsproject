@@ -3,6 +3,7 @@ package br.com.logicmc.bedwars.game.phase;
 import java.util.*;
 import java.util.function.Consumer;
 
+import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.phase.event.BedDestroyedEvent;
 import br.com.logicmc.bedwars.game.phase.event.GeneratorEvent;
@@ -32,9 +33,9 @@ import br.com.logicmc.core.system.party.PartyManager;
 public class IngamePhase implements PhaseControl {
 
     private final List<String> available;
+    private final int stopupgrade;
 
-    private Scoreboard scoreboard;
-    private int stopupgrade;
+    private Scoreboard[] scoreboards;
 
     private PhaseEvent event;
 
@@ -63,17 +64,10 @@ public class IngamePhase implements PhaseControl {
         for (NormalGenerator generator : arena.getEmerald()) {
             resetGenerator(generator, time);
         }
-
-        // event load
         int remainingtime = event.getInittime() - time;
 
-        if(remainingtime > 0){
-
-            int i = remainingtime / 60;
-            arena.getScoreboard().getTeam("upgrade").setSuffix("§f em §a" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
-
-        } else {
-
+        // event load
+        if(remainingtime == 0){
             event.execute(arena);
 
             if(time < stopupgrade) {
@@ -81,13 +75,19 @@ public class IngamePhase implements PhaseControl {
                     event = new GeneratorEvent(time + 300, event.getEventname().replace("Diamond","Emerald"), 1);
                 else
                     event = new GeneratorEvent(time + 300, event.getEventname().replace("Emerald","Diamond")+"I", 0);
-            } else if(event.getEventname().equalsIgnoreCase("Camas destruidas"))
+            } else if(event.getEventname().equalsIgnoreCase("Cama destruida"))
                 event = new SuddenDeathEvent(time+(10*60));
             else
                 event = new BedDestroyedEvent(time+(10*60));
 
-            arena.getScoreboard().getTeam("upgrade").setPrefix(ChatColor.WHITE+event.getEventname());
+            arena.forEachScoreboard(scoreboard-> scoreboard.getTeam("upgrade").setPrefix(ChatColor.WHITE+event.getEventname()));
+            remainingtime = event.getInittime() - time;
         }
+
+        int i = remainingtime / 60;
+        int finalRemainingtime = remainingtime;
+        arena.forEachScoreboard(scoreboard-> scoreboard.getTeam("upgrade").setSuffix("§f em §a" + (i < 10 ? "0" + i + ":" : i + ":") + (finalRemainingtime % 60 < 10 ? "0" + finalRemainingtime % 60 : finalRemainingtime % 60)));
+
         return time;
     }
 
@@ -179,12 +179,17 @@ public class IngamePhase implements PhaseControl {
                     index+=1;
                 }
             }
-            Team scteam = scoreboard.getTeam(bwPlayer.getTeamcolor());
-            if(scteam.getEntries().isEmpty()) {
-                scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§"+score).setScore(score+5);
-                scteam.addEntry("§"+score);
-                score++;
+
+            for(Scoreboard scoreboard : getScoreboards()){
+                Team scteam = scoreboard.getTeam(bwPlayer.getTeamcolor());
+                if(scteam.getEntries().isEmpty()) {
+                    System.out.println("team "+scteam.getName()+" score:"+score);
+                    scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§"+score).setScore(score+5);
+                    scteam.addEntry("§"+score);
+                    score++;
+                }
             }
+
 
             //prepare player
             Player player = Bukkit.getPlayer(uuid);
@@ -211,6 +216,7 @@ public class IngamePhase implements PhaseControl {
 
 
             if(!list.isEmpty()) {
+                arena.forEachScoreboard(scoreboard -> );
                 arena.updateEntry(player, arena.getScoreboard(), "enemy", list);
                 list.clear();
             }
@@ -219,9 +225,9 @@ public class IngamePhase implements PhaseControl {
             arena.updateEntry(player, arena.getScoreboard(), "friend", list);
         }
 
-        scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§l").setScore((index+5+1));
-        scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§k").setScore((index+5+2));
-        scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§o").setScore((index+5+3));
+        scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§l").setScore((score+5+1));
+        scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§k").setScore((score+5+2));
+        scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§o").setScore((score+5+3));
         scoreboard.getTeam("upgrade").addEntry("§k");
 
         arena.getPreteam().clear();
@@ -235,13 +241,10 @@ public class IngamePhase implements PhaseControl {
     public void stop(Arena engine) {
         scoreboard.getObjective(DisplaySlot.SIDEBAR).unregister();
         scoreboard.getTeams().forEach(Team::unregister);
+        event = new GeneratorEvent(300, "Diamond II", 0);
     }
 
-    @Override
-    public Scoreboard getScoreboard() {
-        return scoreboard;
-    }
-    
+
     private void createTeam(Scoreboard scoreboard, String name, String prefix, String suffix, String entry) {
         Team team = scoreboard.registerNewTeam(name);
         team.setPrefix(prefix);
@@ -252,24 +255,6 @@ public class IngamePhase implements PhaseControl {
 
     @Override
     public void preinit(Arena arena) {
-        scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-        Objective objective = scoreboard.registerNewObjective("ingame"+new Random().nextInt(10000),"dummy");
-
-        objective.setDisplayName("§b§lBEDWARS");
-        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-
-		objective.getScore("§e").setScore(4);
-		objective.getScore("§d").setScore(3);
-		objective.getScore("§c").setScore(2);
-		objective.getScore("§b").setScore(1);
-		objective.getScore("§a").setScore(0);
-
-        createTeam(scoreboard, "upgrade", "§f"+event.getEventname(),"§f em §a 00:00","");
-        createTeam(scoreboard, "kills", "§fMatou: ","§a0","§d");
-        createTeam(scoreboard, "beds", "§fCapturas: ","§a0","§c");
-        createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§a");
-        createTeam(scoreboard, "enemy", "§c","","");
-        createTeam(scoreboard, "friend", "§a","","");
 
         int index = 0;
         for(BWTeam team : BWTeam.values()){
@@ -279,5 +264,32 @@ public class IngamePhase implements PhaseControl {
                 index++;
             }
         }
+    }
+
+    @Override
+    public Scoreboard createScoreboard(String lang) {
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+        Objective objective = scoreboard.registerNewObjective("ingame"+new Random().nextInt(10000)+lang,"dummy");
+
+        objective.setDisplayName("§b§lBEDWARS");
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+
+        objective.getScore("§e").setScore(4);
+        objective.getScore("§d").setScore(3);
+        objective.getScore("§c").setScore(2);
+        objective.getScore("§b").setScore(1);
+        objective.getScore("§a").setScore(0);
+
+        createTeam(scoreboard, "upgrade", "§f"+event.getEventname(),"§f em §a 00:00","");
+        createTeam(scoreboard, "kills", "§f"+getTranslatedMessage(BWMessages.WORD_KILLS, lang)+": ","§a0","§d");
+        createTeam(scoreboard, "beds", "§f"+getTranslatedMessage(BWMessages.WORD_CAPTURED, lang)+": ","§a0","§c");
+        createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§a");
+        createTeam(scoreboard, "enemy", "§c","","");
+        createTeam(scoreboard, "friend", "§a","","");
+        return scoreboard;
+    }
+
+    private String getTranslatedMessage(BWMessages msg, String lang) {
+        return BWMain.getInstance().messagehandler.getMessage(msg, lang);
     }
 }

@@ -20,14 +20,20 @@ public class EntityManager {
     }
 
     public void registerEntities(){
-       addToMaps(ImmobileVillager.class, "Villager", 120);
+        addToMaps(SuperDragon.class, "EnderDragon", 63);
+        addToMaps(ImmobileVillager.class, "Villager", 120);
     }
 
     public void spawnImmobileVillager(Location location, String name){
-        ImmobileVillager immobileVillager = new ImmobileVillager(location.getWorld());
+        ImmobileVillager immobileVillager = new ImmobileVillager(((CraftWorld)location.getWorld()).getHandle());
         immobileVillager.setCustomName(name);
         immobileVillager.setLocation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         ((CraftWorld)location.getWorld()).getHandle().addEntity(immobileVillager);
+    }
+    public void spawnDragon(Location location){
+        SuperDragon dragon = new SuperDragon(((CraftWorld)location.getWorld()).getHandle());
+        dragon.setLocation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+        ((CraftWorld)location.getWorld()).getHandle().addEntity(dragon);
     }
 
     private void addToMaps(Class clazz, String name, int id)

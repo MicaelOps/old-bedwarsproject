@@ -44,11 +44,11 @@ public class SetLocations extends CommandAdapter {
             }
 
             if(strings[0].toLowerCase().equalsIgnoreCase("diamond")) {
-                arena.getDiamond().add(new NormalGenerator(player.getLocation(), Material.AIR, null, 222));
+                arena.getDiamond().add(new NormalGenerator(player.getLocation(), Material.DIAMOND, null, 222));
                 arena.save();
                 player.sendMessage("Generator diamond adicionado com sucesso");
             } else if(strings[0].toLowerCase().equalsIgnoreCase("emerald")) {
-                arena.getEmerald().add(new NormalGenerator(player.getLocation(), Material.AIR, null, 222));
+                arena.getEmerald().add(new NormalGenerator(player.getLocation(), Material.EMERALD, null, 222));
                 arena.save();
                 player.sendMessage("Generator emerald adicionado com sucesso");
             }

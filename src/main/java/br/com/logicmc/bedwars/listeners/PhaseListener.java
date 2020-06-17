@@ -92,8 +92,17 @@ public class PhaseListener implements Listener {
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(final BlockPlaceEvent event) {
         event.setCancelled(check(event.getBlock().getLocation()));
-        if(!event.isCancelled())
-            BWManager.getInstance().getArena(event.getBlock().getLocation().getWorld().getName()).getBlocks().add(event.getBlock().getLocation());
+        if(!event.isCancelled()) {
+            Location location = event.getBlock().getLocation();
+            Arena arena = BWManager.getInstance().getArena(location.getWorld().getName());
+            for(Island island : arena.getIslands()) {
+                if(island.getGenerator().getLocation().distance(location) < 3){
+                    event.setCancelled(true);
+                }
+            }
+            if(!event.isCancelled())
+                BWManager.getInstance().getArena(event.getBlock().getLocation().getWorld().getName()).getBlocks().add(event.getBlock().getLocation());
+        }
     }
     
     @EventHandler(priority=EventPriority.HIGHEST)
@@ -109,16 +118,43 @@ public class PhaseListener implements Listener {
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbreal(final EntitySpawnEvent event) {
-        if(event.getEntityType() == EntityType.DROPPED_ITEM){
-            if(((Item)event.getEntity()).getItemStack().getType() == Material.BED){
+        if(event.getEntityType() == EntityType.DROPPED_ITEM) {
+            if (((Item) event.getEntity()).getItemStack().getType() == Material.BED) {
                 event.setCancelled(true);
             }
-        }
+        } else
+            event.setCancelled(event.getEntityType() != EntityType.PLAYER && event.getEntityType() != EntityType.DROPPED_ITEM && event.getEntityType() != EntityType.ARMOR_STAND&& event.getEntityType() != EntityType.ENDER_DRAGON);
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void foodlevelchange(final FoodLevelChangeEvent event) {
-        event.setCancelled(check(event.getEntity().getLocation()));
+        event.setFoodLevel(20);
+    }
+
+    @EventHandler(priority=EventPriority.HIGHEST)
+    public void foodlevelchange(final PlayerMoveEvent event) {
+        if(event.getPlayer().getGameMode() == GameMode.SURVIVAL){
+            Player player = event.getPlayer();
+            if(event.getTo().getBlockY() < 10){
+                final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+                final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
+                bwPlayer.getData().increaseDeaths();
+                for (final Island island : arena.getIslands()) {
+                    if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
+
+                        for (final UUID uuid : arena.getPlayers()) {
+                            Player other = Bukkit.getPlayer(uuid);
+                            if(other.getGameMode() == GameMode.SURVIVAL){
+                                other.hidePlayer(player);
+                            }
+                        }
+
+                        respawn(arena, island, bwPlayer, player);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     @EventHandler(priority= EventPriority.HIGHEST)
@@ -135,7 +171,7 @@ public class PhaseListener implements Listener {
                     if(player.getGameMode()==GameMode.SURVIVAL){
                         final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
                         final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
-
+                        bwPlayer.getData().increaseDeaths();
                         for (final Island island : arena.getIslands()) {
                             if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
 
@@ -162,6 +198,7 @@ public class PhaseListener implements Listener {
                 }
             }
         }
+        System.out.println(event.isCancelled());
     }
     @EventHandler
     public void donotsleep(PlayerBedEnterEvent event){
@@ -171,7 +208,7 @@ public class PhaseListener implements Listener {
     public void damagedddby(EntityDamageByEntityEvent event) {
         boolean damage = check(event.getEntity().getLocation(), event.getEntity());
         if(!damage){
-            if(event.getEntity() instanceof Player && event.getDamager() instanceof Player){
+            if(event.getEntity() instanceof Player){
                 damage = plugin.playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(plugin.playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
                 if(!damage) {
                     if(event.getFinalDamage() >= ((Player) event.getEntity()).getHealth()) {
@@ -181,9 +218,13 @@ public class PhaseListener implements Listener {
                         if(player.getGameMode()==GameMode.SURVIVAL) {
                             final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
                             final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
-                            final BWPlayer killer = BWManager.getInstance().getBWPlayer(event.getDamager().getUniqueId());
-                            killer.increaseKills();
-                            arena.updateScoreboardTeam((Player) event.getDamager(), "kills", ChatColor.GREEN+""+killer.getKills());
+                            bwPlayer.getData().increaseDeaths();
+
+                            if(event.getDamager() instanceof Player){
+                                final BWPlayer killer = BWManager.getInstance().getBWPlayer(event.getDamager().getUniqueId());
+                                killer.increaseKills();
+                                arena.updateScoreboardTeam((Player) event.getDamager(), "kills", ChatColor.GREEN+""+killer.getKills());
+                            }
                             for (final Island island : arena.getIslands()) {
                                 if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
 
@@ -208,6 +249,7 @@ public class PhaseListener implements Listener {
                 }
             }
         }
+
         event.setCancelled(damage);
     }
     private void respawn(Arena arena, Island island, PlayerBase<BWPlayer> bwPlayer, Player player) {
@@ -235,6 +277,7 @@ public class PhaseListener implements Listener {
                         Player other = Bukkit.getPlayer(uuid);
                         if(other.getGameMode() == GameMode.SURVIVAL){
                             other.showPlayer(player);
+                            player.showPlayer(other);
                         }
                     }
                     player.sendTitle("","");

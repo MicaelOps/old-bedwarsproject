@@ -20,6 +20,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
@@ -40,143 +41,150 @@ public class ShopInventoryListeners implements Listener {
         if (event.getCurrentItem() == null || !event.getCurrentItem().hasItemMeta())
             return;
 
-        if (event.getInventory().getName().equalsIgnoreCase("Upgrades")) {
+        if(!(event.getClickedInventory() instanceof PlayerInventory)){
+            if (event.getInventory().getName().equalsIgnoreCase("Upgrades")) {
 
-            event.setCancelled(true);
-            Player player = (Player) event.getWhoClicked();
-            BWPlayer bwplayer =BWManager.getInstance().getBWPlayer(player.getUniqueId());
+                event.setCancelled(true);
+                Player player = (Player) event.getWhoClicked();
+                BWPlayer bwplayer =BWManager.getInstance().getBWPlayer(player.getUniqueId());
 
-            for(Island island : BWManager.getInstance().getArena(bwplayer.getMapname()).getIslands()){
-                if(island.getTeam().name().equalsIgnoreCase(bwplayer.getTeamcolor())) {
+                for(Island island : BWManager.getInstance().getArena(bwplayer.getMapname()).getIslands()){
+                    if(island.getTeam().name().equalsIgnoreCase(bwplayer.getTeamcolor())) {
 
-                    ItemStack cost = new ItemStack(Material.AIR);
-                    Consumer<Island> upgrade = null;
+                        ItemStack cost = new ItemStack(Material.AIR);
+                        Consumer<Island> upgrade = null;
 
-                    if(stack.getType() == Material.IRON_CHESTPLATE) {
-                        cost = plugin.getArmor().getCost(island);
-                        upgrade = plugin.getArmor().getUpgrademethod();
-                    } else if(stack.getType() == Material.DIAMOND_SWORD) {
-                        cost = plugin.getSharpness().getCost(island);
-                        upgrade = plugin.getSharpness().getUpgrademethod();
-                    } else if(stack.getType() == Material.FURNACE) {
-                        cost = plugin.getForgery().getCost(island);
-                        upgrade = plugin.getForgery().getUpgrademethod();
-                    }
-
-                    if(cost.getType() != Material.AIR && upgrade != null){
-                        if(player.getInventory().contains(cost.getType(), cost.getAmount())) {
-                            upgrade.accept(island);
-                            player.closeInventory();
-                        } else
-                            plugin.messagehandler.sendMessage(player, BWMessages.MISSING_AMOUNT);
-                    }
-                    break;
-                }
-            }
-
-        } else if (event.getInventory().getName().equalsIgnoreCase("Categories")) {
-            event.setCancelled(true);
-            Inventory inventory = null;
-            int i = 10;
-
-            if (stack.getType() == Material.DIAMOND_SWORD) {
-                inventory = Bukkit.createInventory(null, 36, "Shop");
-                for (ShopItem shopItem : plugin.getFight().getListitems()) {
-                    if (i == 17)
-                        i = 19;
-                    else if(i== 26)
-                        i = 28;
-                    inventory.setItem(i, shopItem.getMenu());
-                    i++;
-                }
-            } else if (stack.getType() == Material.GOLDEN_APPLE) {
-                inventory = Bukkit.createInventory(null, 45, "Shop");
-                for (ShopItem shopItem : plugin.getUtilities().getListitems()) {
-                    if (i == 17)
-                        i = 19;
-                    else if(i== 26)
-                        i = 28;
-                    else if(i== 35)
-                        i = 37;
-                    inventory.setItem(i, shopItem.getMenu());
-                    i++;
-                }
-            } else if (stack.getType() == Material.STONE) {
-                inventory = Bukkit.createInventory(null, 27, "Shop");
-                for (ShopItem shopItem : plugin.getBlocks().getListitems()) {
-                    if (i == 18)
-                        i = 19;
-                    inventory.setItem(i, shopItem.getMenu());
-                    i++;
-                }
-            } else if (stack.getType() == Material.IRON_PICKAXE) {
-                inventory = Bukkit.createInventory(null, 36, "Shop");
-                for (ShopItem shopItem : plugin.getTools().getListitems()) {
-                    if (i == 17)
-                        i = 19;
-                    else if (i == 26)
-                        i = 28;
-                    inventory.setItem(i, shopItem.getMenu());
-                    i++;
-                }
-            }
-
-            event.getWhoClicked().openInventory(inventory);
-        } else if (event.getInventory().getName().equalsIgnoreCase("Shop")) {
-            event.setCancelled(true);
-            stack = stack.clone();
-            Player player = (Player) event.getWhoClicked();
-            if(player.getInventory().firstEmpty() != -1){
-                String[] lore = stack.getItemMeta().getLore().get(0).split(" ");
-                System.out.println(lore[0].substring(2));
-                int amount = Integer.parseInt(lore[0].substring(2));
-                String material = lore[1].substring(2);
-                if(!material.startsWith("E"))
-                    material=material+"_INGOT";
-                Material costmaterial = Material.valueOf(material.toUpperCase());
-                if(player.getInventory().contains(costmaterial, amount)){
-
-                    removeItem(new ItemStack(costmaterial, amount), player.getInventory());
-                    ItemMeta meta = stack.getItemMeta();
-                    meta.setLore(new ArrayList<>());
-                    stack.setItemMeta(meta);
-
-                    String name = stack.getType().name();
-                    if(name.contains("SWORD")){
-                        for(int i = 0; i< player.getInventory().getSize(); i++){
-                            ItemStack sword = player.getInventory().getItem(i);
-                            if(sword != null && sword.getType().name().contains("SWORD")) {
-                                player.getInventory().setItem(i, stack);
-                                break;
-                            }
+                        if(stack.getType() == Material.IRON_CHESTPLATE) {
+                            cost = plugin.getArmor().getCost(island);
+                            upgrade = plugin.getArmor().getUpgrademethod();
+                        } else if(stack.getType() == Material.DIAMOND_SWORD) {
+                            cost = plugin.getSharpness().getCost(island);
+                            upgrade = plugin.getSharpness().getUpgrademethod();
+                        } else if(stack.getType() == Material.FURNACE) {
+                            cost = plugin.getForgery().getCost(island);
+                            upgrade = plugin.getForgery().getUpgrademethod();
                         }
 
-                        Island island = BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getIslands().stream().filter(islands -> player.getDisplayName().contains(""+islands.getTeam().getChatColor())).findFirst().get();
-                        if(island.getSharpness() != 0)
-                            stack.addEnchantment(Enchantment.DAMAGE_ALL, island.getSharpness());
-                    } else if(name.equalsIgnoreCase("WOOL")){
-                        stack = new ItemStack(Material.WOOL, stack.getAmount(), BWTeam.valueOf(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor()).getData());
-                        player.getInventory().addItem(stack);
-                    } else if(name.contains("AXE") || name.contains("PICKAXE")){
-                        player.getInventory().addItem(stack);
-                        Island island = BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getIslands().stream().filter(islands -> player.getDisplayName().contains(""+islands.getTeam().getChatColor())).findFirst().get();
-                        if(island.getSharpness() != 0)
-                            stack.addEnchantment(Enchantment.DIG_SPEED, island.getSharpness());
-                    } else if(name.contains("CHESTPLATE")){
-                        name = name.replace("_CHESTPLATE","");
-                        Island island = BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getIslands().stream().filter(islands -> player.getDisplayName().contains(""+islands.getTeam().getChatColor())).findFirst().get();
-
-                        player.getInventory().setLeggings(addEnchantment(Material.valueOf(name+"_LEGGINGS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor()));
-                        player.getInventory().setBoots(addEnchantment(Material.valueOf(name+"_BOOTS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor()));
-                    } else {
-                        player.getInventory().addItem(stack);
+                        if(cost.getType() != Material.AIR && upgrade != null){
+                            if(player.getInventory().contains(cost.getType(), cost.getAmount())) {
+                                upgrade.accept(island);
+                                player.closeInventory();
+                            } else
+                                plugin.messagehandler.sendMessage(player, BWMessages.MISSING_AMOUNT);
+                        } else
+                            plugin.messagehandler.sendMessage(player, BWMessages.ERROR_MAXIMUM_UPGRADED);
+                        break;
                     }
-                } else {
-                    plugin.messagehandler.sendMessage(player, BWMessages.MISSING_AMOUNT);
-                    player.closeInventory();
                 }
-            } else
-                plugin.messagehandler.sendMessage(player, BWMessages.FULL_INVENTORY);
+
+            } else if (event.getInventory().getName().equalsIgnoreCase("Categories")) {
+                event.setCancelled(true);
+                Inventory inventory = null;
+                int i = 10;
+
+                if (stack.getType() == Material.DIAMOND_SWORD) {
+                    inventory = Bukkit.createInventory(null, 36, "Shop");
+                    for (ShopItem shopItem : plugin.getFight().getListitems()) {
+                        if (i == 17)
+                            i = 19;
+                        else if(i== 26)
+                            i = 28;
+                        inventory.setItem(i, shopItem.getMenu());
+                        i++;
+                    }
+                } else if (stack.getType() == Material.GOLDEN_APPLE) {
+                    inventory = Bukkit.createInventory(null, 45, "Shop");
+                    for (ShopItem shopItem : plugin.getUtilities().getListitems()) {
+                        if (i == 17)
+                            i = 19;
+                        else if(i== 26)
+                            i = 28;
+                        else if(i== 35)
+                            i = 37;
+                        inventory.setItem(i, shopItem.getMenu());
+                        i++;
+                    }
+                } else if (stack.getType() == Material.STONE) {
+                    inventory = Bukkit.createInventory(null, 27, "Shop");
+                    for (ShopItem shopItem : plugin.getBlocks().getListitems()) {
+                        if (i == 18)
+                            i = 19;
+                        inventory.setItem(i, shopItem.getMenu());
+                        i++;
+                    }
+                } else if (stack.getType() == Material.IRON_PICKAXE) {
+                    inventory = Bukkit.createInventory(null, 36, "Shop");
+                    for (ShopItem shopItem : plugin.getTools().getListitems()) {
+                        if (i == 17)
+                            i = 19;
+                        else if (i == 26)
+                            i = 28;
+                        inventory.setItem(i, shopItem.getMenu());
+                        i++;
+                    }
+                }
+
+                event.getWhoClicked().openInventory(inventory);
+            } else if (event.getInventory().getName().equalsIgnoreCase("Shop")) {
+                event.setCancelled(true);
+                stack = stack.clone();
+                Player player = (Player) event.getWhoClicked();
+                if(player.getInventory().firstEmpty() != -1){
+                    String[] lore = stack.getItemMeta().getLore().get(0).split(" ");
+                    System.out.println(lore[0].substring(2));
+                    int amount = Integer.parseInt(lore[0].substring(2));
+                    String material = lore[1].substring(2);
+                    if(!material.startsWith("E"))
+                        material=material+"_INGOT";
+                    Material costmaterial = Material.valueOf(material.toUpperCase());
+                    if(player.getInventory().contains(costmaterial, amount)){
+
+                        removeItem(new ItemStack(costmaterial, amount), player.getInventory());
+                        ItemMeta meta = stack.getItemMeta();
+                        meta.setLore(new ArrayList<>());
+                        stack.setItemMeta(meta);
+
+                        String name = stack.getType().name();
+                        if(name.contains("SWORD")){
+                            for(int i = 0; i< player.getInventory().getSize(); i++){
+                                ItemStack sword = player.getInventory().getItem(i);
+                                if(sword != null && sword.getType().name().contains("SWORD")) {
+                                    Island island = BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getIslands().stream().filter(islands -> player.getDisplayName().contains(""+islands.getTeam().getChatColor())).findFirst().get();
+                                    if(island.getSharpness() != 0)
+                                        stack.addUnsafeEnchantment(Enchantment.DAMAGE_ALL,1);
+                                    player.getInventory().setItem(i, stack);
+                                    break;
+                                }
+                            }
+
+                            Island island = BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getIslands().stream().filter(islands -> player.getDisplayName().contains(""+islands.getTeam().getChatColor())).findFirst().get();
+                            if(island.getSharpness() != 0)
+                                stack.addEnchantment(Enchantment.DAMAGE_ALL, island.getSharpness());
+                        } else if(name.equalsIgnoreCase("WOOL")){
+                            stack = new ItemStack(Material.WOOL, stack.getAmount(), BWTeam.valueOf(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor()).getData());
+                            player.getInventory().addItem(stack);
+                        } else if(name.contains("AXE") || name.contains("PICKAXE")){
+                            player.getInventory().addItem(stack);
+                            Island island = BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getIslands().stream().filter(islands -> player.getDisplayName().contains(""+islands.getTeam().getChatColor())).findFirst().get();
+                            if(island.getSharpness() != 0)
+                                stack.addEnchantment(Enchantment.DIG_SPEED, island.getSharpness());
+                        } else if(name.contains("CHESTPLATE")){
+                            name = name.replace("_CHESTPLATE","");
+                            Island island = BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getIslands().stream().filter(islands -> player.getDisplayName().contains(""+islands.getTeam().getChatColor())).findFirst().get();
+
+                            player.getInventory().setLeggings(addEnchantment(Material.valueOf(name+"_LEGGINGS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor()));
+                            player.getInventory().setBoots(addEnchantment(Material.valueOf(name+"_BOOTS"), Enchantment.PROTECTION_ENVIRONMENTAL, island.getArmor()));
+                        } else {
+                            player.getInventory().addItem(stack);
+                        }
+                    } else {
+                        plugin.messagehandler.sendMessage(player, BWMessages.MISSING_AMOUNT);
+                        player.closeInventory();
+                    }
+                } else
+                    plugin.messagehandler.sendMessage(player, BWMessages.FULL_INVENTORY);
+            }
+
         }
 
     }

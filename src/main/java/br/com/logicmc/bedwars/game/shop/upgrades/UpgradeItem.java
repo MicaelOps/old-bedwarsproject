@@ -1,15 +1,18 @@
 package br.com.logicmc.bedwars.game.shop.upgrades;
 
 import br.com.logicmc.bedwars.BWMain;
+import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.extra.FixedItems;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Island;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -39,8 +42,13 @@ public class UpgradeItem {
         ItemStack stackcost = cost.apply(island);
         ItemStack itemStack = item.getBuild(BWMain.getInstance().messagehandler, lang);
         ItemMeta meta = itemStack.getItemMeta();
-        meta.setLore(Collections.singletonList(ChatColor.YELLOW + "" + stackcost.getAmount()+ " " + ChatColor.AQUA + "DIAMOND"));
+        if(cost.apply(island).getType() == Material.AIR)
+            meta.setLore(Collections.singletonList(BWMain.getInstance().messagehandler.getMessage(BWMessages.MAXIMUM_UPGRADED, lang)));
+        else
+            meta.setLore(Collections.singletonList(ChatColor.YELLOW + "" + stackcost.getAmount()+ " " + ChatColor.AQUA + "DIAMOND"));
         itemStack.setItemMeta(meta);
         return itemStack;
     }
+
+
 }
