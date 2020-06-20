@@ -66,13 +66,14 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onplayerjoinarena(PlayerJoinArenaEvent event) {
         Player player = event.getPlayer();
-        BWPlayer bwPlayer = plugin.playermanager.getPlayerBase(player).getData();
+        PlayerBase<BWPlayer> playerBase = plugin.playermanager.getPlayerBase(player);
+        BWPlayer bwPlayer = playerBase.getData();
 
         bwPlayer.setLevel(20);
         bwPlayer.setUuid(player.getUniqueId());
         bwPlayer.setName(player.getName());
-        plugin.playermanager.getPlayerBase(player).getData().setMap(event.getArenaname());
-        plugin.playermanager.getPlayerBase(player).getData().setTeamcolor("");
+        bwPlayer.setMap(event.getArenaname());
+        bwPlayer.setTeamcolor("");
 
         plugin.utils.cleanPlayer(player);
         plugin.utils.clearChat(player);
@@ -100,9 +101,10 @@ public class PlayerListeners implements Listener {
             }
         }
 
-        player.setScoreboard(arena.getScoreboard());
-        arena.translateScoreboard(player);
+        player.setScoreboard(arena.getScoreboard(playerBase.getPreferences().getLang()));
         player.teleport(BWManager.getInstance().getArena(event.getArenaname()).getLobby());
+        player.getEnderChest().clear();
+        player.setHealth(20.0D);
 
         if(arena.getGamestate() == Arena.WAITING){
 

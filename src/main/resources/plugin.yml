@@ -24,3 +24,4 @@ commands:
   ping:
   admin:
   kick:
+  memory:

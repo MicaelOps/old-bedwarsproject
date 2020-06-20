@@ -86,7 +86,11 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         CommandLoader.loadPackage(this, BWMain.class, "br.com.logicmc.bedwars.commands");
         EntityManager.getInstance().registerEntities();
 
+
         super.onEnable();
+
+        loadTranslations();
+        loadItens();
 
         getServer().getPluginManager().registerEvents(new ShopInventoryListeners(), this);
         getServer().getPluginManager().registerEvents(new PlayerListeners(), this);
@@ -95,9 +99,8 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
 
 
         BWManager.getInstance().addGame("staff", new StaffArena());
+        BWManager.getInstance().getArenas().forEach(Arena::firstStartup); // due to translation error
 
-        loadTranslations();
-        loadItens();
     }
 
 
@@ -327,17 +330,19 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 }
                 for (NormalGenerator generator : diamond) {
                     generator.getLocation().setWorld(world);
-                    generator.setHologram(new Global(generator.getLocation().add(0.0D, 0.3D, 0.0D)).setLine("10:00"));
+                    generator.setHologram(new Global(generator.getLocation().clone().subtract(0.0D,2.0D,0.0D)).setLine("10:00"));
                     generator.getHologram().build();
                 }
                 for (NormalGenerator generator : emerald) {
                     generator.getLocation().setWorld(world);
-                    generator.setHologram(new Global(generator.getLocation().add(0.0D, 0.3D, 0.0D)).setLine("10:00"));
+                    generator.setHologram(new Global(generator.getLocation().clone().subtract(0.0D,2.0D,0.0D)).setLine("10:00"));
                     generator.getHologram().build();
                 }
+                Arena garena = new Arena(arena, 8, Arena.SOLO, spawnlobby, islands, diamond, emerald);
                 BWManager.getInstance().addGame(arena,
-                        new Arena(arena, 8, Arena.SOLO, spawnlobby, islands, diamond, emerald));
-                BWManager.getInstance().getArena(arena).startTimer(this);
+                        garena);
+                garena.startTimer(this);
+                garena.getPhase(0).preinit(garena);
                 
             }
         }

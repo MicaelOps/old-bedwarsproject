@@ -15,6 +15,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftItem;
+import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -26,6 +29,7 @@ import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -198,7 +202,19 @@ public class PhaseListener implements Listener {
                 }
             }
         }
-        System.out.println(event.isCancelled());
+    }
+
+    @EventHandler
+    public void pickupevent(PlayerPickupItemEvent event){
+        Material type = event.getItem().getItemStack().getType();
+
+        if(event.getItem().getItemStack().getMaxStackSize() != 64) {
+            if(type == Material.IRON_INGOT || type == Material.EMERALD || type == Material.GOLD_INGOT || type == Material.DIAMOND){
+                net.minecraft.server.v1_8_R3.ItemStack nmsdummy = CraftItemStack.asNMSCopy(event.getItem().getItemStack());
+                nmsdummy.getItem().c(64);
+                event.getItem().setItemStack(CraftItemStack.asBukkitCopy(nmsdummy));
+            }
+        }
     }
     @EventHandler
     public void donotsleep(PlayerBedEnterEvent event){
@@ -209,40 +225,96 @@ public class PhaseListener implements Listener {
         boolean damage = check(event.getEntity().getLocation(), event.getEntity());
         if(!damage){
             if(event.getEntity() instanceof Player){
-                damage = plugin.playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(plugin.playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
-                if(!damage) {
-                    if(event.getFinalDamage() >= ((Player) event.getEntity()).getHealth()) {
-                        damage=true;
-                        event.setCancelled(true);
-                        final Player player = (Player) event.getEntity();
-                        if(player.getGameMode()==GameMode.SURVIVAL) {
-                            final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
-                            final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
-                            bwPlayer.getData().increaseDeaths();
 
-                            if(event.getDamager() instanceof Player){
-                                final BWPlayer killer = BWManager.getInstance().getBWPlayer(event.getDamager().getUniqueId());
-                                killer.increaseKills();
-                                arena.updateScoreboardTeam((Player) event.getDamager(), "kills", ChatColor.GREEN+""+killer.getKills());
-                            }
-                            for (final Island island : arena.getIslands()) {
-                                if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
+                Player player = (Player) event.getEntity();
 
-                                    player.setGameMode(GameMode.SPECTATOR);
-                                    player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999 ,5));
-                                    player.setAllowFlight(true);
-                                    player.setFlying(true);
+                if(player.getGameMode() == GameMode.SURVIVAL){
 
-                                    for (final UUID uuid : arena.getPlayers()) {
-                                        Player other = Bukkit.getPlayer(uuid);
-                                        other.sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.PLAYER_KILLED_BY_PLAYER, BWMain.getInstance().getLang(other)).replace("{damager}", ((Player) event.getDamager()).getDisplayName()).replace("{player}",player.getName()));
-                                        if(other.getGameMode() == GameMode.SURVIVAL){
-                                            other.hidePlayer(player);
+                    boolean death = event.getFinalDamage() >= ((Player) event.getEntity()).getHealth();
+                    final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+                    final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
+
+                    if(event.getDamager() instanceof  Player){
+                        damage = plugin.playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(plugin.playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
+
+                        if(!damage && death) {
+                            Player playerkiller = (Player) event.getDamager();
+                            final BWPlayer killer = BWManager.getInstance().getBWPlayer(playerkiller.getUniqueId());
+                            killer.increaseKills();
+                            arena.updateScoreboardTeam(playerkiller, "kills", ChatColor.GREEN+""+killer.getKills());
+
+                            ItemStack iron = new ItemStack(Material.IRON_INGOT, 0);
+                            ItemStack emerald = new ItemStack(Material.EMERALD, 0);
+                            ItemStack gold = new ItemStack(Material.GOLD_INGOT, 0);
+                            ItemStack diamond = new ItemStack(Material.DIAMOND, 0);
+
+
+                            for(int i = 0; i < player.getInventory().getSize(); i++){
+                                ItemStack stack = player.getInventory().getItem(i);
+                                if(stack != null) {
+
+                                    if(stack.getType() == Material.IRON_INGOT){
+                                        iron.setAmount(iron.getAmount()+stack.getAmount());
+                                        player.getInventory().setItem(i, new ItemStack(Material.AIR));
+                                    } else if(stack.getType() == Material.EMERALD){
+                                        emerald.setAmount(emerald.getAmount()+stack.getAmount());
+                                        player.getInventory().setItem(i, new ItemStack(Material.AIR));
+                                    } else if(stack.getType() == Material.GOLD_INGOT){
+                                        gold.setAmount(gold.getAmount()+stack.getAmount());
+                                        player.getInventory().setItem(i, new ItemStack(Material.AIR));
+                                    } else if(stack.getType() == Material.DIAMOND){
+                                        diamond.setAmount(diamond.getAmount()+stack.getAmount());
+                                        player.getInventory().setItem(i, new ItemStack(Material.AIR));
+                                    } else if(stack.getType().name().contains("_SWORD")){
+                                        if(stack.containsEnchantment(Enchantment.DAMAGE_ALL)){
+                                            ItemStack woodspord = new ItemStack(Material.WOOD_SWORD);
+                                            woodspord.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
+                                            player.getInventory().setItem(i, woodspord);
+                                        } else {
+                                            player.getInventory().setItem(i, new ItemStack(Material.WOOD_SWORD));
                                         }
                                     }
-                                    respawn(arena, island, bwPlayer, player);
-                                    break;
                                 }
+                            }
+                            if(gold.getAmount() != 0){
+                                playerkiller.sendMessage("§6+"+gold.getAmount()+" Gold");
+                                playerkiller.getInventory().addItem(gold);
+                            }
+                            if(emerald.getAmount() != 0){
+                                playerkiller.sendMessage("§2+"+emerald.getAmount()+" Emerald");
+                                playerkiller.getInventory().addItem(emerald);
+                            }
+                            if(iron.getAmount() != 0){
+                                playerkiller.sendMessage("§f+"+iron.getAmount()+" Iron");
+                                playerkiller.getInventory().addItem(iron);
+                            }
+                            if(diamond.getAmount() != 0){
+                                playerkiller.sendMessage("§b+"+iron.getAmount()+" Diamond");
+                                playerkiller.getInventory().addItem(diamond);
+                            }
+                        }
+                    }
+
+                    if(death) {
+                        damage=true;
+                        bwPlayer.getData().increaseDeaths();
+                        for ( Island island : arena.getIslands()) {
+                            if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
+
+                                player.setGameMode(GameMode.SPECTATOR);
+                                player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999 ,5));
+                                player.setAllowFlight(true);
+                                player.setFlying(true);
+
+                                for (final UUID uuid : arena.getPlayers()) {
+                                    Player other = Bukkit.getPlayer(uuid);
+                                    other.sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.PLAYER_KILLED_BY_PLAYER, BWMain.getInstance().getLang(other)).replace("{damager}", ((Player) event.getDamager()).getDisplayName()+"§7").replace("{player}",player.getDisplayName()+"§7"));
+                                    if(other.getGameMode() == GameMode.SURVIVAL){
+                                        other.hidePlayer(player);
+                                    }
+                                }
+                                respawn(arena, island, bwPlayer, player);
+                                break;
                             }
                         }
                     }
@@ -254,6 +326,16 @@ public class PhaseListener implements Listener {
     }
     private void respawn(Arena arena, Island island, PlayerBase<BWPlayer> bwPlayer, Player player) {
 
+        player.getInventory().clear();
+
+        if(island.getSharpness() ==0) {
+            player.getInventory().addItem(new ItemStack(Material.WOOD_SWORD));
+        } else {
+            ItemStack woodspord = new ItemStack(Material.WOOD_SWORD);
+            woodspord.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
+            player.getInventory().addItem(woodspord);
+        }
+        
 		player.setGameMode(GameMode.SPECTATOR);
         if (island.isBedbroken()) {
             player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));

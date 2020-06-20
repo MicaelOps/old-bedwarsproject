@@ -131,7 +131,6 @@ public class ShopInventoryListeners implements Listener {
                 Player player = (Player) event.getWhoClicked();
                 if(player.getInventory().firstEmpty() != -1){
                     String[] lore = stack.getItemMeta().getLore().get(0).split(" ");
-                    System.out.println(lore[0].substring(2));
                     int amount = Integer.parseInt(lore[0].substring(2));
                     String material = lore[1].substring(2);
                     if(!material.startsWith("E"))

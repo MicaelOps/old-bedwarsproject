@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import br.com.logicmc.bedwars.BWMain;
+import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.extra.Schematic;
 import br.com.logicmc.bedwars.extra.YamlFile;
 import br.com.logicmc.bedwars.game.BWManager;
@@ -28,7 +29,6 @@ import br.com.logicmc.bedwars.game.engine.PhaseControl;
 
 public class EndPhase implements PhaseControl {
 
-    private Scoreboard scoreboard;
     private int kickall;
     
     @Override
@@ -57,7 +57,7 @@ public class EndPhase implements PhaseControl {
             world.getEntities().forEach(Entity::remove);
             world.getLivingEntities().forEach(LivingEntity::remove);
             YamlFile mainconfig = BWMain.getInstance().mainconfig;
-            Schematic schematic = Schematic.read(new File(BWMain.getInstance().getDataFolder(), arena + ".schematic"));
+            Schematic schematic = Schematic.read(new File(BWMain.getInstance().getDataFolder(), arena.getName() + ".schematic"));
             schematic.paste(new Location(world, 250, 100, 250));
             mainconfig.loopThroughSectionKeys(arena.getName()+".islands", (visland) -> {
                 arena.getIslands().add(new Island(visland, arena.getName(),
@@ -86,6 +86,7 @@ public class EndPhase implements PhaseControl {
             }
 
             arena.setGamestate(Arena.WAITING);
+            arena.getPhase(0).preinit(arena);
             arena.changePhase();
 
         }
@@ -93,8 +94,12 @@ public class EndPhase implements PhaseControl {
     }
 
     @Override
+    public int getIndex() {
+        return 6;
+    }
+
+    @Override
     public void init(Arena arena) {
-        System.out.println("Restarting "+arena.getName());
         arena.setGamestate(Arena.END);
         kickall = arena.getTime()+10;
         if(!arena.getPlayers().isEmpty()){
@@ -119,22 +124,15 @@ public class EndPhase implements PhaseControl {
 
     }
 
+
     @Override
     public void stop(Arena arena) {
-        scoreboard.getObjective(DisplaySlot.SIDEBAR).unregister();
-        scoreboard.getTeams().forEach(Team::unregister);
-    }
-
-    @Override
-    public void translateScoreboard(Player player) {
-
+        arena.forEachScoreboard(scoreboard ->scoreboard.getObjective(DisplaySlot.SIDEBAR).unregister());
+        arena.forEachScoreboard(scoreboard ->scoreboard.getTeams().forEach(Team::unregister));
     }
 
 
-    @Override
-    public Scoreboard getScoreboard() {
-        return scoreboard;
-    }
+
     private void createTeam(Scoreboard scoreboard, String name, String prefix, String suffix, String entry) {
         Team team = scoreboard.registerNewTeam(name);
         team.setPrefix(prefix);
@@ -144,20 +142,30 @@ public class EndPhase implements PhaseControl {
 
     @Override
     public void preinit(Arena arena) {
-        scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-        if(scoreboard.getObjective(DisplaySlot.SIDEBAR) == null){
-            Objective objective = scoreboard.registerNewObjective("end"+new Random().nextInt(10000),"dummy");
 
-            objective.setDisplayName("§b§lBEDWARS");
+    }
+
+    @Override
+    public Scoreboard createScoreboard(String lang, Scoreboard scoreboard) {
+        if(scoreboard == null) {
+            scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+        }
+
+        Objective objective = scoreboard.getObjective(DisplaySlot.SIDEBAR);
+
+        if(objective == null) {
+            objective = scoreboard.registerNewObjective("end" + new Random().nextInt(10000), "dummy");
+            objective.setDisplayName("§e§lBED WARS");
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
-            objective.getScore("§3").setScore(3);
-            objective.getScore("§2").setScore(2);
-            objective.getScore("§1").setScore(1);
-            objective.getScore("§0").setScore(0);
-
-            createTeam(scoreboard, "winner", "§fTeam ","","§2");
-            createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");
         }
+        objective.getScore("§3").setScore(3);
+        objective.getScore("§2").setScore(2);
+        objective.getScore("§1").setScore(1);
+        objective.getScore("§0").setScore(0);
+
+        createTeam(scoreboard, "winner", "§f"+BWMain.getInstance().messagehandler.getMessage(BWMessages.WORD_TEAM, lang)+" ","","§2");
+        createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");
+        return scoreboard;
     }
 }

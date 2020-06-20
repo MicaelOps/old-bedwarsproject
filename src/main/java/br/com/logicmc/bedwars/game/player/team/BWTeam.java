@@ -12,8 +12,7 @@ public enum BWTeam {
     YELLOW(ChatColor.YELLOW, Color.YELLOW, (short)4),
     GRAY(ChatColor.GRAY, Color.GRAY, (short)7),
     RED(ChatColor.RED, Color.RED, (short)14),
-    WHITE(ChatColor.WHITE, Color.WHITE, (short)0),
-    AQUA(ChatColor.AQUA, Color.AQUA, (short)3);
+    WHITE(ChatColor.WHITE, Color.WHITE, (short)0);
 
     private final ChatColor chatColor;
     private final Color color;

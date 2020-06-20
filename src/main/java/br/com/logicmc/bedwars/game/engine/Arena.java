@@ -46,10 +46,10 @@ public class Arena {
     private final HashSet<Island> islands;
     private final HashSet<Location> blocks;
     private final HashSet<NormalGenerator> diamond,emerald;
-    private final PhaseControl[] controls = {new WaitingPhase(), new IngamePhase(), new EndPhase()};
+    private PhaseControl[] controls;
+    private Scoreboard[] scoreboards;
 
     private Location lobby;
-    private BukkitTask task;
     private int phaseControl;
     private int gamestate , time,allotedplayers;
 
@@ -69,14 +69,44 @@ public class Arena {
         allotedplayers = 0;
         gamestate = WAITING;
         phaseControl = 0;
+        scoreboards = new Scoreboard[9];
+        controls = new PhaseControl[]{new WaitingPhase(), new IngamePhase(), new EndPhase()};
 
+    }
+
+    public void firstStartup(){
         initScoreboards();
+        controls[0].init(this);
 
     }
 
     private void initScoreboards(){
         for(PhaseControl control : controls) {
+            scoreboards[control.getIndex()] = control.createScoreboard("en",scoreboards[control.getIndex()]);
+            scoreboards[control.getIndex()+1] =  control.createScoreboard("pt",scoreboards[control.getIndex()+1]);
+            scoreboards[control.getIndex()+2] = control.createScoreboard("es",scoreboards[control.getIndex()+2]);
             control.preinit(this);
+        }
+    }
+    public void forEachScoreboard(Consumer<Scoreboard> action){
+        action.accept(scoreboards[controls[phaseControl].getIndex()]);
+        action.accept(scoreboards[controls[phaseControl].getIndex()+1]);
+        action.accept(scoreboards[controls[phaseControl].getIndex()+2]);
+    }
+    public void forEachPhaseScoreboard(PhaseControl control, Consumer<Scoreboard> action){
+        action.accept(scoreboards[control.getIndex()]);
+        action.accept(scoreboards[control.getIndex()+1]);
+        action.accept(scoreboards[control.getIndex()+2]);
+    }
+
+    public int getPositionScoreboard(String lang){
+        switch (lang) {
+            case "pt":
+                return 1;
+            case "es":
+                return 2;
+            default:
+                return 0;
         }
     }
     public HashSet<Location> getBlocks() {
@@ -111,27 +141,11 @@ public class Arena {
         return lobby;
     }
 
-    public void setLobby(Location lobby) {
-        this.lobby = lobby;
-    }
-
     public HashSet<UUID> getPlayers() {
         return players;
     }
     public Scoreboard getScoreboard(String lang) {
-        return controls[phaseControl].getScoreboards()[getPositionScoreboard(lang)];
-    }
-    public int getPositionScoreboard(String lang){
-        switch (lang) {
-            case "en":
-                return 0;
-            case "pt":
-                return 1;
-            case "es":
-                return 2;
-            default:
-                return 0;
-        }
+        return scoreboards[controls[phaseControl].getIndex()+getPositionScoreboard(lang)];
     }
 
     public int getGamestate() {
@@ -143,10 +157,9 @@ public class Arena {
     }
 
 
-    public BukkitTask getTask() {
-        return task;
+    public PhaseControl getPhase(int i){
+        return controls[phaseControl];
     }
-
     public void changePhase() {
         controls[phaseControl].stop(this);
 
@@ -159,7 +172,7 @@ public class Arena {
 
         for(UUID ingameplayers : getPlayers()) {
             Player ingamePlayer = Bukkit.getPlayer(ingameplayers);
-            ingamePlayer.setScoreboard(controls[phaseControl].getScoreboards()[getPositionScoreboard(BWMain.getInstance().playermanager.getPlayerBase(ingamePlayer).getPreferences().getLang())]);
+            ingamePlayer.setScoreboard(scoreboards[controls[phaseControl].getIndex()+getPositionScoreboard(BWMain.getInstance().playermanager.getPlayerBase(ingamePlayer).getPreferences().getLang())]);
         }
         controls[phaseControl].init(this);
     }
@@ -171,12 +184,6 @@ public class Arena {
         return time;
     }
 
-
-    public void forEachScoreboard(Consumer<Scoreboard> action){
-        for(Scoreboard scoreboard : controls[phaseControl].getScoreboards()){
-            action.accept(scoreboard);
-        }
-    }
 
     public boolean checkend(){
         return getPlayers().stream().filter(uuid -> Bukkit.getPlayer(uuid).getGameMode()==GameMode.SURVIVAL).count() <= getTeamcomposition();
@@ -207,7 +214,7 @@ public class Arena {
      * Starts arena timer
      */
     public void startTimer(JavaPlugin plugin) {
-        task = Bukkit.getScheduler().runTaskTimer(plugin, new TimeScheduler(this), 0L, 20L);
+        Bukkit.getScheduler().runTaskTimer(plugin, new TimeScheduler(this), 0L, 20L);
     }
 
     public String getName() {
@@ -216,7 +223,7 @@ public class Arena {
 
     public void brocastTimeMessage(BWMessages messages, int time) {
         for(UUID ingameplayers : getPlayers()) {
-            Bukkit.getPlayer(ingameplayers).sendMessage(BWMain.getInstance().messagehandler.getMessage(messages, BWMain.getInstance().getLang(Bukkit.getPlayer(ingameplayers))).replace("{time}",""+time));
+            Bukkit.getPlayer(ingameplayers).sendMessage("§e"+BWMain.getInstance().messagehandler.getMessage(messages, BWMain.getInstance().getLang(Bukkit.getPlayer(ingameplayers))).replace("{time}","§c"+time+"§e"));
         }
     }
     public void updateScoreboardForAll(String team, String suffix) {
