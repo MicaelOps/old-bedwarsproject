@@ -335,7 +335,7 @@ public class PhaseListener implements Listener {
             woodspord.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
             player.getInventory().addItem(woodspord);
         }
-        
+
 		player.setGameMode(GameMode.SPECTATOR);
         if (island.isBedbroken()) {
             player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
