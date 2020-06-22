@@ -13,10 +13,15 @@ public enum FixedItems {
 	UPGRADE_FORGERY(Material.FURNACE, BWMessages.UPGRADE_FORGERY),
 	UPGRADE_ARMOR(Material.IRON_CHESTPLATE, BWMessages.UPGRADE_ARMOR),
 
-	SHOP_TOOLS(Material.IRON_PICKAXE, BWMessages.SHOP_TOOLS),
-	SHOP_UTILITIES(Material.GOLDEN_APPLE, BWMessages.SHOP_UTILITIES),
-	SHOP_BLOCKS(Material.STONE, BWMessages.SHOP_BLOCKS),
-	SHOP_FIGHT(Material.DIAMOND_SWORD, BWMessages.SHOP_FIGHT),
+	SHOP_TOOLS(Material.STONE_PICKAXE, BWMessages.SHOP_TOOLS, BWMessages.CLICK_VIEW),
+	SHOP_UTILITIES(Material.GOLDEN_APPLE, BWMessages.SHOP_UTILITIES, BWMessages.CLICK_VIEW),
+	SHOP_BLOCKS(Material.STAINED_CLAY, BWMessages.SHOP_BLOCKS, BWMessages.CLICK_VIEW),
+	SHOP_FIGHT(Material.WOOD_SWORD, BWMessages.SHOP_FIGHT, BWMessages.CLICK_VIEW),
+	SHOP_POTIONS(Material.BREWING_STAND_ITEM, BWMessages.SHOP_POTION, BWMessages.CLICK_VIEW),
+	SHOP_BOW(Material.BOW, BWMessages.SHOP_BOW, BWMessages.CLICK_VIEW),
+	SHOP_ARMOR(Material.CHAINMAIL_BOOTS, BWMessages.SHOP_ARMOR, BWMessages.CLICK_VIEW),
+	SHOP_QUICKSHOP(Material.NETHER_STAR, BWMessages.QUICKSHOP, BWMessages.CLICK_VIEW),
+
 	STAFF_ARENA_SPECTATE(Material.BOOK, BWMessages.STAFF_ARENA_SPECTATE),
 	SPECTATE_PLAYERS(Material.ENDER_PEARL, BWMessages.SPECTATE_PLAYERS),
 	SPECTATE_JOINLOBBY(Material.REDSTONE, BWMessages.SPECTATE_JOINLOBBY),
@@ -40,7 +45,11 @@ public enum FixedItems {
 		this.layout = buildStack();
 		this.lore = lore;
 	}
-	
+
+	public Material getMaterial() {
+		return material;
+	}
+
 	private ItemStack buildStack() {
 		ItemStack stack = new ItemStack(material);
 		ItemMeta meta = stack.getItemMeta();

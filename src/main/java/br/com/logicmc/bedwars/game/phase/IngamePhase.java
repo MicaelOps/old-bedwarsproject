@@ -1,6 +1,9 @@
 package br.com.logicmc.bedwars.game.phase;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.game.BWManager;
@@ -9,7 +12,6 @@ import br.com.logicmc.bedwars.game.phase.event.GeneratorEvent;
 import br.com.logicmc.bedwars.game.phase.event.PhaseEvent;
 import br.com.logicmc.bedwars.game.phase.event.SuddenDeathEvent;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -118,7 +120,7 @@ public class IngamePhase implements PhaseControl {
         if (hologram != null) {
             int remainingtime = generator.getTime() - time;
             int i = remainingtime / 60;
-            hologram.editLine(0,"§e" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
+            hologram.editLine(2,"§e" + (i < 10 ? "0" + i + ":" : i + ":") + (remainingtime % 60 < 10 ? "0" + remainingtime % 60 : remainingtime % 60));
         }
     }
     @Override
@@ -127,6 +129,7 @@ public class IngamePhase implements PhaseControl {
         arena.setGamestate(Arena.INGAME);
         
         int index = 0;
+        int adder = arena.getTeamcomposition() == Arena.SOLO ? 2 : 5;
         final int[] score = { 0 };
 
         for(UUID vips : arena.getPreteam().keySet()){
@@ -198,14 +201,22 @@ public class IngamePhase implements PhaseControl {
                 }
             }
 
+            AtomicBoolean increase = new AtomicBoolean(true);
+
+            int finalscore = score[0];
             arena.forEachScoreboard(scoreboard ->  {
                 Team scteam = scoreboard.getTeam(bwPlayer.getTeamcolor());
                 if(scteam.getEntries().isEmpty()) {
-                    scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§"+ score[0]).setScore(score[0] +5);
-                    scteam.addEntry("§"+ score[0]);
-                    score[0]++;
+                    scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§"+ finalscore).setScore(finalscore+adder);
+                    scteam.addEntry("§"+ finalscore);
+                    if(increase.get()) {
+                        score[0]++;
+                        increase.set(false);
+                    }
+
                 }
             });
+            increase.set(true);
 
 
             //prepare player
@@ -213,15 +224,21 @@ public class IngamePhase implements PhaseControl {
             BWTeam team = BWTeam.valueOf(bwPlayer.getTeamcolor());
             arena.updateScoreboardTeam(player, bwPlayer.getTeamcolor(), "§a ✓ §7(You)");
 
-            player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor())).findFirst().get().getSpawn());
-            player.setGameMode(GameMode.SURVIVAL);
-            player.getInventory().clear();
-            player.getInventory().setHelmet(BWMain.getInstance().createColorouedArmor(Material.LEATHER_HELMET, team.getColor()));
-            player.getInventory().setChestplate(BWMain.getInstance().createColorouedArmor(Material.LEATHER_CHESTPLATE, team.getColor()));
-            player.getInventory().setLeggings(BWMain.getInstance().createColorouedArmor(Material.LEATHER_LEGGINGS, team.getColor()));
-            player.getInventory().setBoots(BWMain.getInstance().createColorouedArmor(Material.LEATHER_BOOTS, team.getColor()));
-            player.getInventory().setItem(0,new ItemStack(Material.WOOD_SWORD));
-            player.setDisplayName(team.getChatColor()+player.getName());
+            Optional<Island> value = arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor())).findFirst();
+
+            if(value.isPresent()) {
+                player.teleport(value.get().getSpawn());
+                player.setGameMode(GameMode.SURVIVAL);
+                player.getInventory().clear();
+                player.getInventory().setHelmet(BWMain.getInstance().createColorouedArmor(Material.LEATHER_HELMET, team.getColor()));
+                player.getInventory().setChestplate(BWMain.getInstance().createColorouedArmor(Material.LEATHER_CHESTPLATE, team.getColor()));
+                player.getInventory().setLeggings(BWMain.getInstance().createColorouedArmor(Material.LEATHER_LEGGINGS, team.getColor()));
+                player.getInventory().setBoots(BWMain.getInstance().createColorouedArmor(Material.LEATHER_BOOTS, team.getColor()));
+                player.getInventory().setItem(0,new ItemStack(Material.WOOD_SWORD));
+                player.setDisplayName(team.getChatColor()+player.getName());
+            } else {
+                player.kickPlayer("Not handled! "+bwPlayer.getTeamcolor()+" for "+arena.getName());
+            }
         
         }
 
@@ -241,12 +258,13 @@ public class IngamePhase implements PhaseControl {
             arena.forEachScoreboard(scoreboard -> arena.updateEntry(player, scoreboard, "friend", list));
         }
 
-        int finalScore = score[0];
         arena.forEachScoreboard(scoreboard ->{
-            scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§l").setScore((finalScore +5+1));
-            scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§k").setScore((finalScore+5+2));
-            scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§o").setScore((finalScore+5+3));
+            scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§l").setScore((score[0]+adder));
+            scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§k").setScore((score[0]+adder+1));
+            scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§o").setScore((score[0]+adder+2));
+            scoreboard.getObjective(DisplaySlot.SIDEBAR).getScore("§r").setScore((score[0]+adder+3));
             scoreboard.getTeam("upgrade").addEntry("§k");
+            scoreboard.getTeam("date").addEntry("§r");
         });
 
         arena.getPreteam().clear();
@@ -290,7 +308,7 @@ public class IngamePhase implements PhaseControl {
     }
 
     @Override
-    public Scoreboard createScoreboard(String lang, Scoreboard scoreboard) {
+    public Scoreboard createScoreboard(Arena arena, String lang, Scoreboard scoreboard) {
         if(scoreboard == null) {
             scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         }
@@ -303,15 +321,24 @@ public class IngamePhase implements PhaseControl {
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         }
-        objective.getScore("§e").setScore(4);
-        objective.getScore("§d").setScore(3);
-        objective.getScore("§c").setScore(2);
+
         objective.getScore("§b").setScore(1);
         objective.getScore("§a").setScore(0);
 
+        if(arena.getTeamcomposition() != Arena.SOLO){
+            objective.getScore("§e").setScore(4);
+            objective.getScore("§d").setScore(3);
+            objective.getScore("§c").setScore(2);
+            createTeam(scoreboard, "kills", "§f"+getTranslatedMessage(BWMessages.WORD_KILLS, lang)+": ","§a0","§d");
+            createTeam(scoreboard, "beds", "§f"+getTranslatedMessage(BWMessages.WORD_CAPTURED, lang)+": ","§a0","§c");
+        } else {
+            createTeam(scoreboard, "kills", "§f"+getTranslatedMessage(BWMessages.WORD_KILLS, lang)+": ","§a0","");
+            createTeam(scoreboard, "beds", "§f"+getTranslatedMessage(BWMessages.WORD_CAPTURED, lang)+": ","§a0","");
+        }
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDateTime now = LocalDateTime.now();
+        createTeam(scoreboard, "date","§7"+dtf.format(now),"","");
         createTeam(scoreboard, "upgrade", "§f"+event.getEventname(),"§f em §a 00:00","");
-        createTeam(scoreboard, "kills", "§f"+getTranslatedMessage(BWMessages.WORD_KILLS, lang)+": ","§a0","§d");
-        createTeam(scoreboard, "beds", "§f"+getTranslatedMessage(BWMessages.WORD_CAPTURED, lang)+": ","§a0","§c");
         createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§a");
         createTeam(scoreboard, "enemy", "§c","","");
         createTeam(scoreboard, "friend", "§a","","");

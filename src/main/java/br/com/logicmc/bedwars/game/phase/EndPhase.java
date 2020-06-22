@@ -1,6 +1,8 @@
 package br.com.logicmc.bedwars.game.phase;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.UUID;
@@ -117,11 +119,19 @@ public class EndPhase implements PhaseControl {
                     bwPlayer.increaseLoses();
                 }
             }
-            BWTeam finalWinner = winner;
-            Bukkit.getOnlinePlayers().forEach(player -> player.sendTitle(ChatColor.BOLD+""+ChatColor.GREEN+"WINNER", "§fTeam "+ finalWinner.getChatColor()+ finalWinner.name()));
-
+            if(winner != null) {
+                BWTeam finalWinner = winner;
+                for(UUID uuid : arena.getPlayers()){
+                    Player player = Bukkit.getPlayer(uuid);
+                    String lang = BWMain.getInstance().getLang(player);
+                    if(BWManager.getInstance().getBWPlayer(uuid).getTeamcolor().equalsIgnoreCase(winner.name())){
+                        player.sendTitle(BWMain.getInstance().messagehandler.getMessage(BWMessages.HEADTITLE_VICTORY, lang), BWMain.getInstance().messagehandler.getMessage(BWMessages.LOWERTITLE_VICTORY, lang));
+                    } else {
+                        player.sendTitle(BWMain.getInstance().messagehandler.getMessage(BWMessages.HEADTITLE_GAMELOST, lang), BWMain.getInstance().messagehandler.getMessage(BWMessages.LOWERTITLE_GAMELOST, lang));
+                    }
+                }
+            }
         }
-
     }
 
 
@@ -146,7 +156,7 @@ public class EndPhase implements PhaseControl {
     }
 
     @Override
-    public Scoreboard createScoreboard(String lang, Scoreboard scoreboard) {
+    public Scoreboard createScoreboard(Arena arena, String lang, Scoreboard scoreboard) {
         if(scoreboard == null) {
             scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         }
@@ -159,10 +169,14 @@ public class EndPhase implements PhaseControl {
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         }
+        objective.getScore("§4").setScore(4);
         objective.getScore("§3").setScore(3);
         objective.getScore("§2").setScore(2);
         objective.getScore("§1").setScore(1);
         objective.getScore("§0").setScore(0);
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDateTime now = LocalDateTime.now();
+        createTeam(scoreboard, "date","§7"+dtf.format(now),"","§4");
 
         createTeam(scoreboard, "winner", "§f"+BWMain.getInstance().messagehandler.getMessage(BWMessages.WORD_TEAM, lang)+" ","","§2");
         createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");

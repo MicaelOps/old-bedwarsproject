@@ -10,11 +10,8 @@ import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import br.com.logicmc.core.account.PlayerBase;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.apache.commons.lang.WordUtils;
+import org.bukkit.*;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftItem;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
@@ -66,19 +63,26 @@ public class PhaseListener implements Listener {
                         if (bwPlayer.getData().getTeamcolor().equalsIgnoreCase(island.getTeam().name()))
                             event.setCancelled(true);
                         else {
+
                             final BWTeam bwTeam = island.getTeam();
                             island.setBedbroken(true);
                             bwPlayer.getData().increaseBeds();
                             arena.updateScoreboardTeam(player, "beds", ChatColor.GREEN + "" + bwPlayer.getData().getBeds());
-
                             for (final UUID uuid : arena.getPlayers()) {
                                 final Player target = Bukkit.getPlayer(uuid);
-                                target.sendTitle("" + ChatColor.BOLD + bwTeam.getChatColor() + bwTeam.name(), plugin.messagehandler.getMessage(BWMessages.BED_DESTROYED, plugin.playermanager.getPlayerBase(uuid).getPreferences().getLang()).replace("{bed}",bwTeam.name()));
+                                System.out.println(target.getName());
+                                target.playSound(target.getLocation(), Sound.ENDERDRAGON_GROWL, 10F, 10F);
+                                String lang = plugin.playermanager.getPlayerBase(uuid).getPreferences().getLang();
+                                if(BWManager.getInstance().getBWPlayer(uuid).getTeamcolor().equalsIgnoreCase(bwTeam.name())){
+                                    target.sendTitle(plugin.messagehandler.getMessage(BWMessages.HEADTITLE_BED_DESTROYED, lang), plugin.messagehandler.getMessage(BWMessages.LOWERTITLE_BED_DESTROYED, lang).replace("{player}", player.getDisplayName()));
+                                } else {
+                                    target.sendMessage(plugin.messagehandler.getMessage(BWMessages.BED_DESTROYED, lang).replace("{bed}",bwTeam.getChatColor()+WordUtils.capitalize(bwTeam.name())).replace("{player}", player.getDisplayName()));
 
-                                if (target.getDisplayName().contains(bwTeam.getChatColor() + ""))
-                                    arena.updateScoreboardTeam(target, bwTeam.name(), ChatColor.RED + " ✗ (You)");
+                                }
+                                if(arena.getTeamcomposition() == Arena.SOLO)
+                                    arena.updateScoreboardTeam(target, bwTeam.name() , ChatColor.GREEN+" 1");
                                 else
-                                    arena.updateScoreboardTeam(target, bwTeam.name(), ChatColor.RED + " ✗");
+                                    arena.updateScoreboardTeam(target, bwTeam.name() , ChatColor.GREEN+""+arena.getTeamcomposition());
                             }
                         }
                         break;
@@ -239,6 +243,7 @@ public class PhaseListener implements Listener {
 
                         if(!damage && death) {
                             Player playerkiller = (Player) event.getDamager();
+                            playerkiller.playSound(playerkiller.getLocation(), Sound.LEVEL_UP, 10F, 10F);
                             final BWPlayer killer = BWManager.getInstance().getBWPlayer(playerkiller.getUniqueId());
                             killer.increaseKills();
                             arena.updateScoreboardTeam(playerkiller, "kills", ChatColor.GREEN+""+killer.getKills());
@@ -338,17 +343,20 @@ public class PhaseListener implements Listener {
 
 		player.setGameMode(GameMode.SPECTATOR);
         if (island.isBedbroken()) {
-            player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
-
-            player.setDisplayName("[SPECTATOR] "+player.getName());
 
             if(arena.checkend())
                 arena.changePhase();
+            else {
+                arena.updateTeamArena(BWTeam.valueOf(bwPlayer.getData().getTeamcolor()));
+                player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.ELIMINATED, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.ELIMINATED_MESSAGE, bwPlayer.getPreferences().getLang()));
 
-            player.getInventory().clear();
-            plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
-            plugin.giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
-            plugin.giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
+                player.setDisplayName("[SPECTATOR] "+player.getName());
+
+                player.getInventory().clear();
+                plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
+                plugin.giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
+                plugin.giveItem(player, 0, FixedItems.SPECTATE_PLAYERS);
+            }
         } else {
             player.sendTitle(ChatColor.BOLD + "" + ChatColor.RED + plugin.messagehandler.getMessage(BWMessages.DEAD, bwPlayer.getPreferences().getLang()), plugin.messagehandler.getMessage(BWMessages.RESPAWN_MESSAGE, bwPlayer.getPreferences().getLang()));
             new BukkitRunnable() {

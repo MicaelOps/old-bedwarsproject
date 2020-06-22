@@ -7,9 +7,15 @@ import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.engine.PhaseControl;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
 
 import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
+import br.com.logicmc.core.addons.hologram.types.Global;
 import net.minecraft.server.v1_8_R3.Packet;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.*;
@@ -85,14 +91,17 @@ public class WaitingPhase implements PhaseControl {
             createArmostand(normalGenerator.getLocation().clone().subtract(0.0D,4.0D, 0.0D), Material.EMERALD_BLOCK);
         }
         for(Island island : arena.getIslands()){
-            EntityManager.getInstance().spawnImmobileVillager(island.getNpc(), "Blocks & Tools");
+            System.out.println(island.getName());
+            new Global(island.getNpc().add(0.0D, 1.5D, 0.0D)).setLines(ChatColor.AQUA+"ITEM SHOP", ChatColor.YELLOW+"RIGHT CLICK").build();
+            new Global(island.getUpgrade().add(0.0D, 1.5D, 0.0D)).setLines(ChatColor.AQUA+"UPGRADES", ChatColor.YELLOW+"RIGHT CLICK").build();
+            EntityManager.getInstance().spawnImmobileVillager(island.getNpc(), "Shop");
             EntityManager.getInstance().spawnImmobileVillager(island.getUpgrade(), "Upgrades");
         }
 
     }
 
     @Override
-    public Scoreboard createScoreboard(String lang, Scoreboard scoreboard) {
+    public Scoreboard createScoreboard(Arena arena, String lang, Scoreboard scoreboard) {
         if(scoreboard == null) {
             scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         }
@@ -106,6 +115,7 @@ public class WaitingPhase implements PhaseControl {
 
         }
 
+        objective.getScore("§9").setScore(9);
         objective.getScore("§8").setScore(8);
         objective.getScore("§7").setScore(7);
         objective.getScore("§6").setScore(6);
@@ -116,8 +126,11 @@ public class WaitingPhase implements PhaseControl {
         objective.getScore("§1").setScore(1);
         objective.getScore("§0").setScore(0);
 
-        createTeam(scoreboard, "mode", "§f"+getTranslatedMessage(BWMessages.WORD_MODE, lang)+": ","§a","§7");
-        createTeam(scoreboard, "map", "§f"+getTranslatedMessage(BWMessages.WORD_MAP, lang)+": ","§a","§6");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDateTime now = LocalDateTime.now();
+        createTeam(scoreboard, "date","§7"+dtf.format(now),"","§9");
+        createTeam(scoreboard, "mode", "§f"+getTranslatedMessage(BWMessages.WORD_MODE, lang)+": ","§a","§6");
+        createTeam(scoreboard, "map", "§f"+getTranslatedMessage(BWMessages.WORD_MAP, lang)+": ","§a","§7");
         createTeam(scoreboard, "time", "§f"+getTranslatedMessage(BWMessages.WORD_TIME, lang),"","§4");
         createTeam(scoreboard, "players", "§f"+getTranslatedMessage(BWMessages.WORD_ONLINE, lang)+": ","§a-1","§2");
         createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");

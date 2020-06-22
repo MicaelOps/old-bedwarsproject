@@ -24,4 +24,7 @@ public class ShopCategory {
         return listitems;
     }
 
+    public void addItem(ShopItem item){
+        listitems.add(item);
+    }
 }

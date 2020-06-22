@@ -11,6 +11,7 @@ import br.com.logicmc.core.account.PlayerBase;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -34,8 +35,8 @@ public class BedDestroyedEvent extends PhaseEvent{
             Player everyone = Bukkit.getPlayer(uuid);
             PlayerBase<BWPlayer> playerbase = BWMain.getInstance().playermanager.getPlayerBase(uuid);
             BWTeam bwTeam = BWTeam.valueOf(playerbase.getData().getTeamcolor());
-            if(everyone.getDisplayName().contains(bwTeam.getChatColor()+""))
-                arena.updateScoreboardTeam(everyone, bwTeam.name(), ChatColor.RED+" X (You)");
+            everyone.playSound(everyone.getLocation(), Sound.ENDERDRAGON_GROWL, 10F, 10F);
+            arena.updateTeamArena(bwTeam);
             everyone.sendTitle("", ChatColor.RED+BWMain.getInstance().messagehandler.getMessage(BWMessages.BEDS_DESTROYED, playerbase.getPreferences().getLang()));
         }
 

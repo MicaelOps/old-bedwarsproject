@@ -10,6 +10,7 @@ public class IslandGenerator extends NormalGenerator{
 
     private ItemStack ironstack,goldstack;
     private int gold,emerald;
+    private boolean iron = false;
 
     public IslandGenerator(Location location) {
         super(location, Material.IRON_INGOT, null, 3);
@@ -24,32 +25,37 @@ public class IslandGenerator extends NormalGenerator{
     public void spawn() {
         gold-=1;
         boolean generategold = gold <= getTime();
-        if(getGeneratorlevel() == 0){
-            multiplespawn(generategold);
-        } else if(getGeneratorlevel() == 1){
-            multiplespawn(generategold);
-            multiplespawn(generategold);
-        } else if(getGeneratorlevel() == 2){
-            multiplespawn(generategold);
-            multiplespawn(generategold);
-            multiplespawn(generategold);
 
-            if(emerald <=getTime()) {
-                getLocation().getWorld().dropItem(getLocation(), new ItemStack(Material.EMERALD));
-                emerald+=60;
-            }
-            
-        } else if(getGeneratorlevel() == 3){
-            multiplespawn(generategold);
-            multiplespawn(generategold);
-            multiplespawn(generategold);
-            multiplespawn(generategold);
+        if(iron){
+            if(getGeneratorlevel() == 0){
+                multiplespawn(generategold);
+            } else if(getGeneratorlevel() == 1){
+                multiplespawn(generategold);
+                multiplespawn(generategold);
+            } else if(getGeneratorlevel() == 2){
+                multiplespawn(generategold);
+                multiplespawn(generategold);
+                multiplespawn(generategold);
 
-            if(emerald <=getTime()) {
-                getLocation().getWorld().dropItem(getLocation(), new ItemStack(Material.EMERALD));
-                emerald+=30;
+                if(emerald <=getTime()) {
+                    getLocation().getWorld().dropItem(getLocation(), new ItemStack(Material.EMERALD));
+                    emerald+=60;
+                }
+
+            } else if(getGeneratorlevel() == 3){
+                multiplespawn(generategold);
+                multiplespawn(generategold);
+                multiplespawn(generategold);
+                multiplespawn(generategold);
+
+                if(emerald <=getTime()) {
+                    getLocation().getWorld().dropItem(getLocation(), new ItemStack(Material.EMERALD));
+                    emerald+=30;
+                }
             }
-        }
+            iron = false;
+        } else
+            iron = true;
     }
 
     public void setIronstack(ItemStack ironstack) {

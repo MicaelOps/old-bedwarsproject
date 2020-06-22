@@ -5,15 +5,18 @@ import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.extra.FixedItems;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Arena;
+import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import br.com.logicmc.core.account.PlayerBase;
+import br.com.logicmc.core.addons.bossbar.Bossbar;
 import br.com.logicmc.core.events.PlayerJoinArenaEvent;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
+import net.minecraft.server.v1_8_R3.IChatBaseComponent;
+import net.minecraft.server.v1_8_R3.PacketPlayOutChat;
+import org.apache.commons.lang.WordUtils;
+import org.bukkit.*;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftItem;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -85,7 +88,8 @@ public class PlayerListeners implements Listener {
 
         arena.getPlayers().add(player.getUniqueId());
 
-        for(Player other : Bukkit.getOnlinePlayers()) {
+        for(UUID uuid : arena.getPlayers()) {
+            Player other = Bukkit.getPlayer(uuid);
             if(!event.getPlayer().getWorld().getName().equalsIgnoreCase(other.getLocation().getWorld().getName())) {
                 event.getPlayer().hidePlayer(other);
             } else {
@@ -105,6 +109,7 @@ public class PlayerListeners implements Listener {
         player.teleport(BWManager.getInstance().getArena(event.getArenaname()).getLobby());
         player.getEnderChest().clear();
         player.setHealth(20.0D);
+        player.setDisplayName("§7"+player.getName());
 
         if(arena.getGamestate() == Arena.WAITING){
 
@@ -141,13 +146,37 @@ public class PlayerListeners implements Listener {
 
         if(arena.getGamestate() == Arena.WAITING) {
             arena.decrementAllotedPlayers();
+            arena.getPreteam().remove(event.getPlayer().getUniqueId());
             for(UUID ingameplayers : arena.getPlayers()) {
                 arena.updateScoreboardTeam(Bukkit.getPlayer(ingameplayers), "players" , ChatColor.GRAY+""+arena.getPlayers().size());
             }
         } else if(arena.getGamestate() == Arena.INGAME){
-            BWManager.getInstance().getBWPlayer(event.getPlayer().getUniqueId()).increaseLoses();
+            BWPlayer bwPlayer = BWManager.getInstance().getBWPlayer(event.getPlayer().getUniqueId());
+            bwPlayer.increaseLoses();
             if(arena.checkend())
                 arena.changePhase();
+            else {
+                BWTeam team = BWTeam.valueOf(bwPlayer.getTeamcolor());
+                for(Island island : arena.getIslands()){
+                    if(island.getTeam().name().equalsIgnoreCase(bwPlayer.getTeamcolor())){
+                        if(arena.getTeamcomposition() == Arena.SOLO || (!island.isBedbroken() && arena.getMembersOfTeam(team).count() == 0L)){
+                            island.setBedbroken(true);
+                            island.getBed().getBlock().setType(Material.AIR);
+                            arena.updateTeamArena(team);
+                        } else if(island.isBedbroken()) {
+                            arena.updateTeamArena(team);
+                        }
+                    }
+                }
+
+                for (final UUID uuid : arena.getPlayers()) {
+                    final Player target = Bukkit.getPlayer(uuid);
+                    if(arena.getTeamcomposition() == Arena.SOLO)
+                        arena.updateScoreboardTeam(target, bwPlayer.getTeamcolor() , ChatColor.GREEN+"1");
+                    else
+                        arena.updateScoreboardTeam(target, bwPlayer.getTeamcolor() , ChatColor.GREEN+""+arena.getTeamcomposition());
+                }
+            }
         }
     }
     @EventHandler
@@ -160,7 +189,7 @@ public class PlayerListeners implements Listener {
 
         if(arena.getGamestate() == Arena.WAITING){
             for(UUID uuid : arena.getPlayers()){
-                Bukkit.getPlayer(uuid).sendMessage(ChatColor.WHITE+event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+                Bukkit.getPlayer(uuid).sendMessage(ChatColor.WHITE+event.getPlayer().getDisplayName()+": "+ChatColor.GRAY+event.getMessage());
             }
         } else {
             for(UUID uuid : arena.getPlayers()){
@@ -186,27 +215,51 @@ public class PlayerListeners implements Listener {
         if (item == null || item.getType().equals(Material.AIR))
             return;
 
-        if(item.getType() == Material.COMPASS)
-            event.setCancelled(true);
+        if(!event.getAction().name().contains("RIGHT"))
+            return;
 
-        if(!item.hasItemMeta() || !event.getAction().name().contains("RIGHT"))
+        Player player = event.getPlayer();
+        if(item.getType() == Material.COMPASS){
+            event.setCancelled(true);
+            Arena arena = BWManager.getInstance().getArena(player.getWorld().getName());
+            if(arena.getGamestate() == Arena.INGAME){
+                double lesserdistance = 9999;
+                Location location = null;
+                String displayname = null;
+                for(UUID uuid : arena.getPlayers()){
+                    Player nearby = Bukkit.getPlayer(uuid);
+                    if(nearby.getGameMode() == GameMode.SURVIVAL && player.getDisplayName().charAt(1) != nearby.getDisplayName().charAt(1)){
+                        double distance = player.getLocation().distance(nearby.getLocation());
+                        if(distance <= lesserdistance){
+                            location = nearby.getLocation();
+                            lesserdistance = distance;
+                            displayname = nearby.getDisplayName();
+                        }
+                    }
+                }
+                send(player, BWMain.getInstance().messagehandler.getMessage(BWMessages.WORD_TARGET, BWMain.getInstance().getLang(player)) +" "+ displayname + ChatColor.RESET + "- "+ChatColor.RED +lesserdistance+"m");
+                player.setCompassTarget(location);
+            }
+        }
+
+        if(!item.hasItemMeta())
             return;
 
         if(event.getAction().name().contains("RIGHT")) {
-            if(item.getType() == Material.WOOL && event.getPlayer().getGameMode() == GameMode.ADVENTURE){
-                PlayerBase<BWPlayer> base = BWMain.getInstance().playermanager.getPlayerBase(event.getPlayer().getUniqueId());
-                if(base.isVip() || base.isStaff()){
+            if(item.getType() == Material.WOOL && event.getPlayer().getGameMode() == GameMode.ADVENTURE) {
+                PlayerBase<BWPlayer> base = BWMain.getInstance().playermanager.getPlayerBase(player.getUniqueId());
+                if (base.isVip() || base.isStaff()) {
                     Inventory inventory = Bukkit.createInventory(null, 9, "Teams");
-                    for(BWTeam team : BWTeam.values()){
-                        ItemStack stack = new ItemStack(Material.WOOL, 1 , team.getData());
+                    for (BWTeam team : BWTeam.values()) {
+                        ItemStack stack = new ItemStack(Material.WOOL, 1, team.getData());
                         ItemMeta meta = stack.getItemMeta();
-                        meta.setDisplayName(team.getChatColor()+team.name());
+                        meta.setDisplayName(team.getChatColor() + team.name());
                         stack.setItemMeta(meta);
                         inventory.addItem(stack);
                     }
-                    event.getPlayer().openInventory(inventory);
+                    player.openInventory(inventory);
                 } else
-                    event.getPlayer().sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.ERROR_ONLY_VIP, base.getPreferences().getLang()));
+                    player.sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.ERROR_ONLY_VIP, base.getPreferences().getLang()));
             } else if(event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY)){
                 if(item.getType() == Material.ENDER_PEARL){
                     Arena arena = BWManager.getInstance().getArena(event.getPlayer().getWorld().getName());
@@ -230,4 +283,12 @@ public class PlayerListeners implements Listener {
         }
     }
 
+
+    private void send(Player player, String text){
+        String s = ChatColor.translateAlternateColorCodes('&', text);
+        IChatBaseComponent icbc = IChatBaseComponent.ChatSerializer.a("{\"text\": \"" + s +
+                "\"}");
+        PacketPlayOutChat bar = new PacketPlayOutChat(icbc, (byte)2);
+        ((CraftPlayer)player).getHandle().playerConnection.sendPacket(bar);
+    }
 }

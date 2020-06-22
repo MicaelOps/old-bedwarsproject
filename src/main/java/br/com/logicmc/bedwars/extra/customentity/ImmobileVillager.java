@@ -22,6 +22,11 @@ public class ImmobileVillager extends EntityVillager {
 
 
     @Override
+    public void makeSound(String s, float f, float f1) {
+
+    }
+
+    @Override
     public boolean damageEntity(DamageSource damagesource, float f) {
         return false;
     }

@@ -14,6 +14,6 @@ public interface PhaseControl {
 
     void stop(Arena arena);
 
-    Scoreboard createScoreboard(String lang, Scoreboard scoreboard);
+    Scoreboard createScoreboard(Arena arena, String lang, Scoreboard scoreboard);
 
 }

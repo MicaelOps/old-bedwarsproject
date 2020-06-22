@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -42,10 +43,10 @@ public class UpgradeItem {
         ItemStack stackcost = cost.apply(island);
         ItemStack itemStack = item.getBuild(BWMain.getInstance().messagehandler, lang);
         ItemMeta meta = itemStack.getItemMeta();
-        if(cost.apply(island).getType() == Material.AIR)
+        if(stackcost.getType() == Material.AIR)
             meta.setLore(Collections.singletonList(BWMain.getInstance().messagehandler.getMessage(BWMessages.MAXIMUM_UPGRADED, lang)));
         else
-            meta.setLore(Collections.singletonList(ChatColor.YELLOW + "" + stackcost.getAmount()+ " " + ChatColor.AQUA + "DIAMOND"));
+            meta.setLore(Arrays.asList(BWMain.getInstance().messagehandler.getMessage(BWMessages.WORD_COST, lang) + " " + ChatColor.AQUA + "" + stackcost.getAmount() + " DIAMOND", "", BWMain.getInstance().messagehandler.getMessage(BWMessages.CLICK_BUY, lang) ));
         itemStack.setItemMeta(meta);
         return itemStack;
     }

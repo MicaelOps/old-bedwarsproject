@@ -10,6 +10,7 @@ import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
 import br.com.logicmc.bedwars.game.phase.EndPhase;
 import br.com.logicmc.bedwars.game.phase.IngamePhase;
 import br.com.logicmc.bedwars.game.phase.WaitingPhase;
+import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import br.com.logicmc.core.system.server.ServerState;
 import net.minecraft.server.v1_8_R3.PacketPlayOutScoreboardTeam;
 import org.bukkit.Bukkit;
@@ -28,6 +29,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 
 public class Arena {
@@ -76,15 +78,13 @@ public class Arena {
 
     public void firstStartup(){
         initScoreboards();
-        controls[0].init(this);
-
     }
 
     private void initScoreboards(){
         for(PhaseControl control : controls) {
-            scoreboards[control.getIndex()] = control.createScoreboard("en",scoreboards[control.getIndex()]);
-            scoreboards[control.getIndex()+1] =  control.createScoreboard("pt",scoreboards[control.getIndex()+1]);
-            scoreboards[control.getIndex()+2] = control.createScoreboard("es",scoreboards[control.getIndex()+2]);
+            scoreboards[control.getIndex()] = control.createScoreboard(this,"en",scoreboards[control.getIndex()]);
+            scoreboards[control.getIndex()+1] =  control.createScoreboard(this,"pt",scoreboards[control.getIndex()+1]);
+            scoreboards[control.getIndex()+2] = control.createScoreboard(this,"es",scoreboards[control.getIndex()+2]);
             control.preinit(this);
         }
     }
@@ -99,7 +99,20 @@ public class Arena {
         action.accept(scoreboards[control.getIndex()+2]);
     }
 
-    public int getPositionScoreboard(String lang){
+    public void updateTeamArena(BWTeam bwTeam) {
+        long players = getMembersOfTeam(bwTeam).count();
+        for(UUID uuid : getPlayers()) {
+            String extra = BWManager.getInstance().getBWPlayer(uuid).getTeamcolor().equalsIgnoreCase(bwTeam.name()) ? ChatColor.GRAY+" (You)" : "";
+            if(players == 0L)
+                updateScoreboardTeam(Bukkit.getPlayer(uuid) , bwTeam.name(), ChatColor.RED+" ✗"+extra);
+            else
+                updateScoreboardTeam(Bukkit.getPlayer(uuid) , bwTeam.name() , ChatColor.GREEN+" "+players+extra);
+        }
+    }
+    public Stream<UUID> getMembersOfTeam(BWTeam team){
+        return getPlayers().stream().filter(uuid -> Bukkit.getPlayer(uuid).getGameMode() == GameMode.SURVIVAL&&BWManager.getInstance().getBWPlayer(uuid).getTeamcolor().equalsIgnoreCase(team.name()));
+    }
+    private int getPositionScoreboard(String lang){
         switch (lang) {
             case "pt":
                 return 1;

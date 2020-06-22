@@ -63,8 +63,8 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     private boolean maintenance;
     private Location spawnlocation;
 
-    private ShopCategory blocks, fight, utilities, tools;
-    private UpgradeItem sharpness, armor, forgery;
+    public ShopCategory blocks, swords, shoparmor, bows, utilities, tools, potions,quickshop;
+    public UpgradeItem sharpness, armor, forgery;
 
     @Override
     public void onEnable() {
@@ -157,34 +157,6 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         return instance;
     }
 
-
-    public ShopCategory getTools() {
-        return tools;
-    }
-
-    public UpgradeItem getArmor() {
-        return armor;
-    }
-
-    public UpgradeItem getSharpness() {
-        return sharpness;
-    }
-
-    public UpgradeItem getForgery() {
-        return forgery;
-    }
-
-    public ShopCategory getBlocks() {
-        return blocks;
-    }
-
-    public ShopCategory getFight() {
-        return fight;
-    }
-
-    public ShopCategory getUtilities() {
-        return utilities;
-    }
 
     @Override
     public ServerType getServerType() {
@@ -330,19 +302,22 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 }
                 for (NormalGenerator generator : diamond) {
                     generator.getLocation().setWorld(world);
-                    generator.setHologram(new Global(generator.getLocation().clone().subtract(0.0D,2.0D,0.0D)).setLine("10:00"));
+                    Global global = new Global(generator.getLocation().clone().subtract(0.0D,0.8D,0.0D));
+                    global.setLines(ChatColor.YELLOW + "Tier "+ChatColor.RED+"I",  ChatColor.BOLD+""+ChatColor.AQUA+"Diamond", "10:10");
+                    generator.setHologram(global);
                     generator.getHologram().build();
                 }
                 for (NormalGenerator generator : emerald) {
                     generator.getLocation().setWorld(world);
-                    generator.setHologram(new Global(generator.getLocation().clone().subtract(0.0D,2.0D,0.0D)).setLine("10:00"));
+                    Global global = new Global(generator.getLocation().clone().subtract(0.0D,0.7D,0.0D));
+                    global.setLines(ChatColor.YELLOW + "Tier "+ChatColor.RED+"I",  ChatColor.BOLD+""+ChatColor.GREEN+"Emerald", "10:10");
+                    generator.setHologram(global);
                     generator.getHologram().build();
                 }
                 Arena garena = new Arena(arena, 8, Arena.SOLO, spawnlobby, islands, diamond, emerald);
                 BWManager.getInstance().addGame(arena,
                         garena);
                 garena.startTimer(this);
-                garena.getPhase(0).preinit(garena);
                 
             }
         }
@@ -377,52 +352,68 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     private void loadItens(){
 
         blocks = new ShopCategory(FixedItems.SHOP_BLOCKS);
-        fight = new ShopCategory(FixedItems.SHOP_FIGHT);
+        swords = new ShopCategory(FixedItems.SHOP_FIGHT);
         utilities = new ShopCategory(FixedItems.SHOP_UTILITIES);
         tools = new ShopCategory(FixedItems.SHOP_TOOLS);
+        bows = new ShopCategory(FixedItems.SHOP_BOW);
+        potions = new ShopCategory(FixedItems.SHOP_POTIONS);
+        shoparmor = new ShopCategory(FixedItems.SHOP_ARMOR);
+        quickshop = new ShopCategory(FixedItems.SHOP_QUICKSHOP);
+
+        quickshop.addItem(new ShopItem(new ItemStack(Material.WOOL, 16), new ItemStack(Material.IRON_INGOT, 4)));
+        quickshop.addItem(new ShopItem(new ItemStack(Material.STONE_SWORD, 1), new ItemStack(Material.IRON_INGOT, 10)));
+        quickshop.addItem(new ShopItem(new ItemStack(Material.IRON_SWORD, 1), new ItemStack(Material.GOLD_INGOT, 7)));
+        quickshop.addItem(new ShopItem(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1), new ItemStack(Material.IRON_INGOT, 40)));
+        quickshop.addItem(new ShopItem(new ItemStack(Material.STONE_AXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
+        quickshop.addItem(new ShopItem(new ItemStack(Material.IRON_PICKAXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
+        quickshop.addItem(new ShopItem(new ItemStack(Material.SHEARS, 1), new ItemStack(Material.IRON_INGOT, 20)));
+        quickshop.addItem(new ShopItem(new ItemStack(Material.GOLDEN_APPLE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
+        quickshop.addItem(new ShopItem(new ItemStack(Material.SNOW_BALL, 1), new ItemStack(Material.IRON_INGOT, 40)));
+        quickshop.addItem(new ShopItem(new ItemStack(Material.FIREBALL, 1), new ItemStack(Material.IRON_INGOT, 40)));
         
-        blocks.getListitems().add(new ShopItem(new ItemStack(Material.WOOL, 16), new ItemStack(Material.IRON_INGOT, 4)));
-        blocks.getListitems().add(new ShopItem(new ItemStack(Material.HARD_CLAY, 16), new ItemStack(Material.IRON_INGOT, 12)));
-        blocks.getListitems().add(new ShopItem(new ItemStack(Material.WOOD, 16), new ItemStack(Material.GOLD_INGOT, 4)));
-        blocks.getListitems().add(new ShopItem(new ItemStack(Material.GLASS, 4), new ItemStack(Material.IRON_INGOT, 12)));
-        blocks.getListitems().add(new ShopItem(new ItemStack(Material.ENDER_STONE, 12), new ItemStack(Material.IRON_INGOT, 24)));
-        blocks.getListitems().add(new ShopItem(new ItemStack(Material.LADDER, 16), new ItemStack(Material.IRON_INGOT, 4)));
-        blocks.getListitems().add(new ShopItem(new ItemStack(Material.OBSIDIAN, 4), new ItemStack(Material.EMERALD, 4)));
+        blocks.addItem(new ShopItem(new ItemStack(Material.WOOL, 16), new ItemStack(Material.IRON_INGOT, 4)));
+        blocks.addItem(new ShopItem(new ItemStack(Material.HARD_CLAY, 16), new ItemStack(Material.IRON_INGOT, 12)));
+        blocks.addItem(new ShopItem(new ItemStack(Material.WOOD, 16), new ItemStack(Material.GOLD_INGOT, 4)));
+        blocks.addItem(new ShopItem(new ItemStack(Material.GLASS, 4), new ItemStack(Material.IRON_INGOT, 12)));
+        blocks.addItem(new ShopItem(new ItemStack(Material.ENDER_STONE, 12), new ItemStack(Material.IRON_INGOT, 24)));
+        blocks.addItem(new ShopItem(new ItemStack(Material.LADDER, 16), new ItemStack(Material.IRON_INGOT, 4)));
+        blocks.addItem(new ShopItem(new ItemStack(Material.OBSIDIAN, 4), new ItemStack(Material.EMERALD, 4)));
 
-        fight.getListitems().add(new ShopItem(new ItemStack(Material.STONE_SWORD, 1), new ItemStack(Material.IRON_INGOT, 10)));
-        fight.getListitems().add(new ShopItem(new ItemStack(Material.IRON_SWORD, 1), new ItemStack(Material.GOLD_INGOT, 7)));
-        fight.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_SWORD, 1), new ItemStack(Material.EMERALD, 4)));
+        swords.addItem(new ShopItem(new ItemStack(Material.STONE_SWORD, 1), new ItemStack(Material.IRON_INGOT, 10)));
+        swords.addItem(new ShopItem(new ItemStack(Material.IRON_SWORD, 1), new ItemStack(Material.GOLD_INGOT, 7)));
+        swords.addItem(new ShopItem(new ItemStack(Material.DIAMOND_SWORD, 1), new ItemStack(Material.EMERALD, 4)));
+        swords.addItem(new ShopItem(addEnchantment(Material.STICK, Enchantment.KNOCKBACK, 1), new ItemStack(Material.EMERALD, 4)));
 
-        fight.getListitems().add(new ShopItem(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1), new ItemStack(Material.IRON_INGOT, 40)));
-        fight.getListitems().add(new ShopItem(new ItemStack(Material.IRON_CHESTPLATE, 1), new ItemStack(Material.GOLD_INGOT, 12)));
-        fight.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_CHESTPLATE, 1), new ItemStack(Material.EMERALD, 7)));
+        shoparmor.addItem(new ShopItem(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1), new ItemStack(Material.IRON_INGOT, 40)));
+        shoparmor.addItem(new ShopItem(new ItemStack(Material.IRON_CHESTPLATE, 1), new ItemStack(Material.GOLD_INGOT, 12)));
+        shoparmor.addItem(new ShopItem(new ItemStack(Material.DIAMOND_CHESTPLATE, 1), new ItemStack(Material.EMERALD, 7)));
 
-        utilities.getListitems().add(new ShopItem(addEnchantment(Material.STICK, Enchantment.KNOCKBACK, 1), new ItemStack(Material.EMERALD, 4)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.SHEARS, 1), new ItemStack(Material.IRON_INGOT, 20)));
+        potions.addItem(new ShopItem(addPotion(PotionEffectType.SPEED, 45, 2), new ItemStack(Material.EMERALD, 1)));
+        potions.addItem(new ShopItem(addPotion(PotionEffectType.JUMP, 45, 5), new ItemStack(Material.EMERALD, 1)));
 
-        tools.getListitems().add(new ShopItem(new ItemStack(Material.WOOD_AXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
-        tools.getListitems().add(new ShopItem(new ItemStack(Material.STONE_AXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
-        tools.getListitems().add(new ShopItem(new ItemStack(Material.IRON_AXE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
-        tools.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_AXE, 1), new ItemStack(Material.GOLD_INGOT, 6)));
+        tools.addItem(new ShopItem(new ItemStack(Material.WOOD_AXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
+        tools.addItem(new ShopItem(new ItemStack(Material.STONE_AXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
+        tools.addItem(new ShopItem(new ItemStack(Material.IRON_AXE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
+        tools.addItem(new ShopItem(new ItemStack(Material.DIAMOND_AXE, 1), new ItemStack(Material.GOLD_INGOT, 6)));
 
-        tools.getListitems().add(new ShopItem(new ItemStack(Material.WOOD_PICKAXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
-        tools.getListitems().add(new ShopItem(new ItemStack(Material.IRON_PICKAXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
-        tools.getListitems().add(new ShopItem(new ItemStack(Material.GOLD_PICKAXE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
-        tools.getListitems().add(new ShopItem(new ItemStack(Material.DIAMOND_PICKAXE, 1), new ItemStack(Material.GOLD_INGOT, 6)));
+        tools.addItem(new ShopItem(new ItemStack(Material.WOOD_PICKAXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
+        tools.addItem(new ShopItem(new ItemStack(Material.IRON_PICKAXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
+        tools.addItem(new ShopItem(new ItemStack(Material.GOLD_PICKAXE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
+        tools.addItem(new ShopItem(new ItemStack(Material.DIAMOND_PICKAXE, 1), new ItemStack(Material.GOLD_INGOT, 6)));
 
+        bows.addItem(new ShopItem(new ItemStack(Material.BOW, 1), new ItemStack(Material.GOLD_INGOT, 12)));
+        bows.addItem(new ShopItem(addEnchantment(Material.BOW, Enchantment.ARROW_DAMAGE, 1), new ItemStack(Material.GOLD_INGOT, 24)));
+        bows.addItem(new ShopItem(addEnchantment(Material.BOW, Enchantment.ARROW_DAMAGE, 2), new ItemStack(Material.EMERALD, 6)));
 
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.BOW, 1), new ItemStack(Material.GOLD_INGOT, 12)));
-        utilities.getListitems().add(new ShopItem(addEnchantment(Material.BOW, Enchantment.ARROW_DAMAGE, 1), new ItemStack(Material.GOLD_INGOT, 24)));
-        utilities.getListitems().add(new ShopItem(addEnchantment(Material.BOW, Enchantment.ARROW_DAMAGE, 2), new ItemStack(Material.EMERALD, 6)));
-        utilities.getListitems().add(new ShopItem(addPotion(PotionEffectType.SPEED, 45, 2), new ItemStack(Material.EMERALD, 1)));
-        utilities.getListitems().add(new ShopItem(addPotion(PotionEffectType.JUMP, 45, 5), new ItemStack(Material.EMERALD, 1)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.GOLDEN_APPLE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.SNOW_BALL, 1), new ItemStack(Material.IRON_INGOT, 40)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.FIREBALL, 1), new ItemStack(Material.IRON_INGOT, 40)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.TNT, 1), new ItemStack(Material.GOLD_INGOT, 4)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.ENDER_PEARL, 1), new ItemStack(Material.EMERALD, 4)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.WATER_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 3)));
-        utilities.getListitems().add(new ShopItem(new ItemStack(Material.MILK_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 4)));
+        utilities.addItem(new ShopItem(new ItemStack(Material.COMPASS, 1), new ItemStack(Material.IRON_INGOT, 50)));
+        utilities.addItem(new ShopItem(new ItemStack(Material.SHEARS, 1), new ItemStack(Material.IRON_INGOT, 20)));
+        utilities.addItem(new ShopItem(new ItemStack(Material.GOLDEN_APPLE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
+        utilities.addItem(new ShopItem(new ItemStack(Material.SNOW_BALL, 1), new ItemStack(Material.IRON_INGOT, 40)));
+        utilities.addItem(new ShopItem(new ItemStack(Material.FIREBALL, 1), new ItemStack(Material.IRON_INGOT, 40)));
+        utilities.addItem(new ShopItem(new ItemStack(Material.TNT, 1), new ItemStack(Material.GOLD_INGOT, 4)));
+        utilities.addItem(new ShopItem(new ItemStack(Material.ENDER_PEARL, 1), new ItemStack(Material.EMERALD, 4)));
+        utilities.addItem(new ShopItem(new ItemStack(Material.WATER_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 3)));
+        utilities.addItem(new ShopItem(new ItemStack(Material.MILK_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 4)));
 
         sharpness = new UpgradeItem(FixedItems.UPGRADE_SHARPNESS,  (island) -> {
             int teamcomp = BWManager.getInstance().getArena(island.getArena()).getTeamcomposition();
@@ -533,7 +524,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     private ItemStack addPotion(PotionEffectType type , int duration, int power){
         ItemStack itemStack = new ItemStack(Material.POTION, 1);
         PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
-        potionMeta.addCustomEffect(new PotionEffect(type, duration, power), true);
+        potionMeta.addCustomEffect(new PotionEffect(type, duration, power), false);
         itemStack.setItemMeta(potionMeta);
         return itemStack;
     }
