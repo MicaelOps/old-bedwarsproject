@@ -68,9 +68,7 @@ public class WaitingPhase implements PhaseControl {
     @Override
     public void init(Arena arena) {
         arena.setGamestate(Arena.WAITING);
-        arena.setTime(500);
-        arena.forEachScoreboard(scoreboard -> scoreboard.getTeam("mode").setSuffix("§a"+(arena.getTeamcomposition() == Arena.SOLO ? "Solo" : "Squad")));
-        arena.forEachScoreboard(scoreboard -> scoreboard.getTeam("map").setSuffix("§a"+WordUtils.capitalize(arena.getName())));
+        arena.setTime(100);
      }
 
     @Override
@@ -91,7 +89,6 @@ public class WaitingPhase implements PhaseControl {
             createArmostand(normalGenerator.getLocation().clone().subtract(0.0D,4.0D, 0.0D), Material.EMERALD_BLOCK);
         }
         for(Island island : arena.getIslands()){
-            System.out.println(island.getName());
             new Global(island.getNpc().add(0.0D, 1.5D, 0.0D)).setLines(ChatColor.AQUA+"ITEM SHOP", ChatColor.YELLOW+"RIGHT CLICK").build();
             new Global(island.getUpgrade().add(0.0D, 1.5D, 0.0D)).setLines(ChatColor.AQUA+"UPGRADES", ChatColor.YELLOW+"RIGHT CLICK").build();
             EntityManager.getInstance().spawnImmobileVillager(island.getNpc(), "Shop");
@@ -112,7 +109,6 @@ public class WaitingPhase implements PhaseControl {
             objective = scoreboard.registerNewObjective("waiting" + new Random().nextInt(10000), "dummy");
             objective.setDisplayName("§e§lBED WARS");
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-
         }
 
         objective.getScore("§9").setScore(9);
@@ -129,8 +125,8 @@ public class WaitingPhase implements PhaseControl {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDateTime now = LocalDateTime.now();
         createTeam(scoreboard, "date","§7"+dtf.format(now),"","§9");
-        createTeam(scoreboard, "mode", "§f"+getTranslatedMessage(BWMessages.WORD_MODE, lang)+": ","§a","§6");
-        createTeam(scoreboard, "map", "§f"+getTranslatedMessage(BWMessages.WORD_MAP, lang)+": ","§a","§7");
+        createTeam(scoreboard, "mode", "§f"+getTranslatedMessage(BWMessages.WORD_MODE, lang)+": ","§a"+(arena.getTeamcomposition() == Arena.SOLO ? "Solo" : "Squad"),"§6");
+        createTeam(scoreboard, "map", "§f"+getTranslatedMessage(BWMessages.WORD_MAP, lang)+": ","§a"+WordUtils.capitalize(arena.getName()),"§7");
         createTeam(scoreboard, "time", "§f"+getTranslatedMessage(BWMessages.WORD_TIME, lang),"","§4");
         createTeam(scoreboard, "players", "§f"+getTranslatedMessage(BWMessages.WORD_ONLINE, lang)+": ","§a-1","§2");
         createTeam(scoreboard, "site", "§7www.logic","§7mc.com.br","§0");

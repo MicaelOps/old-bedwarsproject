@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftEntity;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -165,6 +166,8 @@ public class ShopInventoryListeners implements Listener {
 
         if(player.getGameMode() != GameMode.SURVIVAL)
             return;
+
+        System.out.println("asdas " + ((CraftEntity)entity).getHandle().getNBTTag().getString("CustomName"));
         if(entity.getType() == EntityType.VILLAGER){
 
             event.setCancelled(true);

@@ -11,22 +11,22 @@ public class EntityManager {
 
     public static EntityManager instance;
 
-    public static EntityManager getInstance(){
-
-        if(instance == null)
-            instance = new EntityManager();
-        
-        return instance;
-    }
-
-    public void registerEntities(){
+    private EntityManager(){
         addToMaps(SuperDragon.class, "EnderDragon", 63);
         addToMaps(ImmobileVillager.class, "Villager", 120);
+    }
+    public static EntityManager getInstance(){
+
+        if(instance == null) {
+
+            instance = new EntityManager();
+        }
+
+        return instance;
     }
 
     public void spawnImmobileVillager(Location location, String name){
         ImmobileVillager immobileVillager = new ImmobileVillager(((CraftWorld)location.getWorld()).getHandle());
-        immobileVillager.setCustomName(name);
         immobileVillager.setLocation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         ((CraftWorld)location.getWorld()).getHandle().addEntity(immobileVillager);
     }

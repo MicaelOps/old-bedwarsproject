@@ -84,9 +84,6 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             System.out.println("[Arena] Lobby location is null");
 
         CommandLoader.loadPackage(this, BWMain.class, "br.com.logicmc.bedwars.commands");
-        EntityManager.getInstance().registerEntities();
-
-
         super.onEnable();
 
         loadTranslations();

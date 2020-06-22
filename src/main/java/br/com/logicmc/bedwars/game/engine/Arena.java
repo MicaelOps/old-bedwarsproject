@@ -178,8 +178,8 @@ public class Arena {
 
         if(controls[phaseControl] instanceof EndPhase) {
             initScoreboards();
-            BWMain.getInstance().updateArena(getName());
             phaseControl = 0;
+            BWMain.getInstance().updateArena(getName());
         }else
             phaseControl+=1;
 
@@ -187,6 +187,7 @@ public class Arena {
             Player ingamePlayer = Bukkit.getPlayer(ingameplayers);
             ingamePlayer.setScoreboard(scoreboards[controls[phaseControl].getIndex()+getPositionScoreboard(BWMain.getInstance().playermanager.getPlayerBase(ingamePlayer).getPreferences().getLang())]);
         }
+
         controls[phaseControl].init(this);
     }
     public void changeTime() {

@@ -131,7 +131,7 @@ public class PhaseListener implements Listener {
                 event.setCancelled(true);
             }
         } else
-            event.setCancelled(event.getEntityType() != EntityType.PLAYER && event.getEntityType() != EntityType.DROPPED_ITEM && event.getEntityType() != EntityType.ARMOR_STAND&& event.getEntityType() != EntityType.ENDER_DRAGON);
+            event.setCancelled(event.getEntityType() != EntityType.SMALL_FIREBALL && event.getEntityType() != EntityType.IRON_GOLEM &&event.getEntityType() != EntityType.FIREBALL && event.getEntityType() != EntityType.PLAYER && event.getEntityType() != EntityType.DROPPED_ITEM && event.getEntityType() != EntityType.ARMOR_STAND&& event.getEntityType() != EntityType.ENDER_DRAGON&& event.getEntityType() != EntityType.VILLAGER);
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
