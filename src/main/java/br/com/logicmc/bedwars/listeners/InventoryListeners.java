@@ -41,7 +41,7 @@ public class InventoryListeners implements Listener {
             if (event.getInventory().getName().equalsIgnoreCase("Teams")) {
 
                 Player player = (Player) event.getWhoClicked();
-                BWTeam bwTeam = BWTeam.valueOf(stack.getItemMeta().getDisplayName().substring(2));
+                BWTeam bwTeam = BWTeam.getTeam(stack.getItemMeta().getDisplayName().substring(2));
                 Arena arena = BWManager.getInstance().getArena(player.getWorld().getName());
 
                 Optional<UUID> uuid = arena.getPreteam().keySet().stream().filter(uuid1 -> arena.getPreteam().get(uuid1).equalsIgnoreCase(bwTeam.name())).findFirst();

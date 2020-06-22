@@ -19,6 +19,7 @@ import org.bukkit.craftbukkit.v1_8_R3.entity.CraftItem;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -52,15 +53,21 @@ public class PlayerListeners implements Listener {
 
         BWPlayer bwPlayer =plugin.playermanager.getPlayerBase(player).getData();
 
-        BWManager.getInstance().getArenabyUUID(player.getUniqueId()).getPlayers().remove(player.getUniqueId());
+        Arena oldarena = BWManager.getInstance().getArenabyUUID(player.getUniqueId());
+
+        oldarena.getPlayers().remove(player.getUniqueId());
+
+        for(UUID uuid : oldarena.getPlayers()){
+            Bukkit.getPlayer(uuid).hidePlayer(player);
+        }
 
         if(!bwPlayer.getMapname().equalsIgnoreCase("staff")) {
             plugin.giveItem(player, 0, FixedItems.STAFF_ARENA_SPECTATE);
             bwPlayer.setMap(player.getWorld().getName());
             bwPlayer.setTeamcolor("");
         } else {
-            if(BWManager.getInstance().getArena(bwPlayer.getMapname()).checkend()){
-                BWManager.getInstance().getArena(bwPlayer.getMapname()).changePhase();
+            if(oldarena.checkend()){
+                oldarena.changePhase();
             }
         }
 
@@ -88,20 +95,24 @@ public class PlayerListeners implements Listener {
 
         arena.getPlayers().add(player.getUniqueId());
 
-        for(UUID uuid : arena.getPlayers()) {
-            Player other = Bukkit.getPlayer(uuid);
-            if(!event.getPlayer().getWorld().getName().equalsIgnoreCase(other.getLocation().getWorld().getName())) {
-                event.getPlayer().hidePlayer(other);
-            } else {
+        // newplayers in arena have to be hidden from players in other arenas
+        for(Player online : Bukkit.getOnlinePlayers()){
+            if(online.getWorld().getName().equalsIgnoreCase(player.getWorld().getName())) {
                 if(arena.getGamestate() == Arena.WAITING) {
-                    player.showPlayer(other);
+                    player.showPlayer(online);
                     player.setDisplayName(player.getName());
-                    other.showPlayer(player);
+                    online.showPlayer(player);
                 } else {
                     player.setDisplayName("[SPECTATOR] "+player.getName());
-                    player.showPlayer(other);
-                    other.hidePlayer(player);
+
+                    player.showPlayer(online);
+                    if(online.getGameMode() == GameMode.SURVIVAL)
+                        online.hidePlayer(player);
+                    else
+                        online.showPlayer(player);
                 }
+            } else {
+                player.hidePlayer(online);
             }
         }
 
@@ -110,6 +121,7 @@ public class PlayerListeners implements Listener {
         player.getEnderChest().clear();
         player.setHealth(20.0D);
         player.setDisplayName("§7"+player.getName());
+        player.setGameMode(GameMode.ADVENTURE);
 
         if(arena.getGamestate() == Arena.WAITING){
 
@@ -123,7 +135,6 @@ public class PlayerListeners implements Listener {
             arena.updateScoreboardForAll("players", ChatColor.GREEN+""+arena.getPlayers().size());
         } else {
             player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999, 3));
-            player.setGameMode(GameMode.SPECTATOR);
             player.setAllowFlight(true);
             player.setFlying(true);
             plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
@@ -253,15 +264,24 @@ public class PlayerListeners implements Listener {
                     for (BWTeam team : BWTeam.values()) {
                         ItemStack stack = new ItemStack(Material.WOOL, 1, team.getData());
                         ItemMeta meta = stack.getItemMeta();
-                        meta.setDisplayName(team.getChatColor() + team.name());
+                        meta.setDisplayName(team.getChatColor() + team.getName(base.getPreferences().getLang()));
                         stack.setItemMeta(meta);
                         inventory.addItem(stack);
                     }
                     player.openInventory(inventory);
                 } else
                     player.sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.ERROR_ONLY_VIP, base.getPreferences().getLang()));
+            } else if(item.getType() == Material.FIREBALL && event.getPlayer().getGameMode() == GameMode.SURVIVAL){
+                Location gotol = player.getEyeLocation().toVector().add(player.getEyeLocation().getDirection().multiply(2)).toLocation(player.getWorld());
+                Fireball fireball = player.getWorld().spawn( player.getLocation(), Fireball.class);
+                fireball.setDirection(gotol.toVector());
+                fireball.setBounce(false);
+                fireball.setIsIncendiary(true);
+                fireball.setYield(4F);
+                player.getInventory().setItemInHand(new ItemStack(Material.AIR));
             } else if(event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY)){
                 if(item.getType() == Material.ENDER_PEARL){
+                    event.setCancelled(true);
                     Arena arena = BWManager.getInstance().getArena(event.getPlayer().getWorld().getName());
                     Inventory inventory = Bukkit.createInventory(null, 18, "Players");
                     for(UUID uuid : arena.getPlayers()){

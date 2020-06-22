@@ -3,6 +3,7 @@ package br.com.logicmc.bedwars.listeners;
 import br.com.logicmc.bedwars.BWMain;
 import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.extra.FixedItems;
+import br.com.logicmc.bedwars.extra.customentity.ImmobileVillager;
 import br.com.logicmc.bedwars.game.BWManager;
 import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
@@ -167,12 +168,13 @@ public class ShopInventoryListeners implements Listener {
         if(player.getGameMode() != GameMode.SURVIVAL)
             return;
 
-        System.out.println("asdas " + ((CraftEntity)entity).getHandle().getNBTTag().getString("CustomName"));
+        net.minecraft.server.v1_8_R3.Entity d = ((CraftEntity)entity).getHandle();
+        String shop = ((ImmobileVillager)d).getShop();
         if(entity.getType() == EntityType.VILLAGER){
 
             event.setCancelled(true);
 
-            if(entity.getCustomName().equalsIgnoreCase("Upgrades")) {
+            if(shop.equalsIgnoreCase("Upgrades")) {
                 Inventory inventory = Bukkit.createInventory(null, 27, "Upgrades");
                 String lang = plugin.getLang(player);
                 for(Island island : BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getIslands()){

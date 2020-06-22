@@ -70,7 +70,6 @@ public class PhaseListener implements Listener {
                             arena.updateScoreboardTeam(player, "beds", ChatColor.GREEN + "" + bwPlayer.getData().getBeds());
                             for (final UUID uuid : arena.getPlayers()) {
                                 final Player target = Bukkit.getPlayer(uuid);
-                                System.out.println(target.getName());
                                 target.playSound(target.getLocation(), Sound.ENDERDRAGON_GROWL, 10F, 10F);
                                 String lang = plugin.playermanager.getPlayerBase(uuid).getPreferences().getLang();
                                 if(BWManager.getInstance().getBWPlayer(uuid).getTeamcolor().equalsIgnoreCase(bwTeam.name())){
@@ -79,10 +78,7 @@ public class PhaseListener implements Listener {
                                     target.sendMessage(plugin.messagehandler.getMessage(BWMessages.BED_DESTROYED, lang).replace("{bed}",bwTeam.getChatColor()+WordUtils.capitalize(bwTeam.name())).replace("{player}", player.getDisplayName()));
 
                                 }
-                                if(arena.getTeamcomposition() == Arena.SOLO)
-                                    arena.updateScoreboardTeam(target, bwTeam.name() , ChatColor.GREEN+" 1");
-                                else
-                                    arena.updateScoreboardTeam(target, bwTeam.name() , ChatColor.GREEN+""+arena.getTeamcomposition());
+                                arena.updateTeamArena(bwTeam);
                             }
                         }
                         break;
@@ -367,7 +363,6 @@ public class PhaseListener implements Listener {
                         Player other = Bukkit.getPlayer(uuid);
                         if(other.getGameMode() == GameMode.SURVIVAL){
                             other.showPlayer(player);
-                            player.showPlayer(other);
                         }
                     }
                     player.sendTitle("","");
@@ -386,7 +381,7 @@ public class PhaseListener implements Listener {
     }
     private boolean check(final Location location, final Entity player) {
         if (player instanceof Player)
-            return BWManager.getInstance().getArena(location.getWorld().getName()).getGamestate()  != Arena.INGAME || ((Player) player).hasPotionEffect(PotionEffectType.INVISIBILITY);
+            return BWManager.getInstance().getArena(location.getWorld().getName()).getGamestate()  != Arena.INGAME || ((Player) player).hasPotionEffect(PotionEffectType.INVISIBILITY) || ((Player) player).getGameMode() != GameMode.SURVIVAL;
         else
             return check(location);
     }

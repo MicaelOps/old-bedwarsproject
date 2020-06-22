@@ -64,15 +64,13 @@ public class UtilsCommands extends CommandAdapter {
 
         if(strings.length != 0){
             for(UUID uuid : arena.getPlayers()){
-                //ChatColor.BOLD+""+team.getChatColor()+team.name().charAt(0)+" §f"+WordUtils.capitalize(team.name().toLowerCase());
-
                 StringBuilder builder = new StringBuilder();
                 for(int i = 0; i < strings.length; i++){
-                    builder.append(strings[i]+" ");
+                    builder.append(strings[i]).append(" ");
                 }
 
-                if(player.getGameMode() != GameMode.SURVIVAL){
-                    if(Bukkit.getPlayer(uuid).getGameMode() != GameMode.SURVIVAL){
+                if(player.getGameMode() == GameMode.ADVENTURE){
+                    if(Bukkit.getPlayer(uuid).getGameMode() == GameMode.ADVENTURE){
                         Bukkit.getPlayer(uuid).sendMessage(player.getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+builder.toString());
                     }
                 } else {

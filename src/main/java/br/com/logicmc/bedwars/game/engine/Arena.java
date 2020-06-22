@@ -78,6 +78,7 @@ public class Arena {
 
     public void firstStartup(){
         initScoreboards();
+        controls[phaseControl].init(this);
     }
 
     private void initScoreboards(){
@@ -92,11 +93,6 @@ public class Arena {
         action.accept(scoreboards[controls[phaseControl].getIndex()]);
         action.accept(scoreboards[controls[phaseControl].getIndex()+1]);
         action.accept(scoreboards[controls[phaseControl].getIndex()+2]);
-    }
-    public void forEachPhaseScoreboard(PhaseControl control, Consumer<Scoreboard> action){
-        action.accept(scoreboards[control.getIndex()]);
-        action.accept(scoreboards[control.getIndex()+1]);
-        action.accept(scoreboards[control.getIndex()+2]);
     }
 
     public void updateTeamArena(BWTeam bwTeam) {

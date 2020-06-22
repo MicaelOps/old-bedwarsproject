@@ -293,11 +293,6 @@ public class IngamePhase implements PhaseControl {
     @Override
     public void preinit(Arena arena) {
 
-        arena.forEachPhaseScoreboard(this, scoreboard ->  {
-            for(BWTeam team : BWTeam.values()){
-                createTeam(scoreboard, team.name(),ChatColor.BOLD+""+team.getChatColor()+team.name().charAt(0)+" §f"+WordUtils.capitalize(team.name().toLowerCase()) ,ChatColor.GREEN+" ✓", "");
-            }
-        });
         int index = 0;
         for(BWTeam team : BWTeam.values()){
             for(int i = 0; i < arena.getTeamcomposition(); i++) {
@@ -322,6 +317,9 @@ public class IngamePhase implements PhaseControl {
 
         }
 
+        for(BWTeam team : BWTeam.values()){
+            createTeam(scoreboard, team.name(),ChatColor.BOLD+""+team.getChatColor()+team.getName(lang).charAt(0)+" §f"+WordUtils.capitalize(team.getName(lang).toLowerCase()) ,ChatColor.GREEN+" ✓", "");
+        }
         objective.getScore("§b").setScore(1);
         objective.getScore("§a").setScore(0);
 

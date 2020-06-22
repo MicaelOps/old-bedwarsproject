@@ -6,8 +6,13 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 public class ImmobileVillager extends EntityVillager {
-    public ImmobileVillager(World world) {
+
+    private final String string;
+
+    public ImmobileVillager(World world, String string) {
         super(world);
+
+        this.string = string;
 
         //clearing entity intelligence
         List<?> goalB = (List<?>)getPrivateField("b", PathfinderGoalSelector.class, goalSelector); goalB.clear();
@@ -31,23 +36,9 @@ public class ImmobileVillager extends EntityVillager {
 
     }
 
-    @Override
-    public void f(NBTTagCompound nbttagcompound) {
-        super.f(nbttagcompound);
-        nbttagcompound.setString("CustomName", "Sshop");
-        nbttagcompound.setByte("CustomNameVisible", (byte)0);
-    }
 
-    @Override
-    public void e(NBTTagCompound nbttagcompound) {
-        super.e(nbttagcompound);
-        nbttagcompound.setString("CustomName", "Sshop");
-        nbttagcompound.setByte("CustomNameVisible", (byte)0);
-    }
-
-    @Override
-    public void setCustomName(String s) {
-        getNBTTag().setString("CustomName", "Sshop");
+    public String getShop(){
+        return string;
     }
 
     @Override

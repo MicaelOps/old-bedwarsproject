@@ -26,7 +26,7 @@ public class EntityManager {
     }
 
     public void spawnImmobileVillager(Location location, String name){
-        ImmobileVillager immobileVillager = new ImmobileVillager(((CraftWorld)location.getWorld()).getHandle());
+        ImmobileVillager immobileVillager = new ImmobileVillager(((CraftWorld)location.getWorld()).getHandle(), name);
         immobileVillager.setLocation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         ((CraftWorld)location.getWorld()).getHandle().addEntity(immobileVillager);
     }

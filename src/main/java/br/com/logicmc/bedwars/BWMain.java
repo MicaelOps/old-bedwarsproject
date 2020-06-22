@@ -311,7 +311,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                     generator.setHologram(global);
                     generator.getHologram().build();
                 }
-                Arena garena = new Arena(arena, 8, Arena.SOLO, spawnlobby, islands, diamond, emerald);
+                Arena garena = new Arena(arena, 8, Arena.DUO, spawnlobby, islands, diamond, emerald);
                 BWManager.getInstance().addGame(arena,
                         garena);
                 garena.startTimer(this);
@@ -521,7 +521,8 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
     private ItemStack addPotion(PotionEffectType type , int duration, int power){
         ItemStack itemStack = new ItemStack(Material.POTION, 1);
         PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
-        potionMeta.addCustomEffect(new PotionEffect(type, duration, power), false);
+        potionMeta.addCustomEffect(new PotionEffect(type, duration, power), true);
+        potionMeta.setMainEffect(type);
         itemStack.setItemMeta(potionMeta);
         return itemStack;
     }

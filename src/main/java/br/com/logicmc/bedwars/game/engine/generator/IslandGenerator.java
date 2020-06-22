@@ -23,10 +23,11 @@ public class IslandGenerator extends NormalGenerator{
 
     @Override
     public void spawn() {
-        gold-=1;
-        boolean generategold = gold <= getTime();
+
 
         if(iron){
+            boolean generategold = gold <= getTime();
+            gold-=1;
             if(getGeneratorlevel() == 0){
                 multiplespawn(generategold);
             } else if(getGeneratorlevel() == 1){
