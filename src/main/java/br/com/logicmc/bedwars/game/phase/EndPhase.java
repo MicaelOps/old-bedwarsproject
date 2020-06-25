@@ -18,6 +18,8 @@ import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -49,8 +51,14 @@ public class EndPhase implements PhaseControl {
                 BWMain.getInstance().sendRedirect(Bukkit.getPlayer(uuid),"lobbybedwars-1");
             }
         } else if(time == (kickall+5)){
-            arena.getBlocks().forEach(location -> location.getBlock().setType(Material.AIR));
+            arena.getBlocks().forEach(simpleBlock -> simpleBlock.toLocation(arena.getName()).getBlock().setType(Material.AIR));
             arena.getBlocks().clear();
+            arena.getDestroyedBlocks().forEach(destroyedBlock -> {
+                Block block = destroyedBlock.getSimpleBlock().toLocation(arena.getName()).getBlock();
+                block.setType(destroyedBlock.getType());
+                block.setData(destroyedBlock.getData());
+            });
+            Bukkit.getWorld(arena.getName()).getEntitiesByClass(EnderDragon.class).forEach(Entity::remove);
             arena.getPreteam().clear();
             arena.getPlayers().clear();
             arena.getIslands().clear();
@@ -59,8 +67,6 @@ public class EndPhase implements PhaseControl {
             world.getEntities().forEach(Entity::remove);
             world.getLivingEntities().forEach(LivingEntity::remove);
             YamlFile mainconfig = BWMain.getInstance().mainconfig;
-            Schematic schematic = Schematic.read(new File(BWMain.getInstance().getDataFolder(), arena.getName() + ".schematic"));
-            schematic.paste(new Location(world, 250, 100, 250));
             mainconfig.loopThroughSectionKeys(arena.getName()+".islands", (visland) -> {
                 arena.getIslands().add(new Island(visland, arena.getName(),
                         BWTeam.valueOf(mainconfig.getConfig()
@@ -87,6 +93,7 @@ public class EndPhase implements PhaseControl {
                     island.getUpgrade().setWorld(world);
             }
 
+            arena.getDestroyedBlocks().clear();
             arena.setGamestate(Arena.WAITING);
             arena.getPhase(0).preinit(arena);
             arena.changePhase();

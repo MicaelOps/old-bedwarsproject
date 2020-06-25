@@ -37,6 +37,9 @@ public class Island {
         forgery = 0;
         sharpness = 0;
         armor = 0;
+
+        this.npc.setY(Double.sum(this.npc.getBlockY(), 0.9));
+        this.upgrade.setY(Double.sum(this.upgrade.getBlockY(), 0.9));
     }
 
     public String getArena() {

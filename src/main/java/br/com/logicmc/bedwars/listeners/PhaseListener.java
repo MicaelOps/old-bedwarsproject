@@ -4,6 +4,8 @@ import br.com.logicmc.bedwars.BWMain;
 import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.extra.FixedItems;
 import br.com.logicmc.bedwars.game.BWManager;
+import br.com.logicmc.bedwars.game.addons.DestroyedBlock;
+import br.com.logicmc.bedwars.game.addons.SimpleBlock;
 import br.com.logicmc.bedwars.game.engine.Arena;
 import br.com.logicmc.bedwars.game.engine.Island;
 import br.com.logicmc.bedwars.game.player.BWPlayer;
@@ -12,7 +14,6 @@ import br.com.logicmc.core.account.PlayerBase;
 
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftItem;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -26,6 +27,7 @@ import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -44,10 +46,14 @@ public class PhaseListener implements Listener {
     
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockdamage(final EntityExplodeEvent event) {
+
         if(event.getEntityType() == EntityType.PRIMED_TNT){
-            event.blockList().removeIf(block->!BWManager.getInstance().getArena(block.getLocation().getWorld().getName()).getBlocks().contains(block.getLocation()));
+            event.blockList().removeIf(block->!BWManager.getInstance().getArena(block.getLocation().getWorld().getName()).getBlocks().contains(new SimpleBlock(block.getLocation())));
+        } else {
+            event.blockList().forEach(block->BWManager.getInstance().getArena(block.getLocation().getWorld().getName()).getDestroyedBlocks().add(new DestroyedBlock(new SimpleBlock(block.getLocation()), block.getType(), block.getData())));
         }
     }
+
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockbuild(final BlockBreakEvent event){
@@ -85,10 +91,13 @@ public class PhaseListener implements Listener {
                     }
                 }
             } else {
-                final HashSet<Location> blocks = BWManager.getInstance().getArena(event.getBlock().getLocation().getWorld().getName()).getBlocks();
-                if (blocks.contains(event.getBlock().getLocation())) {
-                    blocks.remove(event.getBlock().getLocation());
-                } else
+                final HashSet<SimpleBlock> blocks = BWManager.getInstance().getArena(event.getBlock().getLocation().getWorld().getName()).getBlocks();
+
+                SimpleBlock simpleBlock = new SimpleBlock(event.getBlock().getLocation());
+
+                if (blocks.contains(simpleBlock))
+                    blocks.remove(simpleBlock);
+                 else
                     event.setCancelled(true);
             }
         }
@@ -105,7 +114,7 @@ public class PhaseListener implements Listener {
                 }
             }
             if(!event.isCancelled())
-                BWManager.getInstance().getArena(event.getBlock().getLocation().getWorld().getName()).getBlocks().add(event.getBlock().getLocation());
+                BWManager.getInstance().getArena(event.getBlockPlaced().getLocation().getWorld().getName()).getBlocks().add(new SimpleBlock(event.getBlockPlaced().getLocation()));
         }
     }
     
@@ -128,6 +137,11 @@ public class PhaseListener implements Listener {
             }
         } else
             event.setCancelled(event.getEntityType() != EntityType.SMALL_FIREBALL && event.getEntityType() != EntityType.IRON_GOLEM &&event.getEntityType() != EntityType.FIREBALL && event.getEntityType() != EntityType.PLAYER && event.getEntityType() != EntityType.DROPPED_ITEM && event.getEntityType() != EntityType.ARMOR_STAND&& event.getEntityType() != EntityType.ENDER_DRAGON&& event.getEntityType() != EntityType.VILLAGER);
+    }
+
+    @EventHandler
+    public void weater(WeatherChangeEvent event){
+        event.setCancelled(true);
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
@@ -309,10 +323,13 @@ public class PhaseListener implements Listener {
 
                                 for (final UUID uuid : arena.getPlayers()) {
                                     Player other = Bukkit.getPlayer(uuid);
-                                    other.sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.PLAYER_KILLED_BY_PLAYER, BWMain.getInstance().getLang(other)).replace("{damager}", ((Player) event.getDamager()).getDisplayName()+"§7").replace("{player}",player.getDisplayName()+"§7"));
-                                    if(other.getGameMode() == GameMode.SURVIVAL){
+
+                                    if(event.getDamager() instanceof Player)
+                                        other.sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.PLAYER_KILLED_BY_PLAYER, BWMain.getInstance().getLang(other)).replace("{damager}", ((Player) event.getDamager()).getDisplayName()+"§7").replace("{player}",player.getDisplayName()+"§7"));
+
+                                    if(other.getGameMode() == GameMode.SURVIVAL)
                                         other.hidePlayer(player);
-                                    }
+
                                 }
                                 respawn(arena, island, bwPlayer, player);
                                 break;

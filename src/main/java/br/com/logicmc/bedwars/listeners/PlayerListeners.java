@@ -22,6 +22,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.*;
@@ -190,27 +191,29 @@ public class PlayerListeners implements Listener {
             }
         }
     }
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void chat(AsyncPlayerChatEvent event){
-        event.setCancelled(true);
-        Arena arena = BWManager.getInstance().getArena(event.getPlayer().getLocation().getWorld().getName());
+        if(!event.isCancelled()){
+            event.setCancelled(true);
+            Arena arena = BWManager.getInstance().getArena(event.getPlayer().getLocation().getWorld().getName());
 
-        if(event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY))
-            return;
+            if(event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY))
+                return;
 
-        if(arena.getGamestate() == Arena.WAITING){
-            for(UUID uuid : arena.getPlayers()){
-                Bukkit.getPlayer(uuid).sendMessage(ChatColor.WHITE+event.getPlayer().getDisplayName()+": "+ChatColor.GRAY+event.getMessage());
-            }
-        } else {
-            for(UUID uuid : arena.getPlayers()){
-                if(event.getPlayer().getGameMode() != GameMode.SURVIVAL){
-                    if(Bukkit.getPlayer(uuid).getGameMode() != GameMode.SURVIVAL){
-                        Bukkit.getPlayer(uuid).sendMessage(event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
-                    }
-                } else {
-                    if(Bukkit.getPlayer(uuid).getDisplayName().charAt(1) == event.getPlayer().getDisplayName().charAt(1)){
-                        Bukkit.getPlayer(uuid).sendMessage(ChatColor.GREEN+"[TEAM] "+event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+            if(arena.getGamestate() == Arena.WAITING){
+                for(UUID uuid : arena.getPlayers()){
+                    Bukkit.getPlayer(uuid).sendMessage(ChatColor.WHITE+event.getPlayer().getDisplayName()+": "+ChatColor.GRAY+event.getMessage());
+                }
+            } else {
+                for(UUID uuid : arena.getPlayers()){
+                    if(event.getPlayer().getGameMode() != GameMode.SURVIVAL){
+                        if(Bukkit.getPlayer(uuid).getGameMode() != GameMode.SURVIVAL){
+                            Bukkit.getPlayer(uuid).sendMessage(event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+                        }
+                    } else {
+                        if(Bukkit.getPlayer(uuid).getDisplayName().charAt(1) == event.getPlayer().getDisplayName().charAt(1)){
+                            Bukkit.getPlayer(uuid).sendMessage(ChatColor.GREEN+"[TEAM] "+event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
+                        }
                     }
                 }
             }

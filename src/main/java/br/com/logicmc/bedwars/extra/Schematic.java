@@ -91,7 +91,7 @@ public class Schematic{
                     Material material = Material.getMaterial(blocks[index]);
                     Location pastelocation = new Location(location.getWorld(), x,y,z).add(location);
                     Block block = location.getWorld().getBlockAt(pastelocation);
-                    if(block.getType() != material) {
+                    if(block.getType() != material  || block.getData() != data[index]) {
                         block.setType(material);
                         block.setData(data[index]);
                     }

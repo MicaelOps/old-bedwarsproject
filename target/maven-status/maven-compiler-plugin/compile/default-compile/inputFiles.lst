@@ -1,5 +1,4 @@
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\commands\UtilsCommands.java
-C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\commands\PartyCommand.java
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\game\phase\IngamePhase.java
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\game\shop\upgrades\UpgradeItem.java
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\game\addons\TimeScheduler.java
@@ -12,9 +11,11 @@ C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\be
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\game\phase\event\BedDestroyedEvent.java
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\game\phase\event\PhaseEvent.java
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\BWMain.java
+C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\game\addons\DestroyedBlock.java
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\game\shop\ShopCategory.java
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\game\engine\generator\IGenerator.java
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\game\player\team\BWTeam.java
+C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\game\addons\SimpleBlock.java
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\listeners\PlayerListeners.java
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\game\phase\event\GeneratorEvent.java
 C:\Users\vitindev\Desktop\logic-projects\bedwars\src\main\java\br\com\logicmc\bedwars\listeners\ShopInventoryListeners.java

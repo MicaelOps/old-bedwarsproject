@@ -83,14 +83,20 @@ public class WaitingPhase implements PhaseControl {
     public void preinit(Arena arena) {
 
 		for(NormalGenerator normalGenerator : arena.getDiamond()) {
-		    createArmostand(normalGenerator.getLocation().clone().subtract(0.0D,4.0D, 0.0D), Material.DIAMOND_BLOCK);
+            Global global = new Global(normalGenerator.getLocation().clone().add(0.0D, 1.0D, 0.0D));
+            global.setLines(ChatColor.YELLOW + "Tier "+ChatColor.RED+"I",  ChatColor.BOLD+""+ChatColor.AQUA+"Diamond", "10:10");
+            normalGenerator.setHologram(global);
+            normalGenerator.getHologram().build();
         }
         for(NormalGenerator normalGenerator : arena.getEmerald()) {
-            createArmostand(normalGenerator.getLocation().clone().subtract(0.0D,4.0D, 0.0D), Material.EMERALD_BLOCK);
+            Global global = new Global(normalGenerator.getLocation().clone().add(0.0D, 1.0D, 0.0D));
+            global.setLines(ChatColor.YELLOW + "Tier "+ChatColor.RED+"I",  ChatColor.BOLD+""+ChatColor.GREEN+"Emerald", "10:10");
+            normalGenerator.setHologram(global);
+            normalGenerator.getHologram().build();
         }
         for(Island island : arena.getIslands()){
-            new Global(island.getNpc().add(0.0D, 1.5D, 0.0D)).setLines(ChatColor.AQUA+"ITEM SHOP", ChatColor.YELLOW+"RIGHT CLICK").build();
-            new Global(island.getUpgrade().add(0.0D, 1.5D, 0.0D)).setLines(ChatColor.AQUA+"UPGRADES", ChatColor.YELLOW+"RIGHT CLICK").build();
+            new Global(island.getNpc().add(0.0D, 0.5D, 0.0D)).setLines(ChatColor.AQUA+"ITEM SHOP", ChatColor.YELLOW+"RIGHT CLICK").build();
+            new Global(island.getUpgrade().add(0.0D, 0.5D, 0.0D)).setLines(ChatColor.AQUA+"UPGRADES", ChatColor.YELLOW+"RIGHT CLICK").build();
             EntityManager.getInstance().spawnImmobileVillager(island.getNpc(), "Shop");
             EntityManager.getInstance().spawnImmobileVillager(island.getUpgrade(), "Upgrades");
         }

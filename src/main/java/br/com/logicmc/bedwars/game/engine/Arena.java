@@ -5,6 +5,8 @@ import br.com.logicmc.bedwars.BWMain;
 import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.extra.YamlFile;
 import br.com.logicmc.bedwars.game.BWManager;
+import br.com.logicmc.bedwars.game.addons.DestroyedBlock;
+import br.com.logicmc.bedwars.game.addons.SimpleBlock;
 import br.com.logicmc.bedwars.game.addons.TimeScheduler;
 import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
 import br.com.logicmc.bedwars.game.phase.EndPhase;
@@ -18,12 +20,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_8_R3.scoreboard.CraftScoreboard;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 
 import java.lang.reflect.Field;
@@ -46,12 +46,13 @@ public class Arena {
     private final int teamcomposition;
     private final HashSet<UUID> players;
     private final HashSet<Island> islands;
-    private final HashSet<Location> blocks;
+    private final HashSet<SimpleBlock> blocks;
+    private final HashSet<DestroyedBlock> destroyedBlocks;
     private final HashSet<NormalGenerator> diamond,emerald;
-    private PhaseControl[] controls;
-    private Scoreboard[] scoreboards;
+    private final PhaseControl[] controls;
+    private final Scoreboard[] scoreboards;
 
-    private Location lobby;
+    private final Location lobby;
     private int phaseControl;
     private int gamestate , time,allotedplayers;
 
@@ -66,6 +67,7 @@ public class Arena {
         this.islands = islands;
         this.lobby = lobby;
         blocks = new HashSet<>();
+        destroyedBlocks = new HashSet<>();
         players = new HashSet<>();
         time = 500;
         allotedplayers = 0;
@@ -118,7 +120,12 @@ public class Arena {
                 return 0;
         }
     }
-    public HashSet<Location> getBlocks() {
+
+    public HashSet<DestroyedBlock> getDestroyedBlocks() {
+        return destroyedBlocks;
+    }
+
+    public HashSet<SimpleBlock> getBlocks() {
         return blocks;
     }
 
@@ -175,6 +182,7 @@ public class Arena {
         if(controls[phaseControl] instanceof EndPhase) {
             initScoreboards();
             phaseControl = 0;
+            setGamestate(WAITING);
             BWMain.getInstance().updateArena(getName());
         }else
             phaseControl+=1;
@@ -253,12 +261,8 @@ public class Arena {
         YamlFile file = BWMain.getInstance().mainconfig;
         cleanSection(file, getName()+".diamond");
         cleanSection(file, getName()+".emerald");
-        diamond.forEach(diamondd -> {
-            file.setLocation(getName()+".diamond.d"+new Random().nextInt(10000), diamondd.getLocation());
-        });
-        emerald.forEach(emeraldd -> {
-            file.setLocation(getName()+".emerald.e"+new Random().nextInt(10000), emeraldd.getLocation());
-        });
+        diamond.forEach(diamondd -> file.setLocation(getName()+".diamond.d"+new Random().nextInt(10000), diamondd.getLocation()));
+        emerald.forEach(emeraldd -> file.setLocation(getName()+".emerald.e"+new Random().nextInt(10000), emeraldd.getLocation()));
         islands.forEach(island -> island.save(getName(), file));
     }
     private void cleanSection(YamlFile config, String path) {

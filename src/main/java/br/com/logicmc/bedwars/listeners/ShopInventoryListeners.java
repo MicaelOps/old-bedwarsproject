@@ -79,11 +79,17 @@ public class ShopInventoryListeners implements Listener {
                         if(cost.getType() != Material.AIR && upgrade != null){
                             if(player.getInventory().contains(cost.getType(), cost.getAmount())) {
                                 upgrade.accept(island);
+                                removeItem(cost,player.getInventory());
                                 player.closeInventory();
-                            } else
+                                player.playSound(player.getLocation(), Sound.ANVIL_USE, 20F , 20F);
+                            } else {
+                                player.playSound(player.getLocation(), Sound.BLAZE_HIT, 10F, 10F);
                                 plugin.messagehandler.sendMessage(player, BWMessages.MISSING_AMOUNT);
-                        } else
+                            }
+                        } else {
+                            player.playSound(player.getLocation(), Sound.BLAZE_HIT, 10F, 10F);
                             plugin.messagehandler.sendMessage(player, BWMessages.ERROR_MAXIMUM_UPGRADED);
+                        }
                         break;
                     }
                 }
@@ -152,6 +158,10 @@ public class ShopInventoryListeners implements Listener {
                     }
                 } else {
                     openShop(stack, (Player) event.getWhoClicked(), event.getInventory());
+
+
+                    ItemStack stack1 = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)5);
+                    event.getInventory().setItem(event.getSlot()+9, stack1);
                 }
             }
 
@@ -206,12 +216,14 @@ public class ShopInventoryListeners implements Listener {
             inventory.setItem(6, plugin.bows.getMenu().getBuild(plugin.messagehandler, lang));
             inventory.setItem(7, plugin.potions.getMenu().getBuild(plugin.messagehandler, lang));
             inventory.setItem(8, plugin.utilities.getMenu().getBuild(plugin.messagehandler, lang));
-            ItemStack stack1 = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)7);
-            inventory.setItem(1, stack1);
-            for(int i = 9; i < 18; i++){
-                inventory.setItem(i, stack1);
-            }
         }
+
+        ItemStack stack1 = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)10);
+        inventory.setItem(1, stack1);
+        for(int i = 9; i < 18; i++){
+            inventory.setItem(i, stack1);
+        }
+
         List<ShopItem> itemList = new ArrayList<>();
 
         if(stack == null || stack.getType() == FixedItems.SHOP_QUICKSHOP.getMaterial())

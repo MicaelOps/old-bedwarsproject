@@ -11,7 +11,6 @@ commands:
   tempmute:
   mute:
   lobby:
-  party:
   tempo:
   setisland:
   setlobby:
@@ -21,7 +20,9 @@ commands:
   unmute:
   tempban:
   ban:
-  ping:
   admin:
   kick:
   memory:
+  connect:
+  reportlist:
+  silence:

@@ -192,16 +192,6 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         return arrayList;
     }
 
-    private void deleteFolder(File folder) {
-        for (File file : folder.listFiles()) {
-            if (file.isDirectory())
-                deleteFolder(file);
-            else
-                file.delete();
-        }
-        folder.delete();
-    }
-
     @Deprecated
     @Override
     public List<String> loadArenas() {
@@ -299,17 +289,9 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 }
                 for (NormalGenerator generator : diamond) {
                     generator.getLocation().setWorld(world);
-                    Global global = new Global(generator.getLocation().clone().subtract(0.0D,0.8D,0.0D));
-                    global.setLines(ChatColor.YELLOW + "Tier "+ChatColor.RED+"I",  ChatColor.BOLD+""+ChatColor.AQUA+"Diamond", "10:10");
-                    generator.setHologram(global);
-                    generator.getHologram().build();
                 }
                 for (NormalGenerator generator : emerald) {
                     generator.getLocation().setWorld(world);
-                    Global global = new Global(generator.getLocation().clone().subtract(0.0D,0.7D,0.0D));
-                    global.setLines(ChatColor.YELLOW + "Tier "+ChatColor.RED+"I",  ChatColor.BOLD+""+ChatColor.GREEN+"Emerald", "10:10");
-                    generator.setHologram(global);
-                    generator.getHologram().build();
                 }
                 Arena garena = new Arena(arena, 8, Arena.DUO, spawnlobby, islands, diamond, emerald);
                 BWManager.getInstance().addGame(arena,
@@ -401,6 +383,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         bows.addItem(new ShopItem(new ItemStack(Material.BOW, 1), new ItemStack(Material.GOLD_INGOT, 12)));
         bows.addItem(new ShopItem(addEnchantment(Material.BOW, Enchantment.ARROW_DAMAGE, 1), new ItemStack(Material.GOLD_INGOT, 24)));
         bows.addItem(new ShopItem(addEnchantment(Material.BOW, Enchantment.ARROW_DAMAGE, 2), new ItemStack(Material.EMERALD, 6)));
+        bows.addItem(new ShopItem(new ItemStack(Material.ARROW, 8), new ItemStack(Material.GOLD_INGOT, 2)));
 
         utilities.addItem(new ShopItem(new ItemStack(Material.COMPASS, 1), new ItemStack(Material.IRON_INGOT, 50)));
         utilities.addItem(new ShopItem(new ItemStack(Material.SHEARS, 1), new ItemStack(Material.IRON_INGOT, 20)));

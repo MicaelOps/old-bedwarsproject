@@ -51,14 +51,15 @@ public class InventoryListeners implements Listener {
                 } else {
                     player.closeInventory();
 
+                    String lang = BWMain.getInstance().getLang(player);
                     player.getInventory().remove(Material.WOOL);
                     plugin.playermanager.getPlayerBase(player.getUniqueId()).getData().setTeamcolor(bwTeam.name());
-                    player.sendMessage(bwTeam.getChatColor() + bwTeam.name() + " selected");
+                    player.sendMessage(bwTeam.getChatColor() + bwTeam.getName(lang) + " selected");
                     BWManager.getInstance().getArena(player.getLocation().getWorld().getName()).getPreteam().put(player.getUniqueId(), bwTeam.name());
 
                     ItemStack vv = new ItemStack(Material.WOOL, 1, bwTeam.getData());
                     ItemMeta meta = stack.getItemMeta();
-                    meta.setDisplayName(bwTeam.getChatColor() + bwTeam.name());
+                    meta.setDisplayName(bwTeam.getChatColor() + bwTeam.getName(lang));
                     vv.setItemMeta(meta);
                     player.getInventory().addItem(vv);
                     player.getInventory().setHelmet(vv);
