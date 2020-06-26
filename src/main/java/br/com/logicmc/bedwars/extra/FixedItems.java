@@ -10,8 +10,13 @@ import java.util.Arrays;
 public enum FixedItems {
 
 	UPGRADE_SHARPNESS(Material.DIAMOND_SWORD, BWMessages.UPGRADE_SHARPNESS),
-	UPGRADE_FORGERY(Material.FURNACE, BWMessages.UPGRADE_FORGERY),
-	UPGRADE_ARMOR(Material.IRON_CHESTPLATE, BWMessages.UPGRADE_ARMOR),
+	UPGRADE_FORGERY(Material.FURNACE, BWMessages.UPGRADE_FORGERY, BWMessages.UPGRADE_FORGERY_SOLO),
+	UPGRADE_ARMOR(Material.IRON_CHESTPLATE, BWMessages.UPGRADE_ARMOR, BWMessages.UPGRADE_ARMOR_SOLO),
+
+	UPGRADE_SHARPNESS_SQUAD(Material.DIAMOND_SWORD, BWMessages.UPGRADE_SHARPNESS),
+	UPGRADE_FORGERY_SQUAD(Material.FURNACE, BWMessages.UPGRADE_FORGERY, BWMessages.UPGRADE_FORGERY_SQUAD),
+	UPGRADE_ARMOR_SQUAD(Material.IRON_CHESTPLATE, BWMessages.UPGRADE_ARMOR, BWMessages.UPGRADE_ARMOR_SQUAD),
+
 
 	SHOP_TOOLS(Material.STONE_PICKAXE, BWMessages.SHOP_TOOLS, BWMessages.CLICK_VIEW),
 	SHOP_UTILITIES(Material.GOLDEN_APPLE, BWMessages.SHOP_UTILITIES, BWMessages.CLICK_VIEW),
@@ -61,7 +66,7 @@ public enum FixedItems {
 		ItemStack stack = this.layout.clone();
 		ItemMeta meta = stack.getItemMeta();
 		if(lore != null)
-			meta.setLore(Arrays.asList(handler.getMessage(lore, lang).split("(line)")));
+			meta.setLore(Arrays.asList(handler.getMessage(lore, lang).split("line")));
 		meta.setDisplayName(handler.getMessage(name, lang));
 		stack.setItemMeta(meta);
 		return stack;

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import br.com.logicmc.bedwars.extra.BWMessages;
 import br.com.logicmc.bedwars.game.BWManager;
@@ -128,7 +129,7 @@ public class IngamePhase implements PhaseControl {
         arena.setTime(1);
         arena.setGamestate(Arena.INGAME);
         
-        int index = 0;
+        AtomicInteger index = new AtomicInteger();
         int adder = arena.getTeamcomposition() == Arena.SOLO ? 2 : 5;
         final int[] score = { 0 };
 
@@ -157,17 +158,22 @@ public class IngamePhase implements PhaseControl {
         
                 if(party != null) {
 
+                    System.out.println(baseplayer.getName() + " has party");
+
+                    String team = null;
+
                     // adds uuid to the same team as other members
                     for(UUID members : party.getMembers()) { // contains owner and everyone
                         if(arena.getPlayers().contains(members)){
-                            BWPlayer memberbw = BWMain.getInstance().playermanager.getPlayerBase(uuid).getData();
+                            BWPlayer memberbw = BWMain.getInstance().playermanager.getPlayerBase(members).getData();
                             
-                            if(memberbw.getTeamcolor() != null && !bwPlayer.getTeamcolor().isEmpty()) {
+                            if(memberbw.getTeamcolor() != null && !memberbw.getTeamcolor().isEmpty()) {
                                 
                                 // member already has team but uuid dosen't therefore we have to make sure we at least try to add uuid to the me team as member.
-                                for(int i = 0; i < available.size(); i++) {
+                                for(int i = index.get(); i < available.size(); i++) {
                                     if(available.get(i).equalsIgnoreCase(memberbw.getTeamcolor())){
                                         bwPlayer.setTeamcolor(available.get(i));
+                                        team = bwPlayer.getTeamcolor();
                                         available.remove(i);
                                         break;
                                     }
@@ -175,29 +181,31 @@ public class IngamePhase implements PhaseControl {
 
                                 // member team is already full
                                 if(bwPlayer.getTeamcolor() == null || bwPlayer.getTeamcolor().isEmpty()) {
-                                    bwPlayer.setTeamcolor(available.get(index));
-                                    index+=1;
+                                    index.set(getNextTeam(index.get()));
+                                    bwPlayer.setTeamcolor(available.get(index.get()));
+                                    team = bwPlayer.getTeamcolor();
+                                    index.addAndGet(1);
                                 }                         
                             }
                         }
                     }
-                    // if the members yet dont have teams we have to add uuid to a team and also the members
-                    if(bwPlayer.getTeamcolor() == null || bwPlayer.getTeamcolor().isEmpty()) {
 
-                        String userteam = available.get(index);
+                    System.out.println("chosen team "+team);
 
-                        bwPlayer.setTeamcolor(userteam);
-                        index+=1; // follows order
-
-                        for(UUID members : party.getMembers()) {
-                            BWMain.getInstance().playermanager.getPlayerBase(members).getData().setTeamcolor(available.get(index));
-                            index+=1; 
-                        }
-                    }
+                    // if the members yet dont have teams we have to adda team and also the members
+                    party.getMembers().stream().filter(uuid1 -> BWMain.getInstance().playermanager.getPlayerBase(uuid1).getData().getTeamcolor().isEmpty()).forEach(uuid1 -> {
+                        index.set(getNextTeam(index.get()));
+                        BWMain.getInstance().playermanager.getPlayerBase(uuid1).getData().setTeamcolor(available.get(index.get()));
+                        index.addAndGet(1);
+                    });
 
                 } else {
-                    bwPlayer.setTeamcolor(available.get(index));
-                    index+=1;
+                    index.set(getNextTeam(index.get())); // get next element
+
+                    while (bwPlayer.getTeamcolor() == null || bwPlayer.getTeamcolor().isEmpty()){
+                        bwPlayer.setTeamcolor(available.get(index.get()));
+                        index.addAndGet(1);
+                    }
                 }
             }
 
@@ -273,6 +281,19 @@ public class IngamePhase implements PhaseControl {
         available.clear();
     }
 
+
+    private int getNextTeam(int startingpoint){
+
+        if(available.get(startingpoint) != null)
+            return startingpoint;
+
+
+        while(available.get(startingpoint) == null){
+            startingpoint++;
+        }
+
+        return startingpoint;
+    }
     
     @Override
     public void stop(Arena arena) {

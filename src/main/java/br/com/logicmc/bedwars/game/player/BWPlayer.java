@@ -34,7 +34,7 @@ public class BWPlayer extends Parceable<BWPlayer> {
         this.squad = squad;
         this.teamcomp = teamcomp;
 
-        teamcolor=null;
+        teamcolor="";
     }
 
     public String getMapname() {

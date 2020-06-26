@@ -35,7 +35,7 @@ public class InventoryListeners implements Listener {
 
 
         if(event.getClickedInventory() instanceof PlayerInventory){
-            event.setCancelled(stack.getType() == Material.WOOL  && event.getSlot() == 39);
+            event.setCancelled(event.getSlot() >= 37);
         }
         else {
             if (event.getInventory().getName().equalsIgnoreCase("Teams")) {

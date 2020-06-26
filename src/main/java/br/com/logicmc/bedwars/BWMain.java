@@ -367,8 +367,11 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         shoparmor.addItem(new ShopItem(new ItemStack(Material.IRON_CHESTPLATE, 1), new ItemStack(Material.GOLD_INGOT, 12)));
         shoparmor.addItem(new ShopItem(new ItemStack(Material.DIAMOND_CHESTPLATE, 1), new ItemStack(Material.EMERALD, 7)));
 
-        potions.addItem(new ShopItem(addPotion(PotionEffectType.SPEED, 45, 2), new ItemStack(Material.EMERALD, 1)));
-        potions.addItem(new ShopItem(addPotion(PotionEffectType.JUMP, 45, 5), new ItemStack(Material.EMERALD, 1)));
+        potions.addItem(new ShopItem(addPotion((short)8226), new ItemStack(Material.EMERALD, 1)));
+        potions.addItem(new ShopItem(addPotion((short)8235), new ItemStack(Material.EMERALD, 1)));
+        potions.addItem(new ShopItem(addPotion((short)8238), new ItemStack(Material.EMERALD, 1)));
+        potions.addItem(new ShopItem(addPotion((short)8193), new ItemStack(Material.EMERALD, 1)));
+
 
         tools.addItem(new ShopItem(new ItemStack(Material.WOOD_AXE, 1), new ItemStack(Material.IRON_INGOT, 10)));
         tools.addItem(new ShopItem(new ItemStack(Material.STONE_AXE, 1), new ItemStack(Material.IRON_INGOT, 15)));
@@ -395,7 +398,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         utilities.addItem(new ShopItem(new ItemStack(Material.WATER_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 3)));
         utilities.addItem(new ShopItem(new ItemStack(Material.MILK_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 4)));
 
-        sharpness = new UpgradeItem(FixedItems.UPGRADE_SHARPNESS,  (island) -> {
+        sharpness = new UpgradeItem(FixedItems.UPGRADE_SHARPNESS, FixedItems.UPGRADE_SHARPNESS,  (island) -> {
             int teamcomp = BWManager.getInstance().getArena(island.getArena()).getTeamcomposition();
             if(island.getSharpness() == 0){
                 if(teamcomp == Arena.SOLO || teamcomp == Arena.DUO)
@@ -418,7 +421,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             });
         });
 
-        forgery = new UpgradeItem(FixedItems.UPGRADE_FORGERY, (island) -> {
+        forgery = new UpgradeItem(FixedItems.UPGRADE_FORGERY, FixedItems.UPGRADE_FORGERY_SQUAD, (island) -> {
             int teamcomp = BWManager.getInstance().getArena(island.getArena()).getTeamcomposition();
             if(teamcomp == Arena.SOLO || teamcomp == Arena.DUO){
                 if(island.getForgery() == 0)
@@ -458,7 +461,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
             island.forEachPlayers(uuid -> BWMain.getInstance().messagehandler.sendMessage(Bukkit.getPlayer(uuid), BWMessages.FORGERY_UPGRADED));
         });
 
-        armor = new UpgradeItem(FixedItems.UPGRADE_ARMOR, (island) -> {
+        armor = new UpgradeItem(FixedItems.UPGRADE_ARMOR, FixedItems.UPGRADE_ARMOR_SQUAD, (island) -> {
             int teamcomp = BWManager.getInstance().getArena(island.getArena()).getTeamcomposition();
             if(teamcomp == Arena.SOLO || teamcomp == Arena.DUO) {
                 if(island.getArmor() == 0)
@@ -501,12 +504,8 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         new YamlFile("es-msg.yml").loadResource(this);
         messagehandler.loadMessage(BWMessages.PLAYER_LEAVE_INGAME, this);
     }
-    private ItemStack addPotion(PotionEffectType type , int duration, int power){
-        ItemStack itemStack = new ItemStack(Material.POTION, 1);
-        PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
-        potionMeta.addCustomEffect(new PotionEffect(type, duration, power), true);
-        potionMeta.setMainEffect(type);
-        itemStack.setItemMeta(potionMeta);
+    private ItemStack addPotion(short data){
+        ItemStack itemStack = new ItemStack(Material.POTION, 1, data);
         return itemStack;
     }
 

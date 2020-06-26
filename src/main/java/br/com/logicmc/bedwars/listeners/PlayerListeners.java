@@ -207,7 +207,7 @@ public class PlayerListeners implements Listener {
             } else {
                 for(UUID uuid : arena.getPlayers()){
                     if(event.getPlayer().getGameMode() != GameMode.SURVIVAL){
-                        if(Bukkit.getPlayer(uuid).getGameMode() != GameMode.SURVIVAL){
+                        if(Bukkit.getPlayer(uuid).getGameMode() == GameMode.ADVENTURE){
                             Bukkit.getPlayer(uuid).sendMessage(event.getPlayer().getDisplayName()+ChatColor.YELLOW+": "+ChatColor.GRAY+event.getMessage());
                         }
                     } else {
@@ -254,7 +254,16 @@ public class PlayerListeners implements Listener {
                 send(player, BWMain.getInstance().messagehandler.getMessage(BWMessages.WORD_TARGET, BWMain.getInstance().getLang(player)) +" "+ displayname + ChatColor.RESET + "- "+ChatColor.RED +lesserdistance+"m");
                 player.setCompassTarget(location);
             }
+        } else if(item.getType() == Material.FIREBALL && event.getPlayer().getGameMode() == GameMode.SURVIVAL) {
+            event.setCancelled(true);
+            Fireball fireball = player.getWorld().spawn(player.getLocation().add(0.0D, 3.0D, 0.0D), Fireball.class);
+            fireball.setBounce(true);
+            fireball.setIsIncendiary(false);
+            fireball.setVelocity(player.getEyeLocation().getDirection().multiply(2));
+            fireball.setYield(2F);
+            player.getInventory().setItemInHand(new ItemStack(Material.FIREBALL, player.getInventory().getItemInHand().getAmount()-1));
         }
+
 
         if(!item.hasItemMeta())
             return;
@@ -274,14 +283,6 @@ public class PlayerListeners implements Listener {
                     player.openInventory(inventory);
                 } else
                     player.sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.ERROR_ONLY_VIP, base.getPreferences().getLang()));
-            } else if(item.getType() == Material.FIREBALL && event.getPlayer().getGameMode() == GameMode.SURVIVAL){
-                Location gotol = player.getEyeLocation().toVector().add(player.getEyeLocation().getDirection().multiply(2)).toLocation(player.getWorld());
-                Fireball fireball = player.getWorld().spawn( player.getLocation(), Fireball.class);
-                fireball.setDirection(gotol.toVector());
-                fireball.setBounce(false);
-                fireball.setIsIncendiary(true);
-                fireball.setYield(4F);
-                player.getInventory().setItemInHand(new ItemStack(Material.AIR));
             } else if(event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY)){
                 if(item.getType() == Material.ENDER_PEARL){
                     event.setCancelled(true);

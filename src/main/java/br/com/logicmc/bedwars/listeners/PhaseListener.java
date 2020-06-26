@@ -12,8 +12,10 @@ import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import br.com.logicmc.core.account.PlayerBase;
 
+import net.minecraft.server.v1_8_R3.EntityTNTPrimed;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.*;
+import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -47,11 +49,28 @@ public class PhaseListener implements Listener {
     @EventHandler(priority=EventPriority.HIGHEST)
     public void blockdamage(final EntityExplodeEvent event) {
 
-        if(event.getEntityType() == EntityType.PRIMED_TNT){
-            event.blockList().removeIf(block->!BWManager.getInstance().getArena(block.getLocation().getWorld().getName()).getBlocks().contains(new SimpleBlock(block.getLocation())));
+        if(event.getEntityType() == EntityType.PRIMED_TNT || event.getEntityType() == EntityType.FIREBALL ){
+            event.blockList().removeIf(block->{
+
+                Location location = block.getLocation();
+
+                if(!BWManager.getInstance().getArena(location.getWorld().getName()).getBlocks().contains(new SimpleBlock(block.getLocation())))
+                    return true;
+
+                if(block.getType() == Material.GLASS)
+                    return true;
+
+                if(block.getType() == Material.BED_BLOCK)
+                    return true;
+
+                return isglass(location.clone().add(0.0D,0.0D,1.0D)) && isglass(location.clone().add(1.0D,0.0D,0.0D)) && isglass(location.clone().add(0.0D,0.0D,1)) && isglass(location.clone().add(-1.0D,0.0D,0.0D)) && isglass(location.clone().add(0.0D,0.0D,-1.0D));
+            });
         } else {
             event.blockList().forEach(block->BWManager.getInstance().getArena(block.getLocation().getWorld().getName()).getDestroyedBlocks().add(new DestroyedBlock(new SimpleBlock(block.getLocation()), block.getType(), block.getData())));
         }
+    }
+    private boolean isglass(Location location){
+        return location.getBlock().getType() == Material.GLASS ||location.getBlock().getType() == Material.BED_BLOCK;
     }
 
 
@@ -106,15 +125,25 @@ public class PhaseListener implements Listener {
     public void blockbreal(final BlockPlaceEvent event) {
         event.setCancelled(check(event.getBlock().getLocation()));
         if(!event.isCancelled()) {
-            Location location = event.getBlock().getLocation();
+            Location location = event.getBlockPlaced().getLocation();
             Arena arena = BWManager.getInstance().getArena(location.getWorld().getName());
             for(Island island : arena.getIslands()) {
                 if(island.getGenerator().getLocation().distance(location) < 3){
                     event.setCancelled(true);
                 }
             }
-            if(!event.isCancelled())
-                BWManager.getInstance().getArena(event.getBlockPlaced().getLocation().getWorld().getName()).getBlocks().add(new SimpleBlock(event.getBlockPlaced().getLocation()));
+            if(!event.isCancelled()) {
+                if(event.getBlockPlaced().getType() == Material.TNT){
+                    event.getBlockPlaced().setType(Material.AIR);
+                    CraftWorld cWorld = (CraftWorld) location.getWorld();
+                    EntityTNTPrimed tnt = new EntityTNTPrimed(location, cWorld.getHandle());
+                    tnt.setPositionRotation(location.getBlockX() + 0.5, location.getBlockY(), location.getBlockZ() + 0.5, 0, 0);
+                    tnt.fuseTicks = 30;
+                    cWorld.getHandle().addEntity(tnt);
+                } else {
+                    BWManager.getInstance().getArena(location.getWorld().getName()).getBlocks().add(new SimpleBlock(location));
+                }
+            }
         }
     }
     
@@ -194,10 +223,12 @@ public class PhaseListener implements Listener {
                             if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
 
                                 for (final UUID uuid : arena.getPlayers()) {
+
                                     Player other = Bukkit.getPlayer(uuid);
-                                    if(other.getGameMode() == GameMode.SURVIVAL){
+
+                                    if(other.getGameMode() == GameMode.SURVIVAL || other.getGameMode() == GameMode.SPECTATOR)
                                         other.hidePlayer(player);
-                                    }
+
                                 }
 
                                 respawn(arena, island, bwPlayer, player);
@@ -248,15 +279,26 @@ public class PhaseListener implements Listener {
                     final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
                     final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
 
-                    if(event.getDamager() instanceof  Player){
+                    Player killer = null;
+
+                    if(event.getDamager() instanceof  Projectile) {
+
+                        Entity entity = (Entity) ((Projectile)event.getDamager()).getShooter();
+
+                        if(entity instanceof Player){
+                            killer = (Player) entity;
+                        }
+                    } else if (event.getDamager() instanceof  Player)
+                        killer = (Player) event.getDamager();
+
+                    if(killer != null) {
                         damage = plugin.playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(plugin.playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
 
                         if(!damage && death) {
-                            Player playerkiller = (Player) event.getDamager();
-                            playerkiller.playSound(playerkiller.getLocation(), Sound.LEVEL_UP, 10F, 10F);
-                            final BWPlayer killer = BWManager.getInstance().getBWPlayer(playerkiller.getUniqueId());
-                            killer.increaseKills();
-                            arena.updateScoreboardTeam(playerkiller, "kills", ChatColor.GREEN+""+killer.getKills());
+                            killer.playSound(killer.getLocation(), Sound.LEVEL_UP, 10F, 10F);
+                            final BWPlayer bwkiller = BWManager.getInstance().getBWPlayer(killer.getUniqueId());
+                            bwkiller.increaseKills();
+                            arena.updateScoreboardTeam(killer, "kills", ChatColor.GREEN+""+bwkiller.getKills());
 
                             ItemStack iron = new ItemStack(Material.IRON_INGOT, 0);
                             ItemStack emerald = new ItemStack(Material.EMERALD, 0);
@@ -292,20 +334,20 @@ public class PhaseListener implements Listener {
                                 }
                             }
                             if(gold.getAmount() != 0){
-                                playerkiller.sendMessage("§6+"+gold.getAmount()+" Gold");
-                                playerkiller.getInventory().addItem(gold);
+                                killer.sendMessage("§6+"+gold.getAmount()+" Gold");
+                                killer.getInventory().addItem(gold);
                             }
                             if(emerald.getAmount() != 0){
-                                playerkiller.sendMessage("§2+"+emerald.getAmount()+" Emerald");
-                                playerkiller.getInventory().addItem(emerald);
+                                killer.sendMessage("§2+"+emerald.getAmount()+" Emerald");
+                                killer.getInventory().addItem(emerald);
                             }
                             if(iron.getAmount() != 0){
-                                playerkiller.sendMessage("§f+"+iron.getAmount()+" Iron");
-                                playerkiller.getInventory().addItem(iron);
+                                killer.sendMessage("§f+"+iron.getAmount()+" Iron");
+                                killer.getInventory().addItem(iron);
                             }
                             if(diamond.getAmount() != 0){
-                                playerkiller.sendMessage("§b+"+iron.getAmount()+" Diamond");
-                                playerkiller.getInventory().addItem(diamond);
+                                killer.sendMessage("§b+"+iron.getAmount()+" Diamond");
+                                killer.getInventory().addItem(diamond);
                             }
                         }
                     }
@@ -327,7 +369,7 @@ public class PhaseListener implements Listener {
                                     if(event.getDamager() instanceof Player)
                                         other.sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.PLAYER_KILLED_BY_PLAYER, BWMain.getInstance().getLang(other)).replace("{damager}", ((Player) event.getDamager()).getDisplayName()+"§7").replace("{player}",player.getDisplayName()+"§7"));
 
-                                    if(other.getGameMode() == GameMode.SURVIVAL)
+                                    if(other.getGameMode() == GameMode.SURVIVAL || other.getGameMode() == GameMode.SPECTATOR)
                                         other.hidePlayer(player);
 
                                 }
@@ -378,7 +420,7 @@ public class PhaseListener implements Listener {
                     Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
                     for (final UUID uuid : arena.getPlayers()) {
                         Player other = Bukkit.getPlayer(uuid);
-                        if(other.getGameMode() == GameMode.SURVIVAL){
+                        if(other.getGameMode() == GameMode.SURVIVAL || other.getGameMode() == GameMode.SPECTATOR){
                             other.showPlayer(player);
                         }
                     }

@@ -19,14 +19,15 @@ import java.util.function.Function;
 
 public class UpgradeItem {
 
-    private final FixedItems item;
+    private final FixedItems solo,squad;
 
     private final Function<Island, ItemStack> cost;
     private final Consumer<Island> upgrademethod;
 
-    public UpgradeItem(FixedItems item, Function<Island, ItemStack> cost, Consumer<Island> upgrademethod) {
+    public UpgradeItem(FixedItems solo, FixedItems squad, Function<Island, ItemStack> cost, Consumer<Island> upgrademethod) {
         this.cost=cost;
-        this.item = item;
+        this.solo = solo;
+        this.squad = squad;
         this.upgrademethod = upgrademethod;
 
     }
@@ -41,12 +42,24 @@ public class UpgradeItem {
 
     public ItemStack getMenu(String lang, Island island) {
         ItemStack stackcost = cost.apply(island);
-        ItemStack itemStack = item.getBuild(BWMain.getInstance().messagehandler, lang);
-        ItemMeta meta = itemStack.getItemMeta();
-        if(stackcost.getType() == Material.AIR)
-            meta.setLore(Collections.singletonList(BWMain.getInstance().messagehandler.getMessage(BWMessages.MAXIMUM_UPGRADED, lang)));
+        ItemStack itemStack;
+
+        if(BWManager.getInstance().getArena(island.getArena()).getTeamcomposition() < 3)
+            itemStack = solo.getBuild(BWMain.getInstance().messagehandler, lang);
         else
-            meta.setLore(Arrays.asList(BWMain.getInstance().messagehandler.getMessage(BWMessages.WORD_COST, lang) + " " + ChatColor.AQUA + "" + stackcost.getAmount() + " DIAMOND", "", BWMain.getInstance().messagehandler.getMessage(BWMessages.CLICK_BUY, lang) ));
+            itemStack = squad.getBuild(BWMain.getInstance().messagehandler, lang);
+
+        ItemMeta meta = itemStack.getItemMeta();
+        List<String> lore = meta.getLore();
+
+        if(lore != null) {
+            lore.add("");
+            if(stackcost.getType() == Material.AIR)
+                lore.add(BWMain.getInstance().messagehandler.getMessage(BWMessages.MAXIMUM_UPGRADED, lang));
+            else
+                lore.add(BWMain.getInstance().messagehandler.getMessage(BWMessages.CLICK_BUY, lang));
+        }
+        meta.setLore(lore);
         itemStack.setItemMeta(meta);
         return itemStack;
     }

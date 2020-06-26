@@ -18,6 +18,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -175,7 +176,7 @@ public class ShopInventoryListeners implements Listener {
         Player player =event.getPlayer();
         Entity entity = event.getRightClicked();
 
-        if(player.getGameMode() != GameMode.SURVIVAL)
+        if(player.getGameMode() != GameMode.SURVIVAL || !(entity instanceof Villager))
             return;
 
         net.minecraft.server.v1_8_R3.Entity d = ((CraftEntity)entity).getHandle();
