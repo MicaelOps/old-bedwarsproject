@@ -165,7 +165,7 @@ public class PhaseListener implements Listener {
                 event.setCancelled(true);
             }
         } else
-            event.setCancelled(event.getEntityType() != EntityType.SMALL_FIREBALL && event.getEntityType() != EntityType.IRON_GOLEM &&event.getEntityType() != EntityType.FIREBALL && event.getEntityType() != EntityType.PLAYER && event.getEntityType() != EntityType.DROPPED_ITEM && event.getEntityType() != EntityType.ARMOR_STAND&& event.getEntityType() != EntityType.ENDER_DRAGON&& event.getEntityType() != EntityType.VILLAGER);
+            event.setCancelled(event.getEntityType() != EntityType.SILVERFISH && event.getEntityType() != EntityType.SMALL_FIREBALL && event.getEntityType() != EntityType.IRON_GOLEM &&event.getEntityType() != EntityType.FIREBALL && event.getEntityType() != EntityType.PLAYER && event.getEntityType() != EntityType.DROPPED_ITEM && event.getEntityType() != EntityType.ARMOR_STAND&& event.getEntityType() != EntityType.ENDER_DRAGON&& event.getEntityType() != EntityType.VILLAGER);
     }
 
     @EventHandler
@@ -207,43 +207,45 @@ public class PhaseListener implements Listener {
     @EventHandler(priority= EventPriority.HIGHEST)
     public void entitydamage(EntityDamageEvent event) {
 
-        if(event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK && event.getEntity() instanceof Player){
-            event.setCancelled(check(event.getEntity().getLocation(), event.getEntity()));
-            final Player player = (Player) event.getEntity();
+        if(!event.isCancelled()){
+            if(event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK && event.getEntity() instanceof Player){
+                event.setCancelled(check(event.getEntity().getLocation(), event.getEntity()));
+                final Player player = (Player) event.getEntity();
 
-            if(!event.isCancelled()) {
+                if(!event.isCancelled()) {
 
-                if(event.getFinalDamage() >= ((Player) event.getEntity()).getHealth()) {
-                    event.setCancelled(true);
-                    if(player.getGameMode()==GameMode.SURVIVAL){
-                        final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
-                        final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
-                        bwPlayer.getData().increaseDeaths();
-                        for (final Island island : arena.getIslands()) {
-                            if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
+                    if(event.getFinalDamage() >= ((Player) event.getEntity()).getHealth()) {
+                        event.setCancelled(true);
+                        if(player.getGameMode()==GameMode.SURVIVAL){
+                            final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+                            final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
+                            bwPlayer.getData().increaseDeaths();
+                            for (final Island island : arena.getIslands()) {
+                                if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
 
-                                for (final UUID uuid : arena.getPlayers()) {
+                                    for (final UUID uuid : arena.getPlayers()) {
 
-                                    Player other = Bukkit.getPlayer(uuid);
+                                        Player other = Bukkit.getPlayer(uuid);
 
-                                    if(other.getGameMode() == GameMode.SURVIVAL || other.getGameMode() == GameMode.SPECTATOR)
-                                        other.hidePlayer(player);
+                                        if(other.getGameMode() == GameMode.SURVIVAL)
+                                            other.hidePlayer(player);
 
+                                    }
+
+                                    respawn(arena, island, bwPlayer, player);
+                                    break;
                                 }
-
-                                respawn(arena, island, bwPlayer, player);
-                                break;
                             }
                         }
                     }
                 }
-            }
-            if(!event.isCancelled()){
-                if(player.getGameMode() == GameMode.SURVIVAL){
-                    player.getInventory().getHelmet().setDurability((short)0);
-                    player.getInventory().getChestplate().setDurability((short)0);
-                    player.getInventory().getLeggings().setDurability((short)0);
-                    player.getInventory().getBoots().setDurability((short)0);
+                if(!event.isCancelled()){
+                    if(player.getGameMode() == GameMode.SURVIVAL){
+                        player.getInventory().getHelmet().setDurability((short)0);
+                        player.getInventory().getChestplate().setDurability((short)0);
+                        player.getInventory().getLeggings().setDurability((short)0);
+                        player.getInventory().getBoots().setDurability((short)0);
+                    }
                 }
             }
         }
@@ -265,124 +267,156 @@ public class PhaseListener implements Listener {
     public void donotsleep(PlayerBedEnterEvent event){
         event.setCancelled(true);
     }
+
     @EventHandler
-    public void damagedddby(EntityDamageByEntityEvent event) {
-        boolean damage = check(event.getEntity().getLocation(), event.getEntity());
-        if(!damage){
-            if(event.getEntity() instanceof Player){
-
-                Player player = (Player) event.getEntity();
-
-                if(player.getGameMode() == GameMode.SURVIVAL){
-
-                    boolean death = event.getFinalDamage() >= ((Player) event.getEntity()).getHealth();
-                    final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
-                    final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
-
-                    Player killer = null;
-
-                    if(event.getDamager() instanceof  Projectile) {
-
-                        Entity entity = (Entity) ((Projectile)event.getDamager()).getShooter();
-
-                        if(entity instanceof Player){
-                            killer = (Player) entity;
-                        }
-                    } else if (event.getDamager() instanceof  Player)
-                        killer = (Player) event.getDamager();
-
-                    if(killer != null) {
-                        damage = plugin.playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(plugin.playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
-
-                        if(!damage && death) {
-                            killer.playSound(killer.getLocation(), Sound.LEVEL_UP, 10F, 10F);
-                            final BWPlayer bwkiller = BWManager.getInstance().getBWPlayer(killer.getUniqueId());
-                            bwkiller.increaseKills();
-                            arena.updateScoreboardTeam(killer, "kills", ChatColor.GREEN+""+bwkiller.getKills());
-
-                            ItemStack iron = new ItemStack(Material.IRON_INGOT, 0);
-                            ItemStack emerald = new ItemStack(Material.EMERALD, 0);
-                            ItemStack gold = new ItemStack(Material.GOLD_INGOT, 0);
-                            ItemStack diamond = new ItemStack(Material.DIAMOND, 0);
-
-
-                            for(int i = 0; i < player.getInventory().getSize(); i++){
-                                ItemStack stack = player.getInventory().getItem(i);
-                                if(stack != null) {
-
-                                    if(stack.getType() == Material.IRON_INGOT){
-                                        iron.setAmount(iron.getAmount()+stack.getAmount());
-                                        player.getInventory().setItem(i, new ItemStack(Material.AIR));
-                                    } else if(stack.getType() == Material.EMERALD){
-                                        emerald.setAmount(emerald.getAmount()+stack.getAmount());
-                                        player.getInventory().setItem(i, new ItemStack(Material.AIR));
-                                    } else if(stack.getType() == Material.GOLD_INGOT){
-                                        gold.setAmount(gold.getAmount()+stack.getAmount());
-                                        player.getInventory().setItem(i, new ItemStack(Material.AIR));
-                                    } else if(stack.getType() == Material.DIAMOND){
-                                        diamond.setAmount(diamond.getAmount()+stack.getAmount());
-                                        player.getInventory().setItem(i, new ItemStack(Material.AIR));
-                                    } else if(stack.getType().name().contains("_SWORD")){
-                                        if(stack.containsEnchantment(Enchantment.DAMAGE_ALL)){
-                                            ItemStack woodspord = new ItemStack(Material.WOOD_SWORD);
-                                            woodspord.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
-                                            player.getInventory().setItem(i, woodspord);
-                                        } else {
-                                            player.getInventory().setItem(i, new ItemStack(Material.WOOD_SWORD));
-                                        }
-                                    }
-                                }
-                            }
-                            if(gold.getAmount() != 0){
-                                killer.sendMessage("§6+"+gold.getAmount()+" Gold");
-                                killer.getInventory().addItem(gold);
-                            }
-                            if(emerald.getAmount() != 0){
-                                killer.sendMessage("§2+"+emerald.getAmount()+" Emerald");
-                                killer.getInventory().addItem(emerald);
-                            }
-                            if(iron.getAmount() != 0){
-                                killer.sendMessage("§f+"+iron.getAmount()+" Iron");
-                                killer.getInventory().addItem(iron);
-                            }
-                            if(diamond.getAmount() != 0){
-                                killer.sendMessage("§b+"+iron.getAmount()+" Diamond");
-                                killer.getInventory().addItem(diamond);
-                            }
-                        }
-                    }
-
-                    if(death) {
-                        damage=true;
-                        bwPlayer.getData().increaseDeaths();
-                        for ( Island island : arena.getIslands()) {
-                            if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
-
-                                player.setGameMode(GameMode.SPECTATOR);
-                                player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999 ,5));
-                                player.setAllowFlight(true);
-                                player.setFlying(true);
-
-                                for (final UUID uuid : arena.getPlayers()) {
-                                    Player other = Bukkit.getPlayer(uuid);
-
-                                    if(event.getDamager() instanceof Player)
-                                        other.sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.PLAYER_KILLED_BY_PLAYER, BWMain.getInstance().getLang(other)).replace("{damager}", ((Player) event.getDamager()).getDisplayName()+"§7").replace("{player}",player.getDisplayName()+"§7"));
-
-                                    if(other.getGameMode() == GameMode.SURVIVAL || other.getGameMode() == GameMode.SPECTATOR)
-                                        other.hidePlayer(player);
-
-                                }
-                                respawn(arena, island, bwPlayer, player);
-                                break;
-                            }
-                        }
-                    }
-                }
+    public void target(EntityTargetEvent event){
+        if(event.getEntityType() == EntityType.IRON_GOLEM || event.getEntityType() == EntityType.SILVERFISH){
+            if(event.getTarget() instanceof  Player){
+                BWTeam teammob = BWTeam.getTeam(event.getEntity().getCustomName().split(" ")[0].substring(2));
+                event.setCancelled(BWManager.getInstance().getBWPlayer(event.getTarget().getUniqueId()).getTeamcolor().equalsIgnoreCase(teammob.name()));
             }
         }
+    }
+    @EventHandler
+    public void targetliving(EntityTargetLivingEntityEvent event){
+        if(event.getEntityType() == EntityType.IRON_GOLEM || event.getEntityType() == EntityType.SILVERFISH){
+            if(event.getTarget() instanceof  Player){
+                BWTeam teammob = BWTeam.getTeam(event.getEntity().getCustomName().split(" ")[0].substring(2));
+                event.setCancelled(BWManager.getInstance().getBWPlayer(event.getTarget().getUniqueId()).getTeamcolor().equalsIgnoreCase(teammob.name()));
+            }
+        }
+    }
 
-        event.setCancelled(damage);
+    @EventHandler
+    public void damagedddby(EntityDamageByEntityEvent event) {
+        if(!event.isCancelled()){
+            boolean damage = check(event.getEntity().getLocation(), event.getEntity());
+
+            Player killer = null;
+
+            if(event.getDamager() instanceof  Projectile) {
+
+                Entity entity = (Entity) ((Projectile)event.getDamager()).getShooter();
+
+                if(entity instanceof Player){
+                    killer = (Player) entity;
+                }
+            } else if (event.getDamager() instanceof  Player)
+                killer = (Player) event.getDamager();
+
+
+
+            if(!damage){
+                if(event.getEntity() instanceof Player){
+
+                    Player player = (Player) event.getEntity();
+
+                    if(player.getGameMode() == GameMode.SURVIVAL){
+
+                        boolean death = event.getFinalDamage() >= ((Player) event.getEntity()).getHealth();
+                        final Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
+                        final PlayerBase<BWPlayer> bwPlayer = plugin.playermanager.getPlayerBase(player.getUniqueId());
+
+                        if(killer != null)
+                            damage = plugin.playermanager.getPlayerBase(event.getEntity().getUniqueId()).getData().getTeamcolor().equalsIgnoreCase(plugin.playermanager.getPlayerBase(event.getDamager().getUniqueId()).getData().getTeamcolor());
+
+
+                        if(!damage && death) {
+                            damage=true;
+                            bwPlayer.getData().increaseDeaths();
+                            for ( Island island : arena.getIslands()) {
+                                if (island.getTeam().name().equalsIgnoreCase(bwPlayer.getData().getTeamcolor())) {
+
+                                    player.setGameMode(GameMode.SPECTATOR);
+                                    player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 99999 ,5));
+                                    player.setAllowFlight(true);
+                                    player.setFlying(true);
+
+                                    for (final UUID uuid : arena.getPlayers()) {
+                                        Player other = Bukkit.getPlayer(uuid);
+
+                                        if(killer != null)
+                                            other.sendMessage(BWMain.getInstance().messagehandler.getMessage(BWMessages.PLAYER_KILLED_BY_PLAYER, BWMain.getInstance().getLang(other)).replace("{damager}", ((Player) event.getDamager()).getDisplayName()+"§7").replace("{player}",player.getDisplayName()+"§7"));
+
+                                        if(other.getGameMode() == GameMode.SURVIVAL)
+                                            other.hidePlayer(player);
+                                    }
+                                    if(killer != null){
+                                        killer.playSound(killer.getLocation(), Sound.LEVEL_UP, 10F, 10F);
+                                        final BWPlayer bwkiller = BWManager.getInstance().getBWPlayer(killer.getUniqueId());
+                                        bwkiller.increaseKills();
+                                        arena.updateScoreboardTeam(killer, "kills", ChatColor.GREEN+""+bwkiller.getKills());
+
+                                        ItemStack iron = new ItemStack(Material.IRON_INGOT, 0);
+                                        ItemStack emerald = new ItemStack(Material.EMERALD, 0);
+                                        ItemStack gold = new ItemStack(Material.GOLD_INGOT, 0);
+                                        ItemStack diamond = new ItemStack(Material.DIAMOND, 0);
+
+
+                                        for(int i = 0; i < player.getInventory().getSize(); i++){
+                                            ItemStack stack = player.getInventory().getItem(i);
+                                            if(stack != null) {
+
+                                                if(stack.getType() == Material.IRON_INGOT){
+                                                    iron.setAmount(iron.getAmount()+stack.getAmount());
+                                                    player.getInventory().setItem(i, new ItemStack(Material.AIR));
+                                                } else if(stack.getType() == Material.EMERALD){
+                                                    emerald.setAmount(emerald.getAmount()+stack.getAmount());
+                                                    player.getInventory().setItem(i, new ItemStack(Material.AIR));
+                                                } else if(stack.getType() == Material.GOLD_INGOT){
+                                                    gold.setAmount(gold.getAmount()+stack.getAmount());
+                                                    player.getInventory().setItem(i, new ItemStack(Material.AIR));
+                                                } else if(stack.getType() == Material.DIAMOND){
+                                                    diamond.setAmount(diamond.getAmount()+stack.getAmount());
+                                                    player.getInventory().setItem(i, new ItemStack(Material.AIR));
+                                                } else if(stack.getType().name().contains("_SWORD")){
+                                                    if(stack.containsEnchantment(Enchantment.DAMAGE_ALL)){
+                                                        ItemStack woodspord = new ItemStack(Material.WOOD_SWORD);
+                                                        woodspord.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
+                                                        player.getInventory().setItem(i, woodspord);
+                                                    } else {
+                                                        player.getInventory().setItem(i, new ItemStack(Material.WOOD_SWORD));
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if(gold.getAmount() != 0){
+                                            killer.sendMessage("§6+"+gold.getAmount()+" Gold");
+                                            killer.getInventory().addItem(gold);
+                                        }
+                                        if(emerald.getAmount() != 0){
+                                            killer.sendMessage("§2+"+emerald.getAmount()+" Emerald");
+                                            killer.getInventory().addItem(emerald);
+                                        }
+                                        if(iron.getAmount() != 0){
+                                            killer.sendMessage("§f+"+iron.getAmount()+" Iron");
+                                            killer.getInventory().addItem(iron);
+                                        }
+                                        if(diamond.getAmount() != 0){
+                                            killer.sendMessage("§b+"+iron.getAmount()+" Diamond");
+                                            killer.getInventory().addItem(diamond);
+                                        }
+                                    }
+                                    respawn(arena, island, bwPlayer, player);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+
+                    if (event.getEntity() instanceof IronGolem || event.getEntity() instanceof Silverfish) {
+
+                        BWTeam teammob = BWTeam.getTeam(event.getEntity().getCustomName().split(" ")[0].substring(2));
+                        if (killer != null)
+                            event.setCancelled(BWManager.getInstance().getBWPlayer(killer.getUniqueId()).getTeamcolor().equalsIgnoreCase(teammob.name()));
+                    }
+
+                }
+
+            }
+            event.setCancelled(damage);
+        }
     }
     private void respawn(Arena arena, Island island, PlayerBase<BWPlayer> bwPlayer, Player player) {
 
@@ -407,6 +441,7 @@ public class PhaseListener implements Listener {
 
                 player.setDisplayName("[SPECTATOR] "+player.getName());
 
+                player.setGameMode(GameMode.ADVENTURE);
                 player.getInventory().clear();
                 plugin.giveItem(player, 8, FixedItems.SPECTATE_JOINLOBBY);
                 plugin.giveItem(player, 7, FixedItems.SPECTATE_JOINNEXT);
@@ -420,9 +455,8 @@ public class PhaseListener implements Listener {
                     Arena arena = BWManager.getInstance().getArena(player.getLocation().getWorld().getName());
                     for (final UUID uuid : arena.getPlayers()) {
                         Player other = Bukkit.getPlayer(uuid);
-                        if(other.getGameMode() == GameMode.SURVIVAL || other.getGameMode() == GameMode.SPECTATOR){
-                            other.showPlayer(player);
-                        }
+                        other.showPlayer(player);
+                        other.showPlayer(player);
                     }
                     player.sendTitle("","");
                     player.teleport(arena.getIslands().stream().filter(island -> island.getTeam().name().equalsIgnoreCase(BWManager.getInstance().getBWPlayer(player.getUniqueId()).getTeamcolor())).findFirst().get().getSpawn());

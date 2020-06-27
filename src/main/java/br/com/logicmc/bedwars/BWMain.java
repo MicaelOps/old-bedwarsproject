@@ -16,10 +16,7 @@ import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import br.com.logicmc.bedwars.game.shop.ShopCategory;
 import br.com.logicmc.bedwars.game.shop.ShopItem;
 import br.com.logicmc.bedwars.game.shop.upgrades.UpgradeItem;
-import br.com.logicmc.bedwars.listeners.InventoryListeners;
-import br.com.logicmc.bedwars.listeners.ShopInventoryListeners;
-import br.com.logicmc.bedwars.listeners.PhaseListener;
-import br.com.logicmc.bedwars.listeners.PlayerListeners;
+import br.com.logicmc.bedwars.listeners.*;
 import br.com.logicmc.core.account.addons.DataStats;
 import br.com.logicmc.core.addons.hologram.types.Global;
 import br.com.logicmc.core.system.command.CommandLoader;
@@ -30,6 +27,8 @@ import br.com.logicmc.core.system.redis.packet.PacketManager;
 import br.com.logicmc.core.system.server.ServerState;
 import br.com.logicmc.core.system.server.ServerType;
 
+import net.minecraft.server.v1_8_R3.IChatBaseComponent;
+import net.minecraft.server.v1_8_R3.PacketPlayOutChat;
 import net.minecraft.server.v1_8_R3.PacketPlayOutScoreboardTeam;
 import org.bukkit.*;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
@@ -93,7 +92,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         getServer().getPluginManager().registerEvents(new PlayerListeners(), this);
         getServer().getPluginManager().registerEvents(new InventoryListeners(), this);
         getServer().getPluginManager().registerEvents(new PhaseListener(), this);
-
+        getServer().getPluginManager().registerEvents(new ItemInteractListeners(), this);
 
         BWManager.getInstance().addGame("staff", new StaffArena());
         BWManager.getInstance().getArenas().forEach(Arena::firstStartup); // due to translation error
@@ -293,7 +292,7 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
                 for (NormalGenerator generator : emerald) {
                     generator.getLocation().setWorld(world);
                 }
-                Arena garena = new Arena(arena, 8, Arena.DUO, spawnlobby, islands, diamond, emerald);
+                Arena garena = new Arena(arena, 8, Arena.SOLO, spawnlobby, islands, diamond, emerald);
                 BWManager.getInstance().addGame(arena,
                         garena);
                 garena.startTimer(this);
@@ -391,12 +390,13 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         utilities.addItem(new ShopItem(new ItemStack(Material.COMPASS, 1), new ItemStack(Material.IRON_INGOT, 50)));
         utilities.addItem(new ShopItem(new ItemStack(Material.SHEARS, 1), new ItemStack(Material.IRON_INGOT, 20)));
         utilities.addItem(new ShopItem(new ItemStack(Material.GOLDEN_APPLE, 1), new ItemStack(Material.GOLD_INGOT, 3)));
-        utilities.addItem(new ShopItem(new ItemStack(Material.SNOW_BALL, 1), new ItemStack(Material.IRON_INGOT, 40)));
         utilities.addItem(new ShopItem(new ItemStack(Material.FIREBALL, 1), new ItemStack(Material.IRON_INGOT, 40)));
         utilities.addItem(new ShopItem(new ItemStack(Material.TNT, 1), new ItemStack(Material.GOLD_INGOT, 4)));
         utilities.addItem(new ShopItem(new ItemStack(Material.ENDER_PEARL, 1), new ItemStack(Material.EMERALD, 4)));
         utilities.addItem(new ShopItem(new ItemStack(Material.WATER_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 3)));
         utilities.addItem(new ShopItem(new ItemStack(Material.MILK_BUCKET, 1), new ItemStack(Material.GOLD_INGOT, 4)));
+        utilities.addItem(new ShopItem(new ItemStack(Material.MONSTER_EGG, 1, (short)99), new ItemStack(Material.IRON_INGOT, 120)));
+        utilities.addItem(new ShopItem(new ItemStack(Material.SNOW_BALL, 1), new ItemStack(Material.IRON_INGOT, 40)));
 
         sharpness = new UpgradeItem(FixedItems.UPGRADE_SHARPNESS, FixedItems.UPGRADE_SHARPNESS,  (island) -> {
             int teamcomp = BWManager.getInstance().getArena(island.getArena()).getTeamcomposition();
@@ -521,5 +521,13 @@ public class BWMain extends MinigamePlugin<BWPlayer> {
         meta.setColor(color);
         stack.setItemMeta(meta);
         return stack;
+    }
+
+    public void send(Player player, String text){
+        String s = ChatColor.translateAlternateColorCodes('&', text);
+        IChatBaseComponent icbc = IChatBaseComponent.ChatSerializer.a("{\"text\": \"" + s +
+                "\"}");
+        PacketPlayOutChat bar = new PacketPlayOutChat(icbc, (byte)2);
+        ((CraftPlayer)player).getHandle().playerConnection.sendPacket(bar);
     }
 }

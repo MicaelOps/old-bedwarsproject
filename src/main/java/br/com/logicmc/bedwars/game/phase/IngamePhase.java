@@ -253,17 +253,7 @@ public class IngamePhase implements PhaseControl {
         for(UUID uuid : arena.getPlayers()){
             Player player = Bukkit.getPlayer(uuid);
             BWPlayer bwplayer = BWManager.getInstance().getBWPlayer(uuid);
-            List<String> list = new ArrayList<>();
-            arena.getPlayers().stream().filter(e->!BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
-
-
-            if(!list.isEmpty()) {
-                arena.forEachScoreboard(scoreboard -> arena.updateEntry(player, scoreboard, "enemy", list));
-                list.clear();
-            }
-
-            arena.getPlayers().stream().filter(e->BWManager.getInstance().getBWPlayer(e).getTeamcolor().equalsIgnoreCase(bwplayer.getTeamcolor())).forEach(e->list.add(BWMain.getInstance().playermanager.getPlayerBase(e).getName()));
-            arena.forEachScoreboard(scoreboard -> arena.updateEntry(player, scoreboard, "friend", list));
+            arena.forEachScoreboard(scoreboard ->scoreboard.getTeam(bwplayer.getTeamcolor()+"_tab").addEntry(player.getName()));
         }
 
         arena.forEachScoreboard(scoreboard ->{
@@ -339,6 +329,7 @@ public class IngamePhase implements PhaseControl {
         }
 
         for(BWTeam team : BWTeam.values()){
+            createTeam(scoreboard, team.name()+"_tab",ChatColor.BOLD+ ""+team.getChatColor()+"["+team.getName(lang).charAt(0)+"]"+ChatColor.RESET+team.getChatColor()+" " ,ChatColor.GREEN+"", "");
             createTeam(scoreboard, team.name(),ChatColor.BOLD+""+team.getChatColor()+team.getName(lang).charAt(0)+" §f"+WordUtils.capitalize(team.getName(lang).toLowerCase()) ,ChatColor.GREEN+" ✓", "");
         }
         objective.getScore("§b").setScore(1);

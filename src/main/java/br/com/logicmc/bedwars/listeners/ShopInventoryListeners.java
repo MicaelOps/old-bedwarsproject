@@ -232,9 +232,9 @@ public class ShopInventoryListeners implements Listener {
         else if (stack.getType() == FixedItems.SHOP_FIGHT.getMaterial())
             itemList = plugin.swords.getListitems();
         else if (stack.getType() == FixedItems.SHOP_UTILITIES.getMaterial())
-            itemList =plugin.utilities.getListitems();
+            itemList = plugin.utilities.getListitems();
         else if (stack.getType() == FixedItems.SHOP_BLOCKS.getMaterial())
-            itemList =  plugin.blocks.getListitems();
+            itemList = plugin.blocks.getListitems();
         else if (stack.getType() == FixedItems.SHOP_TOOLS.getMaterial())
             itemList = plugin.tools.getListitems();
         else if (stack.getType() == FixedItems.SHOP_POTIONS.getMaterial())
@@ -244,24 +244,30 @@ public class ShopInventoryListeners implements Listener {
         else if (stack.getType() == FixedItems.SHOP_ARMOR.getMaterial())
             itemList = plugin.shoparmor.getListitems();
 
-
-
+        int adder = 0;
 
         for(int i = 0; i < 26; i++){
 
-            int slot = i + 19;
+            int slot = i + 19 + adder;
 
-            if(slot== 26 || slot== 27)
+            if(slot == 26) {
                 slot = 28;
-            else if(slot == 35 || slot == 36)
+                adder+=2;
+            } else if(slot == 27) {
+                slot = 29;
+            } else if(slot == 35) {
                 slot = 37;
-            else if(slot == 44)
+            } else if(slot == 36) {
+                slot = 38;
+            } else if(slot == 44)
                 break;
 
-            if( i >= itemList.size())
+
+            if( i >= itemList.size()) {
                 inventory.setItem(slot, new ItemStack(Material.AIR));
-            else
+            } else {
                 inventory.setItem(slot, itemList.get(i).displayMenu(lang));
+            }
         }
 
         if(open)

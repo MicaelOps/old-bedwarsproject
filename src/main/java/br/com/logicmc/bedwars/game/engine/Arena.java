@@ -12,6 +12,7 @@ import br.com.logicmc.bedwars.game.engine.generator.NormalGenerator;
 import br.com.logicmc.bedwars.game.phase.EndPhase;
 import br.com.logicmc.bedwars.game.phase.IngamePhase;
 import br.com.logicmc.bedwars.game.phase.WaitingPhase;
+import br.com.logicmc.bedwars.game.player.BWPlayer;
 import br.com.logicmc.bedwars.game.player.team.BWTeam;
 import br.com.logicmc.core.system.server.ServerState;
 import net.minecraft.server.v1_8_R3.PacketPlayOutScoreboardTeam;
@@ -100,7 +101,7 @@ public class Arena {
     public void updateTeamArena(BWTeam bwTeam) {
         long players = getMembersOfTeam(bwTeam).count();
         for(UUID uuid : getPlayers()) {
-            String extra = BWManager.getInstance().getBWPlayer(uuid).getTeamcolor().equalsIgnoreCase(bwTeam.name()) ? ChatColor.GRAY+" (You)" : "";
+            String extra = BWManager.getInstance().getBWPlayer(uuid).getTeamcolor().equalsIgnoreCase(bwTeam.getName(BWMain.getInstance().getLang(Bukkit.getPlayer(uuid)))) ? ChatColor.GRAY+" (You)" : "";
             if(players == 0L)
                 updateScoreboardTeam(Bukkit.getPlayer(uuid) , bwTeam.name(), ChatColor.RED+" ✗"+extra);
             else
@@ -278,6 +279,18 @@ public class Arena {
             Field field = updatepacket.getClass().getDeclaredField("d");
             field.setAccessible(true);
             field.set(updatepacket, suffix);
+            ((CraftPlayer)player).getHandle().playerConnection.sendPacket(updatepacket);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            player.sendMessage("failed to update scoreboard please report this to the administrator.");
+        }
+    }
+    public void updatePrefix(Player player, Scoreboard sc, String team, String prefix) {
+        net.minecraft.server.v1_8_R3.Scoreboard scoreboard = ((CraftScoreboard)sc).getHandle();
+        PacketPlayOutScoreboardTeam updatepacket = new PacketPlayOutScoreboardTeam(scoreboard.getTeam(team), 2);
+        try {
+            Field field = updatepacket.getClass().getDeclaredField("c");
+            field.setAccessible(true);
+            field.set(updatepacket, prefix);
             ((CraftPlayer)player).getHandle().playerConnection.sendPacket(updatepacket);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             player.sendMessage("failed to update scoreboard please report this to the administrator.");
